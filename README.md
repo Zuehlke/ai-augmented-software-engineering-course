@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="assets/banner.svg" alt="AI Augmented Software Engineering — a Zühlke course" width="100%"/>
+</p>
+
 # AI Augmented Software Engineering
 
 👋 Welcome! This repository holds the course materials for **AI Augmented Software Engineering**, a Zühlke training that
