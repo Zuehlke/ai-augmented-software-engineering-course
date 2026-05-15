@@ -36,15 +36,21 @@ By the end of the course you should be able to:
 The course comes in two flavors. Pick the one that matches the tool you use every day. The theory is the same; the demos
 and labs differ.
 
-| Flavor         | Slides                                                                     | Status                              |
-|----------------|----------------------------------------------------------------------------|-------------------------------------|
-| GitHub Copilot | [Slides](pptx/ai-augmented-software-engineering-course-github-coilot.pptx) | ✅ Ready                             |
-| Claude Code    | [Slides](pptx/ai-augmented-software-engineering-course-claude-code.pptx)   | 🚧 Placeholder, content coming soon |
+| Flavor         | Slides                                                                      | Status   |
+|----------------|-----------------------------------------------------------------------------|----------|
+| GitHub Copilot | [Slides](pptx/ai-augmented-software-engineering-course-github-copilot.pptx) | ✅ Ready |
+| Claude Code    | [Slides](pptx/ai-augmented-software-engineering-course-claude-code.pptx)    | ✅ Ready |
 
-> **Heads up:** the Claude Code slides are still a placeholder. The outline below is tool-neutral and applies to both
-> flavors. Each flavor ships its own companion lab repo and realises the concepts with tool-specific artifacts, such as
-> `copilot-instructions.md` and prompt files for the Copilot flavor, or `CLAUDE.md`, slash commands, and skills for the
-> Claude Code flavor.
+> **Heads up:** the outline below is tool-neutral and applies to both flavors. Each flavor ships its own companion lab
+> repo and realises the concepts with tool-specific artifacts — `copilot-instructions.md` and prompt files for the
+> Copilot flavor, or `CLAUDE.md`, slash commands, and skills for the Claude Code flavor.
+
+### Companion labs
+
+| Flavor         | Lab repo                                                                                         |
+|----------------|--------------------------------------------------------------------------------------------------|
+| GitHub Copilot | [github.com/Zuehlke/github-copilot-training](https://github.com/Zuehlke/github-copilot-training) |
+| Claude Code    | 🚧 Coming soon                                                                                   |
 
 ## Course outline
 
