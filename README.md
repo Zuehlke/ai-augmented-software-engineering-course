@@ -36,8 +36,8 @@ By the end of the course you should be able to:
 The course comes in two flavors. Pick the one that matches the tool you use every day. The theory is the same; the demos
 and labs differ.
 
-| Flavor         | Slides                                                                      | Status   |
-|----------------|-----------------------------------------------------------------------------|----------|
+| Flavor         | Slides                                                                      | Status  |
+|----------------|-----------------------------------------------------------------------------|---------|
 | GitHub Copilot | [Slides](pptx/ai-augmented-software-engineering-course-github-copilot.pptx) | ✅ Ready |
 | Claude Code    | [Slides](pptx/ai-augmented-software-engineering-course-claude-code.pptx)    | ✅ Ready |
 
@@ -152,9 +152,9 @@ in.
 
 | Name            | Role                         | Contact                                                           |
 |-----------------|------------------------------|-------------------------------------------------------------------|
-| Marco Romanutti | Lead Software Architect      | [marco.romanutti@zuehlke.com](mailto:marco.romanutti@zuehlke.com) |
 | Jonathan Ziller | Principal Software Architect | [jonathan.ziller@zuehlke.com](mailto:jonathan.ziller@zuehlke.com) |
-| Lukas Grigis    | Software Engineer            | [lukas.grigis@zuhlke.com](mailto:lukas.grigis@zuhlke.com)         |
+| Marco Romanutti | Lead Software Architect      | [marco.romanutti@zuehlke.com](mailto:marco.romanutti@zuehlke.com) |
+| Lukas Grigis    | Lead Software Architect      | [lukas.grigis@zuhlke.com](mailto:lukas.grigis@zuhlke.com)         |
 
 ## Contributing
 
