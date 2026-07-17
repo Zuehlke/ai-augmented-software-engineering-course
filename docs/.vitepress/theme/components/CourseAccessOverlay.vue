@@ -8,6 +8,7 @@ const route = useRoute();
 
 const showOverlay = ref(false);
 const activeTarget = ref<"labs" | "slides" | null>(null);
+const siteBase = import.meta.env.BASE_URL ?? "/";
 
 function isEnabled(rawValue: string | boolean | undefined, defaultValue: boolean): boolean {
   if (rawValue === undefined) return defaultValue;
@@ -19,7 +20,19 @@ const labsEnabled = isEnabled(import.meta.env.VITE_LABS_ENABLED, true);
 const slidesEnabled = isEnabled(import.meta.env.VITE_SLIDES_ENABLED, true);
 
 function normalizePath(path: string): string {
-  return path.replace(/\.html$/, "");
+  const [pathWithoutQueryOrHash] = path.split(/[?#]/);
+  const normalizedBase = siteBase.endsWith("/") ? siteBase.slice(0, -1) : siteBase;
+  const pathWithoutBase =
+    normalizedBase && normalizedBase !== "/" && pathWithoutQueryOrHash.startsWith(`${normalizedBase}/`)
+      ? pathWithoutQueryOrHash.slice(normalizedBase.length)
+      : pathWithoutQueryOrHash === normalizedBase
+        ? "/"
+        : pathWithoutQueryOrHash;
+  const normalizedPath = pathWithoutBase.replace(/\.html$/, "");
+  if (normalizedPath.length > 1 && normalizedPath.endsWith("/")) {
+    return normalizedPath.slice(0, -1);
+  }
+  return normalizedPath || "/";
 }
 
 function isLabsPath(path: string): boolean {
@@ -33,11 +46,10 @@ function isSlidesPath(path: string): boolean {
 }
 
 function getOverlayTarget(path: string): "labs" | "slides" | null {
-  const normalizedPath = path.replace(/\.html$/, "");
-  if (!labsEnabled && isLabsPath(normalizedPath)) {
+  if (!labsEnabled && isLabsPath(path)) {
     return "labs";
   }
-  if (!slidesEnabled && isSlidesPath(normalizedPath)) {
+  if (!slidesEnabled && isSlidesPath(path)) {
     return "slides";
   }
   return null;
