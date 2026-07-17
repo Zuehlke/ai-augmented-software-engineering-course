@@ -6,6 +6,7 @@ export default defineConfig({
   title: "AI-Augmented Software Engineering",
   description: "An introduction to AI-augmented software engineering that helps teams build software with AI in a more disciplined and systematic way - learning the key concepts and methods of modern AI coding tools and applying them directly in hands-on labs.",
   base,
+  head: [["link", { rel: "icon", type: "image/png", href: `${base}favicon.png` }]],
   srcDir: ".",
   outDir: "../public",
   cleanUrls: true,
