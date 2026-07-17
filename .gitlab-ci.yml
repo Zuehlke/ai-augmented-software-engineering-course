@@ -1,0 +1,50 @@
+# CI for AI-Augmented Software Engineering docs:
+# validate docs on merge requests and deploy them to GitLab Pages.
+# The deploy job MUST be named `pages`, and output MUST land in public/
+# (VitePress outDir is ../public — see docs/.vitepress/config.ts).
+stages:
+  - validate
+  - deploy
+
+default:
+  image: node:24-alpine
+  interruptible: true
+  # VitePress `lastUpdated` shells out to `git log` for every page; node:24-alpine
+  # ships no git, so the docs build dies with "spawn git ENOENT" without this.
+  before_script:
+    - apk add --no-cache git
+
+variables:
+  # Full history (override runner shallow clone) so `lastUpdated` dates are
+  # real per-page commit times.
+  GIT_DEPTH: "0"
+  # Availability toggles consumed by VitePress theme:
+  # true = content is enabled (no overlay), false = show access overlay.
+  VITE_LABS_ENABLED: "false"
+  VITE_SLIDES_ENABLED: "false"
+
+# Build docs on merge requests — fails pipeline on broken pages/links.
+docs-build:
+  stage: validate
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+  script:
+    - cd docs && npm ci && npm run build
+  artifacts:
+    paths:
+      - public
+    expire_in: 7 days
+
+# Deploy to GitLab Pages on the default branch.
+pages:
+  stage: deploy
+  rules:
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+  variables:
+    # Serve assets from project subpath, e.g. /course/. Derived from project slug.
+    PAGES_BASE: "/$CI_PROJECT_NAME/"
+  script:
+    - cd docs && npm ci && npm run build
+  artifacts:
+    paths:
+      - public
