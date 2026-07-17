@@ -1,4 +1,4 @@
-# Lab 3 · Create your own research step
+# Lab 3 · Create your own research agent
 
 ## Context
 

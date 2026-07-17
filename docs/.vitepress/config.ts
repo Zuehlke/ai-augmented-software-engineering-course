@@ -28,7 +28,7 @@ export default defineConfig({
         items: [
           { text: "Lab 1 · Vibe Coding", link: "/labs/lab-1-vibe-coding" },
           { text: "Lab 2 · Instructions & Skills", link: "/labs/lab-2-instructions-and-skills" },
-          { text: "Lab 3 · Create Your Own Research Step", link: "/labs/lab-3-research-step" },
+          { text: "Lab 3 · Create Your Own Research Agent", link: "/labs/lab-3-research-agent" },
           { text: "Lab 4 · Structured Workflow", link: "/labs/lab-4-structured-workflow" },
           { text: "Lab 5 · Common SDD Framework", link: "/labs/lab-5-sdd-framework" },
           { text: "Lab 6 · Agent Hook", link: "/labs/lab-6-agent-hook" },
