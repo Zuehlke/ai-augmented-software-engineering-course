@@ -8,16 +8,12 @@ const route = useRoute();
 
 const showOverlay = ref(false);
 const activeTarget = ref<"labs" | "slides" | null>(null);
+const activeHostName = ref<string | null>(null);
 const siteBase = import.meta.env.BASE_URL ?? "/";
+const hostNames = ["Lukas", "Marco", "Jonathan"] as const;
 
-function isEnabled(rawValue: string | boolean | undefined, defaultValue: boolean): boolean {
-  if (rawValue === undefined) return defaultValue;
-  const normalized = String(rawValue).trim().toLowerCase();
-  return !["0", "false", "off", "no"].includes(normalized);
-}
-
-const labsEnabled = isEnabled(import.meta.env.VITE_LABS_ENABLED, true);
-const slidesEnabled = isEnabled(import.meta.env.VITE_SLIDES_ENABLED, true);
+const labsEnabled = import.meta.env.VITE_LABS_ENABLED ?? true;
+const slidesEnabled = import.meta.env.VITE_SLIDES_ENABLED ?? true;
 
 function normalizePath(path: string): string {
   const [pathWithoutQueryOrHash] = path.split(/[?#]/);
@@ -57,6 +53,7 @@ function getOverlayTarget(path: string): "labs" | "slides" | null {
 
 function openOverlay(target: "labs" | "slides"): void {
   activeTarget.value = target;
+  activeHostName.value = pickHostName();
   showOverlay.value = true;
 }
 
@@ -91,6 +88,18 @@ const overlayDescription = computed(() =>
     ? "The labs will be enabled during the course."
     : "The slides will be provided during the course.",
 );
+
+function pickHostName(): string | null {
+  if (hostNames.length === 0) return null;
+  const pool = activeHostName.value ? hostNames.filter((name) => name !== activeHostName.value) : hostNames;
+  const selectedPool = pool.length > 0 ? pool : hostNames;
+  const randomIndex = Math.floor(Math.random() * selectedPool.length);
+  return selectedPool[randomIndex] ?? null;
+}
+
+const overlayBadge = computed(() =>
+  activeHostName.value ? `Message from ${activeHostName.value}` : "Message from course host",
+);
 </script>
 
 <template>
@@ -114,7 +123,7 @@ const overlayDescription = computed(() =>
         >
           ×
         </button>
-        <span class="slides-overlay__badge">Message from the host</span>
+        <span class="slides-overlay__badge">{{ overlayBadge }}</span>
         <h2 id="course-overlay-title">{{ overlayTitle }}</h2>
         <p id="course-overlay-description">{{ overlayDescription }}</p>
         <button type="button" class="slides-overlay__button" @click="closeOverlay">
