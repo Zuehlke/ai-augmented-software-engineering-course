@@ -45,8 +45,9 @@ git clone https://github.com/Zuehlke/ai-augmented-software-engineering.git
 cd ai-augmented-software-engineering
 ```
 
-Use **Dev Containers: Reopen in Container** in VS Code. The `.devcontainer/devcontainer.json`
-installs Java, Maven, Node.js, and Task inside the container and also applies the recommended VS Code extensions.
+Open the project folder in VS Code. 
+When being asked, select **Dev Containers: Reopen in Container**. The `.devcontainer/devcontainer.json`
+installs Java, Maven, Node.js, and Task inside the container.
 
 ### 3. Run the project
 
