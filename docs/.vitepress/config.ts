@@ -1,6 +1,8 @@
 import { defineConfig } from "vitepress";
 
-const base = process.env.PAGES_BASE ?? "/";
+const rawBase = process.env.PAGES_BASE ?? "/";
+const normalizedBase = rawBase.trim().replace(/^\/+|\/+$/g, "");
+const base = normalizedBase ? `/${normalizedBase}/` : "/";
 
 export default defineConfig({
   title: "AI-Augmented Software Engineering",
