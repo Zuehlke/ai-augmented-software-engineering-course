@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import DefaultTheme from "vitepress/theme";
 import { computed, onMounted, ref } from "vue";
-import { useRoute, useRouter, withBase } from "vitepress";
+import { useData, useRoute, useRouter, withBase } from "vitepress";
 
 const router = useRouter();
 const route = useRoute();
@@ -11,9 +11,10 @@ const activeTarget = ref<"labs" | "slides" | null>(null);
 const activeHostName = ref<string | null>(null);
 const siteBase = import.meta.env.BASE_URL ?? "/";
 const hostNames = ["Lukas", "Marco", "Jonathan"] as const;
+const { theme } = useData();
 
-const labsEnabled = import.meta.env.VITE_LABS_ENABLED ?? true;
-const slidesEnabled = import.meta.env.VITE_SLIDES_ENABLED ?? true;
+const labsEnabled = computed(() => theme.value.accessControl?.labsEnabled ?? true);
+const slidesEnabled = computed(() => theme.value.accessControl?.slidesEnabled ?? true);
 
 function normalizePath(path: string): string {
   const [pathWithoutQueryOrHash] = path.split(/[?#]/);
@@ -42,10 +43,10 @@ function isSlidesPath(path: string): boolean {
 }
 
 function getOverlayTarget(path: string): "labs" | "slides" | null {
-  if (!labsEnabled && isLabsPath(path)) {
+  if (!labsEnabled.value && isLabsPath(path)) {
     return "labs";
   }
-  if (!slidesEnabled && isSlidesPath(path)) {
+  if (!slidesEnabled.value && isSlidesPath(path)) {
     return "slides";
   }
   return null;

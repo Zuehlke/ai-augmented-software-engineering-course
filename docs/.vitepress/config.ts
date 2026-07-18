@@ -1,8 +1,10 @@
 import { defineConfig } from "vitepress";
+import { resolveAccessControlFromEnv } from "./theme/access-control";
 
 const rawBase = process.env.PAGES_BASE ?? "/";
 const normalizedBase = rawBase.trim().replace(/^\/+|\/+$/g, "");
 const base = normalizedBase ? `/${normalizedBase}/` : "/";
+const accessControl = resolveAccessControlFromEnv(process.env);
 const siteDescription =
   "An introduction to AI-augmented software engineering that helps teams build software with AI in a more disciplined and systematic way - learning the key concepts and methods of modern AI coding tools and applying them directly in hands-on labs.";
 const faviconDataUrl =
@@ -23,6 +25,7 @@ export default defineConfig({
   lastUpdated: true,
   ignoreDeadLinks: [/^https?:\/\/localhost/],
   themeConfig: {
+    accessControl,
     nav: [
       { text: "Getting Started", link: "/getting-started/setup" },
       { text: "Labs", link: "/labs/lab-1-vibe-coding" },
