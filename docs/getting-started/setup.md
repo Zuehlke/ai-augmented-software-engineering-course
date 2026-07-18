@@ -5,7 +5,11 @@ Choose one setup option and follow the tab.
 <ContentTabs :tabs="['Cloud (Codespaces)', 'Local (VS Code)', 'Local (IntelliJ)']">
   <template #tab1>
 
-### 1. Open the course in GitHub Codespaces
+### 1. Prerequisites
+
+- [GitHub](https://github.com/) account
+
+### 2. Open the course in GitHub Codespaces
 
 Click the badge and confirm **Create codespace** using the default settings:
 
@@ -18,7 +22,7 @@ Click the badge and confirm **Create codespace** using the default settings:
 > Note that GitHub may ask for a **payment method purely for verification** to
 > unlock Codespaces, even on the free tier.
 
-### 2. Run the project
+### 3. Run the project
 
 ```bash
 task versions
@@ -36,7 +40,7 @@ To confirm the application is running, open `.../swagger-ui/index.html` on the f
 
 - [Git](https://git-scm.com/downloads)
 - [Docker Desktop](https://www.docker.com/products/docker-desktop/) (or another local Docker-compatible runtime)
-- [VS Code](https://code.visualstudio.com/download) including the [VS Code Dev Containers extension](https://marketplace.visualstudio.com/items?itemName=ms-vscode-remote.remote-containers)
+- [VS Code](https://code.visualstudio.com/download) including the [Dev Containers extension](https://marketplace.visualstudio.com/items?itemName=ms-vscode-remote.remote-containers)
 
 ### 2. Clone and open in VS Code
 
@@ -67,7 +71,7 @@ To confirm the application is running, open [Swagger UI](http://localhost:8080/s
 
 - [Git](https://git-scm.com/downloads)
 - [Docker Desktop](https://www.docker.com/products/docker-desktop/) (or another local Docker-compatible runtime)
-- [IntelliJ IDEA](https://www.jetbrains.com/idea/download/) including the [IntelliJ Dev Containers plugin](https://www.jetbrains.com/help/idea/connect-to-devcontainer.html)
+- [IntelliJ IDEA](https://www.jetbrains.com/idea/download/) including the [Dev Containers plugin](https://www.jetbrains.com/help/idea/connect-to-devcontainer.html)
 
 ### 2. Clone and open in IntelliJ IDEA
 
