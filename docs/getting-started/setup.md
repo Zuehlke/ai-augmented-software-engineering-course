@@ -21,7 +21,7 @@ Click the badge and confirm **Create codespace** using the default settings:
 ### 2. Run the project
 
 ```bash
-task verify-tools
+task versions
 task run
 task test
 ```
@@ -51,7 +51,7 @@ installs Java, Maven, Node.js, and Task inside the container and also applies th
 ### 3. Run the project
 
 ```bash
-task verify-tools
+task versions
 task run
 task test
 ```
@@ -81,7 +81,7 @@ This provides Java, Maven, Node.js, and Task inside the container.
 ### 3. Run the project
 
 ```bash
-task verify-tools
+task versions
 task run
 task test
 ```
