@@ -18,8 +18,8 @@ Click the badge and confirm **Create codespace** using the default settings:
 
 > [!IMPORTANT]
 > GitHub Codespaces free tier includes up to 60 hours per month. 
-> Make sure to delete your codespace when you are done to avoid exceeding the free tier limit.
-> 
+> Make sure to delete your codespace when you are done to avoid exceeding the free tier limit. You can see all your Codespaces at https://github.com/codespaces.
+>
 > Note that GitHub may ask for a **payment method purely for verification** to
 > unlock Codespaces, even on the free tier.
 
@@ -38,7 +38,7 @@ Using [task](https://taskfile.dev/) you can run the application:
 task run
 ```
 
-To confirm the application is running, open `.../swagger-ui/index.html` on the forwarded Codespaces URL.
+After your application successfully started, you should be able to access the Swagger UI at `.../swagger-ui/index.html` on the forwarded Codespaces URL.
 
   </template>
 
@@ -70,7 +70,7 @@ Using [task](https://taskfile.dev/) you can run the application:
 task run
 ```
 
-To confirm the application is running, open [Swagger UI](http://localhost:8080/swagger-ui/index.html).
+After your application successfully started, you should be able to access the Swagger UI at [Swagger UI](http://localhost:8080/swagger-ui/index.html).
 
   </template>
 
@@ -90,8 +90,9 @@ git clone https://github.com/Zuehlke/ai-augmented-software-engineering.git
 cd ai-augmented-software-engineering
 ```
 
-Open the project folder in IntelliJ IDEA and start it with the Dev Containers workflow, using the repository's `.devcontainer/devcontainer.json`.
-This provides Java, Maven, Node.js, and Task inside the container.
+Open the project folder in IntelliJ IDEA.
+When being asked, select **Reopen in Container**. The `.devcontainer/devcontainer.json`
+installs Java, Maven, Node.js, and Task inside the container.
 
 ### 3. Run the application
 
@@ -101,7 +102,7 @@ Using [task](https://taskfile.dev/) you can run the application:
 task run
 ```
 
-To confirm the application is running, open [Swagger UI](http://localhost:8080/swagger-ui/index.html).
+After your application successfully started, you should be able to access the Swagger UI at [Swagger UI](http://localhost:8080/swagger-ui/index.html).
 
   </template>
 </ContentTabs>
