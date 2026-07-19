@@ -8,6 +8,7 @@ Choose one setup option and follow the tab.
 ### 1. Prerequisites
 
 - [GitHub](https://github.com/) account
+- Active [GitHub Copilot](https://github.com/features/copilot) or [Claude Code](https://claude.ai) license
 
 ### 2. Open the course in GitHub Codespaces
 
@@ -22,7 +23,17 @@ Click the badge and confirm **Create codespace** using the default settings:
 > Note that GitHub may ask for a **payment method purely for verification** to
 > unlock Codespaces, even on the free tier.
 
-### 3. Run the project
+### 3. Setup AI tool
+
+Choose one of the following:
+
+**GitHub Copilot (Built-in)**
+GitHub Copilot is built into GitHub Codespaces. Simply sign in with your GitHub account to use it.
+
+**Claude Code**
+To setup Claude Code, follow the [Claude Code Quickstart guide](https://code.claude.com/docs/en/quickstart).
+
+### 4. Run the application
 
 ```bash
 task versions
@@ -41,6 +52,7 @@ To confirm the application is running, open `.../swagger-ui/index.html` on the f
 - [Git](https://git-scm.com/downloads)
 - [Docker Desktop](https://www.docker.com/products/docker-desktop/) (or another local Docker-compatible runtime)
 - [VS Code](https://code.visualstudio.com/download) including the [Dev Containers extension](https://marketplace.visualstudio.com/items?itemName=ms-vscode-remote.remote-containers)
+- [GitHub Copilot](https://github.com/features/copilot) or [Claude Code](https://claude.ai) license active and ready to use in your IDE or CLI
 
 ### 2. Clone and open in VS Code
 
@@ -53,7 +65,7 @@ Open the project folder in VS Code.
 When being asked, select **Dev Containers: Reopen in Container**. The `.devcontainer/devcontainer.json`
 installs Java, Maven, Node.js, and Task inside the container.
 
-### 3. Run the project
+### 3. Run the application
 
 ```bash
 task versions
@@ -72,6 +84,7 @@ To confirm the application is running, open [Swagger UI](http://localhost:8080/s
 - [Git](https://git-scm.com/downloads)
 - [Docker Desktop](https://www.docker.com/products/docker-desktop/) (or another local Docker-compatible runtime)
 - [IntelliJ IDEA](https://www.jetbrains.com/idea/download/) including the [Dev Containers plugin](https://www.jetbrains.com/help/idea/connect-to-devcontainer.html)
+- [GitHub Copilot](https://github.com/features/copilot) or [Claude Code](https://claude.ai) license active and ready to use in your IDE or CLI
 
 ### 2. Clone and open in IntelliJ IDEA
 
@@ -83,7 +96,7 @@ cd ai-augmented-software-engineering
 Open the project folder in IntelliJ IDEA and start it with the Dev Containers workflow, using the repository's `.devcontainer/devcontainer.json`.
 This provides Java, Maven, Node.js, and Task inside the container.
 
-### 3. Run the project
+### 3. Run the application
 
 ```bash
 task versions
