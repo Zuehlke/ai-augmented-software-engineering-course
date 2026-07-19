@@ -27,18 +27,15 @@ Click the badge and confirm **Create codespace** using the default settings:
 
 Choose one of the following:
 
-**GitHub Copilot (Built-in)**
-GitHub Copilot is built into GitHub Codespaces. Simply sign in with your GitHub account to use it.
-
-**Claude Code**
-To setup Claude Code, follow the [Claude Code Quickstart guide](https://code.claude.com/docs/en/quickstart).
+- **GitHub Copilot (Built-in):** GitHub Copilot is built into GitHub Codespaces. Simply sign in with your GitHub account to use it.
+- **Claude Code:** To setup Claude Code, follow the [Claude Code Quickstart guide](https://code.claude.com/docs/en/quickstart).
 
 ### 4. Run the application
 
+Using [task](https://taskfile.dev/) you can run the application:
+
 ```bash
-task versions
 task run
-task test
 ```
 
 To confirm the application is running, open `.../swagger-ui/index.html` on the forwarded Codespaces URL.
@@ -67,10 +64,10 @@ installs Java, Maven, Node.js, and Task inside the container.
 
 ### 3. Run the application
 
+Using [task](https://taskfile.dev/) you can run the application:
+
 ```bash
-task versions
 task run
-task test
 ```
 
 To confirm the application is running, open [Swagger UI](http://localhost:8080/swagger-ui/index.html).
@@ -98,10 +95,10 @@ This provides Java, Maven, Node.js, and Task inside the container.
 
 ### 3. Run the application
 
+Using [task](https://taskfile.dev/) you can run the application:
+
 ```bash
-task versions
 task run
-task test
 ```
 
 To confirm the application is running, open [Swagger UI](http://localhost:8080/swagger-ui/index.html).
