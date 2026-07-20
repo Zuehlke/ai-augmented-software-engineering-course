@@ -1,4 +1,4 @@
-# Lab 6 · Enforce quality through an agent hook
+# Lab 6 · Automated feedback loops
 
 ## Context
 

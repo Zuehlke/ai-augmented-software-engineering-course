@@ -1,4 +1,4 @@
-# Lab 2 · Shaping behavior using instructions and skills
+# Lab 2 · Steering agents using AGENTS.md and skills
 
 ## Context
 

@@ -1,4 +1,4 @@
-# Lab 4 · Implementing a feature using a structured workflow
+# Lab 4 · Structured agentic workflows
 
 ## Context
 

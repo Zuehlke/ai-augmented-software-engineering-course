@@ -1,4 +1,4 @@
-# Lab 5 · Implementing a feature using a common SDD framework
+# Lab 5 · Spec-Driven Development (SDD)
 
 ## Context
 

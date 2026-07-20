@@ -1,4 +1,4 @@
-# Lab 3 · Create your own research agent
+# Lab 3 · Create your own agents
 
 ## Context
 
