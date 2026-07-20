@@ -21,11 +21,12 @@ task lab/vibe-coding
 >
 > [![Open Lab 1 in GitHub Codespaces](https://github.com/codespaces/badge.svg)](https://codespaces.new/Zuehlke/ai-augmented-software-engineering?ref=lab%2Fvibe-coding)
 
-After the command is finished, implement the following endpoint:
+After the command is finished, implement an endpoint that displays flight delays:
 
 - `GET /delays?airline_code=AA&limit=50`  
   → returns `200 OK` or `404 Not Found`
 
-## Tips & Tricks
+Reach out to us if you encounter any issues with your setup.
 
-Try out the available working modes of your AI coding tool.
+> [!NOTE]
+> Try out the available working modes of your AI coding tool.

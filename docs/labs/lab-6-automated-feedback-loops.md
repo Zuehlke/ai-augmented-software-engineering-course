@@ -24,9 +24,8 @@ After the command is finished, complete the following tasks:
 - Update the hook in `verification-harness.json` to make sure tests are run whenever the agent stops.
 - Open a new chat and verify that tests are being executed.
 
-## Tips & Tricks
-
-- The `TODO` markers in the relevant files will help you get started.
+> [!NOTE]
+> The `TODO` markers in the relevant files will help you get started.
 
 ## Solution
 

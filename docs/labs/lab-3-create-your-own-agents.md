@@ -25,9 +25,8 @@ After the command is finished, complete the following tasks:
 - Invoke the skill to create the specification for:
   - `GET /delays?airline_code=AA&limit=50`
 
-## Tips & Tricks
-
-- The `TODO` markers in the relevant files will help you get started.
+> [!NOTE]
+> The `TODO` markers in the relevant files will help you get started.
 
 ## Solution
 
