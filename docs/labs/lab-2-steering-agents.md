@@ -21,8 +21,8 @@ task lab/steering
 
 After the command is finished, complete the following tasks:
 
-- Describe the role and behavior of Copilot in `AGENTS.md`
-- Add the required frontmatter for Java-specific skills in `.github/skills/java/SKILLS.md`
+- Describe the role and behavior agents in `AGENTS.md`
+- Add the required frontmatter for Java-specific skills in `.agents/skills/java/SKILLS.md`
 - Implement the same endpoint again:
   - `GET /delays?airline_code=AA&limit=50`  
     → returns `200 OK` or `404 Not Found`
@@ -65,7 +65,7 @@ Use progressive disclosure. Start with the smallest relevant doc set.
 </details>
 
 <details>
-<summary><code>.github/skills/java/SKILL.md</code></summary>
+<summary><code>.agents/skills/java/SKILL.md</code></summary>
 
 ```markdown
 ---
