@@ -27,4 +27,14 @@ After the command is finished, complete the following tasks:
 ## Tips & Tricks
 
 - The `TODO` markers in the relevant files will help you get started.
-- You can find a reference solution in branch `solution/hook`.
+
+## Solution
+
+<details>
+<summary><code>DUMMY.md</code></summary>
+
+```markdown
+
+```
+
+</details>

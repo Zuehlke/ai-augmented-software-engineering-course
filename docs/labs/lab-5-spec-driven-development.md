@@ -29,6 +29,6 @@ After the command is finished, complete the following tasks:
 - Implement the same endpoint again using that framework's workflow:
   - `GET /delays?airline_code=AA&limit=50`
 
-## Tips & Tricks
+## Solution
 
 Files that are created depend on the framework. Choose one and follow its workflow consistently.
