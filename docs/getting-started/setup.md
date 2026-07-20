@@ -83,6 +83,10 @@ After your application successfully started, you should be able to access the Sw
 - [IntelliJ IDEA](https://www.jetbrains.com/idea/download/) including the [Dev Containers plugin](https://www.jetbrains.com/help/idea/connect-to-devcontainer.html)
 - [GitHub Copilot](https://github.com/features/copilot) or [Claude Code](https://claude.ai) license active and ready to use in your IDE or CLI
 
+> [!IMPORTANT]
+> Recent versions of the GitHub Copilot IntelliJ plugin have [known issues](https://github.com/microsoft/copilot-intellij-feedback/issues/1912) related to containerized enviroments causing unexpected behavior. We recommend using **VS Code** or the **Copilot CLI** instead.
+> If you want to use IntelliJ in a non-containerized enviroment, you can install Java, Maven, Node.js, and Task manually on your machine and run the application without a container.
+
 ### 2. Clone and open in IntelliJ IDEA
 
 ```bash
