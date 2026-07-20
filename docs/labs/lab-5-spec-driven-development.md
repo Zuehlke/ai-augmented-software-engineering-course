@@ -19,9 +19,9 @@ task lab/sdd
 ```
 
 > [!IMPORTANT]
-> If you work in **GitHub Codespaces**, open a **new Codespace** on branch `lab/sdd-with-framework`.
+> If you work in **GitHub Codespaces**, open a **new Codespace** on branch `lab/sdd`.
 >
-> [![Open Lab 5 in GitHub Codespaces](https://github.com/codespaces/badge.svg)](https://codespaces.new/Zuehlke/ai-augmented-software-engineering?ref=lab%2Fsdd-with-framework)
+> [![Open Lab 5 in GitHub Codespaces](https://github.com/codespaces/badge.svg)](https://codespaces.new/Zuehlke/ai-augmented-software-engineering?ref=lab%2Fsdd)
 
 After the command is finished, complete the following tasks:
 
