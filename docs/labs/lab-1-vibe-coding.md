@@ -13,7 +13,7 @@ Familiarize yourself with the repository using GitHub Copilot and implement the 
 Start the lab setup with the following command:
 
 ```bash
-task lab vibe-coding
+task lab/vibe-coding
 ```
 
 > [!IMPORTANT]

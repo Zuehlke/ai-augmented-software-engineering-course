@@ -11,7 +11,7 @@ Your goal is to reduce ambiguity and improve output quality by changing how Copi
 Start the lab setup with the following command:
 
 ```bash
-task lab instructions
+task lab/steering
 ```
 
 > [!IMPORTANT]

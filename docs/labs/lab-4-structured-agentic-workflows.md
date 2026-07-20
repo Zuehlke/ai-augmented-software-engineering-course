@@ -15,7 +15,7 @@ Now apply the full workflow with these phases:
 Start the lab setup with the following command:
 
 ```bash
-task lab sdd
+task lab/structured-workflow
 ```
 
 > [!IMPORTANT]

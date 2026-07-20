@@ -11,7 +11,7 @@ For verification harnesses we want deterministic checks via hooks, not only prob
 Start the lab setup with the following command:
 
 ```bash
-task lab hook
+task lab/hook
 ```
 
 > [!IMPORTANT]

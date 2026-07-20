@@ -11,7 +11,7 @@ Now you will create a reusable workflow that specifically supports clarifying an
 Start the lab setup with the following command:
 
 ```bash
-task lab research
+task lab/research
 ```
 
 > [!IMPORTANT]

@@ -15,7 +15,7 @@ Popular frameworks include:
 Start the lab setup with the following command:
 
 ```bash
-task lab sdd-with-framework
+task lab/sdd
 ```
 
 > [!IMPORTANT]
