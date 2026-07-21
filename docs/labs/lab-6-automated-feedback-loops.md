@@ -22,7 +22,7 @@ task lab/hook
 After the command is finished, complete the following tasks:
 
 - Update the hook in `verification-harness.json` to make sure tests are run whenever the agent stops.
-- Open a new chat and verify that tests are being executed.
+- Open a new chat and verify that tests are being executed. Currently a test is failing, note the behavior of your agent.
 
 > [!NOTE]
 > The `TODO` markers in the relevant files will help you get started.
@@ -30,10 +30,20 @@ After the command is finished, complete the following tasks:
 ## Solution
 
 <details>
-<summary><code>DUMMY.md</code></summary>
+<summary><code>.github/hooks/verification-harness.json</code></summary>
 
-```markdown
-
+```json
+{
+  "hooks": {
+    "agentStop": [
+      {
+        "type": "command",
+        "bash": "out=$(task test 2>&1) || { echo \"$out\" >&2; exit 2; }",
+        "powershell": "$out = task test 2>&1 | Out-String; if ($LASTEXITCODE -ne 0) { [Console]::Error.Write($out); exit 2 }"
+      }
+    ]
+  }
+}
 ```
 
 </details>
