@@ -29,7 +29,7 @@ export default defineConfig({
     nav: [
       { text: "Getting Started", link: "/getting-started/setup" },
       { text: "Labs", link: "/labs/lab-1-vibe-coding" },
-      { text: "Slides", link: "/slides/" },
+      { text: "Resources", link: "/slides/" },
     ],
     sidebar: [
       {
@@ -48,8 +48,11 @@ export default defineConfig({
         ],
       },
       {
-        text: "Slides",
-        items: [{ text: "Slides", link: "/slides/" }],
+        text: "Resources",
+        items: [
+          { text: "Slides", link: "/slides/" },
+          { text: "Cheatsheet", link: "/cheatsheet/" },
+        ],
       },
     ],
     search: { provider: "local" },

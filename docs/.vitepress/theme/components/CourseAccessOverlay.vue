@@ -42,11 +42,16 @@ function isSlidesPath(path: string): boolean {
   return normalizedPath === "/slides" || normalizedPath.startsWith("/slides/");
 }
 
+function isCheatsheetPath(path: string): boolean {
+  const normalizedPath = normalizePath(path);
+  return normalizedPath === "/cheatsheet" || normalizedPath.startsWith("/cheatsheet/");
+}
+
 function getOverlayTarget(path: string): "labs" | "slides" | null {
   if (!labsEnabled.value && isLabsPath(path)) {
     return "labs";
   }
-  if (!slidesEnabled.value && isSlidesPath(path)) {
+  if (!slidesEnabled.value && (isSlidesPath(path) || isCheatsheetPath(path))) {
     return "slides";
   }
   return null;
@@ -81,13 +86,13 @@ onMounted(() => {
 });
 
 const overlayTitle = computed(() =>
-  activeTarget.value === "labs" ? "Labs are not available yet" : "Slides are not available yet",
+  activeTarget.value === "labs" ? "Labs are not available yet" : "Resources are not available yet",
 );
 
 const overlayDescription = computed(() =>
   activeTarget.value === "labs"
     ? "The labs will be enabled during the course."
-    : "The slides will be provided during the course.",
+    : "The slides and cheatsheet will be provided during the course.",
 );
 
 function pickHostName(): string | null {
