@@ -1,4 +1,4 @@
-# Lab 3 · Create your own agents
+# Lab 3 · Create reusable prompts
 
 ## Context
 
@@ -108,3 +108,4 @@ If the user’s prompt is fundamentally insufficient, refuse to review it and as
 ```
 
 </details>
+
