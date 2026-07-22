@@ -6,6 +6,18 @@ Course material for AI-augmented software engineering at Zühlke.
 
 <https://zuehlke.github.io/ai-augmented-software-engineering/>
 
+## Run the page locally
+
+To start the app locally, run:
+
+```bash
+cd docs
+npm install
+npm run dev
+```
+
+This starts the VitePress dev server on <http://localhost:5174>.
+
 ## Contributing
 
 Feedback, corrections, and new modules are welcome. 
