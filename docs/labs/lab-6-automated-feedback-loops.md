@@ -47,3 +47,24 @@ After the command is finished, complete the following tasks:
 ```
 
 </details>
+
+> [!NOTE]
+> For Claude Code, put the equivalent hook in `.claude/settings.json`.
+> The JSON shape is different: Claude Code uses `hooks.Stop` entries with nested command hooks, for example:
+>
+> ```json
+> {
+>   "hooks": {
+>     "Stop": [
+>       {
+>         "hooks": [
+>           {
+>             "type": "command",
+>             "command": "task test"
+>           }
+>         ]
+>       }
+>     ]
+>   }
+> }
+> ```

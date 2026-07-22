@@ -131,3 +131,12 @@ The change is done only when every modified Java artifact is accounted for again
 - API contracts use DTOs with stable field names and safe error semantics.
 ```
 </details>
+
+> [!NOTE]
+> Claude Code uses `CLAUDE.md` rather than `AGENTS.md`.
+> If you want one shared source of truth across tools, create a symlink:
+>
+> ```bash
+> # Create a symlink from AGENTS.md to CLAUDE.md
+> ln -s AGENTS.md CLAUDE.md
+> ```
