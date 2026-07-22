@@ -35,7 +35,7 @@ Choose one of the following:
 
 ### 4. Run the application
 
-Using [task](https://taskfile.dev/) you can run the application:
+Using [task](https://taskfile.dev/) you can run the application from the terminal:
 
 ```bash
 task run
