@@ -50,7 +50,7 @@ After your application successfully started, you should be able to access the Sw
 ### 1. Prerequisites
 
 - [Git](https://git-scm.com/downloads)
-- [Docker Desktop](https://www.docker.com/products/docker-desktop/) (or another local Docker-compatible runtime)
+- [Docker Desktop](https://www.docker.com/products/docker-desktop/)
 - [VS Code](https://code.visualstudio.com/download) including the [Dev Containers extension](https://marketplace.visualstudio.com/items?itemName=ms-vscode-remote.remote-containers)
 - [GitHub Copilot](https://github.com/features/copilot) or [Claude Code](https://claude.ai) license active and ready to use in your IDE or CLI
 
@@ -85,7 +85,7 @@ After your application successfully started, you should be able to access the Sw
 ### 1. Prerequisites
 
 - [Git](https://git-scm.com/downloads)
-- [Docker Desktop](https://www.docker.com/products/docker-desktop/) (or another local Docker-compatible runtime)
+- [Docker Desktop](https://www.docker.com/products/docker-desktop/)
 - [IntelliJ IDEA](https://www.jetbrains.com/idea/download/) including the [Dev Containers plugin](https://www.jetbrains.com/help/idea/connect-to-devcontainer.html)
 - [GitHub Copilot](https://github.com/features/copilot) or [Claude Code](https://claude.ai) license active and ready to use in your IDE or CLI
 
