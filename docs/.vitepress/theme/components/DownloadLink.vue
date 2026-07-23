@@ -8,10 +8,14 @@ const props = defineProps<{
 }>();
 
 const resolvedHref = computed(() => withBase(props.href));
+const filename = computed(() => {
+  const parts = props.href.split("/");
+  return parts[parts.length - 1];
+});
 </script>
 
 <template>
-  <a :href="resolvedHref" :download="true" class="download-link">
+  <a :href="resolvedHref" :download="filename" class="download-link">
     {{ label }}
   </a>
 </template>
