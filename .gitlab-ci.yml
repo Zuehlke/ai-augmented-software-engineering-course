@@ -20,8 +20,8 @@ variables:
   GIT_DEPTH: "0"
   # Availability toggles consumed by VitePress theme:
   # true = content is enabled (no overlay), false = show access overlay.
-  VITE_LABS_ENABLED: true
-  VITE_SLIDES_ENABLED: true
+  VITE_LABS_ENABLED: false
+  VITE_SLIDES_ENABLED: false
 
 # Build docs on merge requests — fails pipeline on broken pages/links.
 docs-build:
