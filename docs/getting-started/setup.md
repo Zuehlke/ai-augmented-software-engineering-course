@@ -8,7 +8,7 @@ Choose one setup option and follow the tab.
 ### 1. Prerequisites
 
 - [GitHub](https://github.com/) account
-- Active [GitHub Copilot](https://github.com/features/copilot) or [Claude Code](https://claude.ai) license
+- Active [GitHub Copilot](https://github.com/features/copilot) or [Claude Code](https://claude.com/de/product/claude-code) license
 
 > [!IMPORTANT] Don't have a license yet?
 > Request one [here](https://ticket.zuehlke.com/support/catalog/items/570).
@@ -31,7 +31,7 @@ Click the badge and confirm **Create codespace** using the default settings:
 Choose one of the following:
 
 - **GitHub Copilot (Built-in):** GitHub Copilot is built into GitHub Codespaces. Simply sign in with your GitHub account to use it.
-- **Claude Code:** To setup Claude Code, follow the [Claude Code Quickstart guide](https://code.claude.com/docs/en/quickstart).
+- **Claude Code:** To setup Claude Code, follow the [Claude Code Quickstart guide](https://code.claude.com/docs/en/quickstart). Be aware that Claude Code only provides a command-line interface (CLI) in Codespaces, and does not provide an IDE plugin.
 
 ### 4. Run the application
 
@@ -52,7 +52,7 @@ After your application successfully started, you should be able to access the Sw
 - [Git](https://git-scm.com/downloads)
 - [Docker Desktop](https://www.docker.com/products/docker-desktop/)
 - [VS Code](https://code.visualstudio.com/download) including the [Dev Containers extension](https://marketplace.visualstudio.com/items?itemName=ms-vscode-remote.remote-containers)
-- [GitHub Copilot](https://github.com/features/copilot) or [Claude Code](https://claude.ai) license active and ready to use in your IDE or CLI
+- [GitHub Copilot](https://github.com/features/copilot) or [Claude Code](https://claude.com/de/product/claude-code) license active and ready to use in your IDE or CLI
 
 > [!IMPORTANT] Don't have a license yet?
 > Request one [here](https://ticket.zuehlke.com/support/catalog/items/570).
@@ -87,7 +87,7 @@ After your application successfully started, you should be able to access the Sw
 - [Git](https://git-scm.com/downloads)
 - [Docker Desktop](https://www.docker.com/products/docker-desktop/)
 - [IntelliJ IDEA](https://www.jetbrains.com/idea/download/) including the [Dev Containers plugin](https://www.jetbrains.com/help/idea/connect-to-devcontainer.html)
-- [GitHub Copilot](https://github.com/features/copilot) or [Claude Code](https://claude.ai) license active and ready to use in your IDE or CLI
+- [GitHub Copilot](https://github.com/features/copilot) or [Claude Code](https://claude.com/de/product/claude-code) license active and ready to use in your IDE or CLI
 
 > [!IMPORTANT] Don't have a license yet?
 > Request one [here](https://ticket.zuehlke.com/support/catalog/items/570).
