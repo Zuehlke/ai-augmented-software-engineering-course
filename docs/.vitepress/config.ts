@@ -52,6 +52,7 @@ export default defineConfig({
         items: [
           { text: "Slides", link: "/slides/" },
           { text: "Cheatsheet", link: "/cheatsheet/" },
+          { text: "Glossary", link: "/glossary/" },
         ],
       },
     ],
