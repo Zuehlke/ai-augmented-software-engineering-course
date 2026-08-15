@@ -1,6 +1,6 @@
 # Setup
 
-Choose one setup option and follow the tab.
+Choose one setup option and follow the steps.
 
 <ContentTabs :tabs="['Cloud (Codespaces)', 'Local (VS Code)', 'Local (IntelliJ)']">
   <template #tab1>
@@ -31,7 +31,7 @@ Click the badge and confirm **Create codespace** using the default settings:
 Choose one of the following:
 
 - **GitHub Copilot (Built-in):** GitHub Copilot is built into GitHub Codespaces. Simply sign in with your GitHub account to use it.
-- **Claude Code:** To setup Claude Code, follow the [Claude Code Quickstart guide](https://code.claude.com/docs/en/quickstart). Be aware that Claude Code only provides a command-line interface (CLI) in Codespaces, and does not provide an IDE plugin.
+- **Claude Code:** To setup Claude Code, follow the [Claude Code Quickstart guide](https://code.claude.com/docs/en/quickstart). Be aware that Claude Code only provides a command-line interface (CLI) in Codespaces.
 
 ### 4. Run the application
 
