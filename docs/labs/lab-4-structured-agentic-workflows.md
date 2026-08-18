@@ -238,3 +238,7 @@ Your work is only done when:
 ```
 
 </details>
+
+> [!NOTE]
+> The skills folder follow a different convention in Claude Code. Rename `.agents/skills` to `.claude/skills` if you want to use Claude Code.
+>
