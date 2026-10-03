@@ -54,6 +54,7 @@ export default defineConfig({
           { text: 'Lab 10 · Ralph Loop <span class="sidebar-tag-new">New</span>', link: "/labs/lab-10-ralph-loop" },
           { text: 'Lab 11 · Parallelizing Work <span class="sidebar-tag-new">New</span>', link: "/labs/lab-11-parallelizing-work" },
           { text: 'Lab 12 · Orchestration <span class="sidebar-tag-new">New</span>', link: "/labs/lab-12-orchestration" },
+          { text: 'Lab 13 · Evals <span class="sidebar-tag-new">New</span>', link: "/labs/lab-13-evals" },
         ],
       },
       {
