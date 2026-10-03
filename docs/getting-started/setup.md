@@ -104,8 +104,8 @@ When being asked, select **Reopen in Container**. The `.devcontainer/devcontaine
 installs Java, Maven, Node.js, and Task inside the container.
 
 > [!IMPORTANT]
-> Recent versions of the GitHub Copilot IntelliJ plugin have [known issues](https://github.com/microsoft/copilot-intellij-feedback/issues/1912) related to containerized enviroments causing unexpected behavior. We recommend using **VS Code** or the **GitHub Copilot CLI** instead.
-> If you want to use IntelliJ in a non-containerized enviroment, you can install Java, Maven, Node.js, and Task manually on your machine and run the application without a container.
+> Recent versions of the GitHub Copilot IntelliJ plugin have [known issues](https://github.com/microsoft/copilot-intellij-feedback/issues/1912) related to containerized environments causing unexpected behavior. We recommend using **VS Code** or the **GitHub Copilot CLI** instead.
+> If you want to use IntelliJ in a non-containerized environment, you can install Java, Maven, Node.js, and Task manually on your machine and run the application without a container.
 
 ### 3. Run the application
 

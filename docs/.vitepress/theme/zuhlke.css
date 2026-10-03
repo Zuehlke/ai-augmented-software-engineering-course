@@ -53,9 +53,6 @@
 }
 
 /* Custom-block accents using the secondary palette. */
-.vp-doc .custom-block.tip {
-  border-color: var(--z-green);
-}
 .vp-doc .custom-block.info {
   border-color: var(--z-blue);
 }
@@ -131,4 +128,18 @@
   .VPNavBarSearch .DocSearch-Button {
     min-width: 320px;
   }
+}
+
+/* Subtle outlined "new" label for sidebar items */
+.sidebar-tag-new {
+  display: inline-block;
+  margin-left: 6px;
+  padding: 0 6px;
+  border: 1px solid var(--vp-c-brand-2);
+  border-radius: 10px;
+  font-size: 11px;
+  line-height: 18px;
+  font-weight: 500;
+  color: var(--vp-c-brand-2);
+  vertical-align: middle;
 }

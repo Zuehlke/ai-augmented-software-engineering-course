@@ -34,7 +34,9 @@ export default defineConfig({
     sidebar: [
       {
         text: "Getting Started",
-        items: [{ text: "Setup", link: "/getting-started/setup" }],
+        items: [
+          { text: "Setup", link: "/getting-started/setup" },
+        ],
       },
       {
         text: "Labs",
