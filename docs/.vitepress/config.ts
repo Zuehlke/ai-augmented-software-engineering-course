@@ -52,6 +52,7 @@ export default defineConfig({
           { text: 'Lab 8 · Tracer Bullets <span class="sidebar-tag-new">New</span>', link: "/labs/lab-8-tracer-bullets" },
           { text: 'Lab 9 · Durable Workflows <span class="sidebar-tag-new">New</span>', link: "/labs/lab-9-durable-workflows" },
           { text: 'Lab 10 · Ralph Loop <span class="sidebar-tag-new">New</span>', link: "/labs/lab-10-ralph-loop" },
+          { text: 'Lab 11 · Parallelizing Work <span class="sidebar-tag-new">New</span>', link: "/labs/lab-11-parallelizing-work" },
         ],
       },
       {
