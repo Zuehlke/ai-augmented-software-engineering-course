@@ -43,6 +43,56 @@ task run
 
 After your application successfully started, you should be able to access the Swagger UI at `.../swagger-ui/index.html` on the forwarded Codespaces URL.
 
+### 5. Agent token {#agent-token}
+
+From Lab 9 on, agents run unattended in [Temporal workflows](/labs/lab-9-durable-workflows), and nobody is there to log in for them. Set up a token once, so every agent run and every new terminal is already logged in.
+
+> [!NOTE]
+> You only need this step if you attend the second course day, from Lab 9 on. If you only attend the first day, you can skip it.
+
+**Create a token**
+
+<ContentTabs :tabs="['GitHub Copilot CLI', 'Claude Code']">
+  <template #tab1>
+
+[Create a fine-grained personal access token](https://github.com/settings/personal-access-tokens/new) with your **personal account** as resource owner (the permission is hidden for organizations) and, under **Account permissions**, set **Copilot Requests** to **Read-only**. Classic tokens (`ghp_…`) don't work with Copilot CLI. The variable name is `COPILOT_GITHUB_TOKEN`.
+
+See [Authenticating GitHub Copilot CLI](https://docs.github.com/en/copilot/how-tos/copilot-cli/set-up-copilot-cli/authenticate-copilot-cli) for details.
+
+  </template>
+  <template #tab2>
+
+Run this in a terminal (in your Codespace or dev container):
+
+```bash
+claude setup-token
+```
+
+It asks you to log in through your browser, then prints a token that is valid for one year. It needs a Pro, Max, Team or Enterprise plan. The variable name is `CLAUDE_CODE_OAUTH_TOKEN`.
+
+See [Generate a long-lived token](https://code.claude.com/docs/en/authentication#generate-a-long-lived-token) for details.
+
+  </template>
+</ContentTabs>
+
+**Store it**
+
+Store the token as a **Codespaces secret**, so every new Codespace has it, including the one you open for each lab:
+
+1. Open [github.com/settings/codespaces](https://github.com/settings/codespaces) and click **New secret**.
+2. Use the variable name from above as **Name**, and paste the token as **Value**.
+3. Under **Repository access**, select `Zuehlke/ai-augmented-software-engineering`.
+
+Codespaces only pick up a new secret when they start, so restart a Codespace that is already running.
+
+**Check it**
+
+This prints `set`, never the token itself:
+
+```bash
+echo ${CLAUDE_CODE_OAUTH_TOKEN:+set} ${COPILOT_GITHUB_TOKEN:+set}
+```
+
   </template>
 
   <template #tab2>
@@ -77,6 +127,58 @@ task run
 ```
 
 After your application successfully started, you should be able to access the Swagger UI at [Swagger UI](http://localhost:8080/swagger-ui/index.html).
+
+### 4. Agent token {#agent-token-vscode}
+
+From Lab 9 on, agents run unattended in [Temporal workflows](/labs/lab-9-durable-workflows), and nobody is there to log in for them. Set up a token once, so every agent run and every new terminal is already logged in.
+
+> [!NOTE]
+> You only need this step if you attend the second course day, from Lab 9 on. If you only attend the first day, you can skip it.
+
+**Create a token**
+
+<ContentTabs :tabs="['GitHub Copilot CLI', 'Claude Code']">
+  <template #tab1>
+
+[Create a fine-grained personal access token](https://github.com/settings/personal-access-tokens/new) with your **personal account** as resource owner (the permission is hidden for organizations) and, under **Account permissions**, set **Copilot Requests** to **Read-only**. Classic tokens (`ghp_…`) don't work with Copilot CLI. The variable name is `COPILOT_GITHUB_TOKEN`.
+
+See [Authenticating GitHub Copilot CLI](https://docs.github.com/en/copilot/how-tos/copilot-cli/set-up-copilot-cli/authenticate-copilot-cli) for details.
+
+  </template>
+  <template #tab2>
+
+Run this in a terminal (in your Codespace or dev container):
+
+```bash
+claude setup-token
+```
+
+It asks you to log in through your browser, then prints a token that is valid for one year. It needs a Pro, Max, Team or Enterprise plan. The variable name is `CLAUDE_CODE_OAUTH_TOKEN`.
+
+See [Generate a long-lived token](https://code.claude.com/docs/en/authentication#generate-a-long-lived-token) for details.
+
+  </template>
+</ContentTabs>
+
+**Store it**
+
+Store the token in `.devcontainer/.env`. Every new terminal in the container loads this file. Uncomment the line for your tool and paste the token:
+
+```bash
+COPILOT_GITHUB_TOKEN=github_pat_...
+# or
+CLAUDE_CODE_OAUTH_TOKEN=sk-ant-oat01-...
+```
+
+Save the file and **open a new terminal**. The file is git-ignored, so the token never ends up in a commit, and it stays in place when `task lab/...` switches branches.
+
+**Check it**
+
+This prints `set`, never the token itself:
+
+```bash
+echo ${CLAUDE_CODE_OAUTH_TOKEN:+set} ${COPILOT_GITHUB_TOKEN:+set}
+```
 
   </template>
 
@@ -116,6 +218,58 @@ task run
 ```
 
 After your application successfully started, you should be able to access the Swagger UI at [Swagger UI](http://localhost:8080/swagger-ui/index.html).
+
+### 4. Agent token {#agent-token-intellij}
+
+From Lab 9 on, agents run unattended in [Temporal workflows](/labs/lab-9-durable-workflows), and nobody is there to log in for them. Set up a token once, so every agent run and every new terminal is already logged in.
+
+> [!NOTE]
+> You only need this step if you attend the second course day, from Lab 9 on. If you only attend the first day, you can skip it.
+
+**Create a token**
+
+<ContentTabs :tabs="['GitHub Copilot CLI', 'Claude Code']">
+  <template #tab1>
+
+[Create a fine-grained personal access token](https://github.com/settings/personal-access-tokens/new) with your **personal account** as resource owner (the permission is hidden for organizations) and, under **Account permissions**, set **Copilot Requests** to **Read-only**. Classic tokens (`ghp_…`) don't work with Copilot CLI. The variable name is `COPILOT_GITHUB_TOKEN`.
+
+See [Authenticating GitHub Copilot CLI](https://docs.github.com/en/copilot/how-tos/copilot-cli/set-up-copilot-cli/authenticate-copilot-cli) for details.
+
+  </template>
+  <template #tab2>
+
+Run this in a terminal (in your Codespace or dev container):
+
+```bash
+claude setup-token
+```
+
+It asks you to log in through your browser, then prints a token that is valid for one year. It needs a Pro, Max, Team or Enterprise plan. The variable name is `CLAUDE_CODE_OAUTH_TOKEN`.
+
+See [Generate a long-lived token](https://code.claude.com/docs/en/authentication#generate-a-long-lived-token) for details.
+
+  </template>
+</ContentTabs>
+
+**Store it**
+
+Store the token in `.devcontainer/.env`. Every new terminal in the container loads this file. Uncomment the line for your tool and paste the token:
+
+```bash
+COPILOT_GITHUB_TOKEN=github_pat_...
+# or
+CLAUDE_CODE_OAUTH_TOKEN=sk-ant-oat01-...
+```
+
+Save the file and **open a new terminal**. The file is git-ignored, so the token never ends up in a commit, and it stays in place when `task lab/...` switches branches.
+
+**Check it**
+
+This prints `set`, never the token itself:
+
+```bash
+echo ${CLAUDE_CODE_OAUTH_TOKEN:+set} ${COPILOT_GITHUB_TOKEN:+set}
+```
 
   </template>
 </ContentTabs>

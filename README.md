@@ -2,6 +2,13 @@
 
 Course material for AI-augmented software engineering at Zühlke.
 
+This is the **Temporal variant** of the course. Labs 1-8 are the same as in the main course. Lab 9
+(durable workflows) is new: it introduces Temporal with a small, read-only workflow. In Labs 10-13 (Ralph
+loop, parallelizing work, orchestration, evals), the unattended agents don't run in bash scripts, but in
+Temporal workflows in TypeScript. They live in the lab branches of
+`Zuehlke/ai-augmented-software-engineering`, in `.harness/flows/`, next to the prompts, the sandbox profile
+and the eval cases they use. The labs show their code.
+
 ## Course Homepage
 
 <https://zuehlke.github.io/ai-augmented-software-engineering/>
