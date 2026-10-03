@@ -11,4 +11,7 @@ hero:
     - theme: alt
       text: Labs
       link: /labs/lab-1-vibe-coding
+    - theme: alt
+      text: Hackathon
+      link: /hackathon/problem-statement
 ---

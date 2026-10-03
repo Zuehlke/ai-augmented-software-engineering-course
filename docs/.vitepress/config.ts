@@ -29,6 +29,7 @@ export default defineConfig({
     nav: [
       { text: "Getting Started", link: "/getting-started/setup" },
       { text: "Labs", link: "/labs/lab-1-vibe-coding" },
+      { text: "Hackathon", link: "/hackathon/problem-statement" },
       { text: "Resources", link: "/slides/" },
     ],
     sidebar: [
@@ -48,6 +49,10 @@ export default defineConfig({
           { text: "Lab 5 · Spec-Driven Development", link: "/labs/lab-5-spec-driven-development" },
           { text: "Lab 6 · Automated Feedback Loops", link: "/labs/lab-6-automated-feedback-loops" },
         ],
+      },
+      {
+        text: "Hackathon",
+        items: [{ text: 'Problem Statement <span class="sidebar-tag-new">New</span>', link: "/hackathon/problem-statement" }],
       },
       {
         text: "Resources",

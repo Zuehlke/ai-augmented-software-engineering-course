@@ -1,0 +1,295 @@
+/*
+ * Styling for the static hackathon problem-statement diagrams
+ * (docs/hackathon/problem-statement.md). Plain HTML/SVG, no component.
+ */
+.problem-statement {
+  margin: 24px 0 32px;
+}
+
+.problem-statement .sprint {
+  margin-bottom: 40px;
+}
+
+.problem-statement .sprint:last-child {
+  margin-bottom: 0;
+}
+
+.problem-statement .sprint-title {
+  margin: 0 0 10px;
+  font-size: 19px;
+  font-weight: 700;
+  color: var(--vp-c-text-1);
+  border: none;
+  padding: 0;
+}
+
+.problem-statement .sprint-content__visual {
+  margin-top: 14px;
+}
+
+.problem-statement .ps-sprint__lede,
+.problem-statement .ps-sprint__body {
+  margin: 0 0 14px;
+  font-size: 14px;
+  line-height: 1.55;
+  color: var(--vp-c-text-2);
+}
+
+.problem-statement .ps-sprint__lede:last-child,
+.problem-statement .ps-sprint__body:last-child {
+  margin-bottom: 0;
+}
+
+/* OKF diagram */
+.problem-statement .okf-diagram {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 20px;
+  padding: 16px 20px;
+  margin-bottom: 14px;
+  background: var(--vp-c-bg-soft);
+  border: 1px solid var(--vp-c-divider);
+  border-radius: 10px;
+}
+
+.problem-statement .okf-box {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 10px;
+  border: 1.5px solid var(--z-purple);
+  border-radius: 8px;
+  background: var(--vp-c-bg);
+  flex-shrink: 0;
+}
+
+.problem-statement .okf-box__label {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--z-purple);
+}
+
+.problem-statement .okf-box__lines {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.problem-statement .okf-box__lines span {
+  display: block;
+  width: 28px;
+  height: 2px;
+  background: var(--vp-c-divider);
+}
+
+.problem-statement .okf-hub {
+  width: 32px;
+  height: 32px;
+  flex-shrink: 0;
+}
+
+.problem-statement .okf-arrow {
+  color: var(--vp-c-text-3);
+  flex-shrink: 0;
+}
+
+.problem-statement .okf-sources {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  flex: 1 1 auto;
+  max-width: 260px;
+  min-width: 0;
+}
+
+.problem-statement .okf-source {
+  font-size: 12px;
+  padding: 7px 16px;
+  border: 1px solid var(--vp-c-divider);
+  border-radius: 6px;
+  background: var(--vp-c-bg);
+  color: var(--vp-c-text-1);
+  text-align: center;
+  white-space: nowrap;
+}
+
+/* Mock panels (file browser / dashboard) */
+.problem-statement .mock-panel {
+  border: 1px solid var(--vp-c-divider);
+  border-radius: 10px;
+  overflow: hidden;
+  background: var(--vp-c-bg);
+}
+
+.problem-statement .mock-panel__bar {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 12px;
+  background: var(--vp-c-bg-soft);
+  border-bottom: 1px solid var(--vp-c-divider);
+}
+
+.problem-statement .mock-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--vp-c-divider);
+}
+
+.problem-statement .mock-panel__title {
+  margin-left: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--vp-c-text-2);
+}
+
+.problem-statement .mock-panel__body {
+  padding: 10px 0;
+}
+
+.problem-statement .file-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 8px;
+  font-family: var(--vp-font-family-mono);
+  font-size: 12.5px;
+  color: var(--vp-c-text-1);
+}
+
+.problem-statement .file-row--indent {
+  padding-left: 30px;
+}
+
+.problem-statement .tree-glyph {
+  color: var(--vp-c-text-3);
+  flex-shrink: 0;
+}
+
+.problem-statement .file-name--dir {
+  color: var(--z-purple);
+  font-weight: 600;
+}
+
+.problem-statement .dash-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 7px 12px;
+  font-size: 13px;
+  color: var(--vp-c-text-1);
+}
+
+.problem-statement .dash-pill {
+  font-size: 11.5px;
+  font-weight: 700;
+  padding: 2px 10px;
+  border-radius: 999px;
+}
+
+.problem-statement .dash-pill--good {
+  color: #0a7a3d;
+  background: rgba(0, 204, 102, 0.16);
+}
+
+.problem-statement .dash-pill--warn {
+  color: #92620a;
+  background: rgba(255, 178, 36, 0.2);
+}
+
+.problem-statement .dash-pill--neutral {
+  color: var(--z-purple);
+  background: var(--vp-c-brand-soft);
+}
+
+/* Flow diagram */
+.problem-statement .flow-diagram {
+  padding: 12px;
+  margin-top: 14px;
+  background: var(--vp-c-bg-soft);
+  border: 1px solid var(--vp-c-divider);
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.problem-statement .flow-svg {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.problem-statement .flow-connector {
+  stroke: var(--vp-c-text-3);
+  stroke-width: 1.75;
+  fill: none;
+}
+
+.problem-statement .flow-arrowhead {
+  fill: var(--vp-c-text-3);
+}
+
+.problem-statement .flow-lane-label__text {
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.problem-statement .flow-lane-label__text--day {
+  fill: var(--z-purple);
+}
+
+.problem-statement .flow-lane-label__text--night {
+  fill: var(--z-blue-mid);
+}
+
+.problem-statement .flow-lane-label__sub {
+  font-size: 9.5px;
+  fill: var(--vp-c-text-3);
+}
+
+.problem-statement .flow-box--day {
+  fill: var(--vp-c-brand-soft);
+  stroke: var(--z-purple-bright);
+  stroke-width: 1.5;
+}
+
+.problem-statement .flow-box--night {
+  fill: rgba(60, 105, 200, 0.12);
+  stroke: var(--z-blue-mid);
+  stroke-width: 1.5;
+}
+
+.problem-statement .flow-box__text {
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.problem-statement .flow-box__text--day {
+  fill: var(--z-purple);
+}
+
+.problem-statement .flow-box__text--night {
+  fill: var(--z-blue-mid);
+}
+
+.problem-statement .badge-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.problem-statement .badge {
+  padding: 10px 8px;
+  text-align: center;
+  font-size: 11.5px;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  font-family: var(--vp-font-family-mono);
+  color: var(--z-purple);
+  border: 1.5px solid var(--z-purple);
+  border-radius: 8px;
+  background: var(--vp-c-bg);
+}
