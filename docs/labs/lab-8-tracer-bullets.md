@@ -4,7 +4,9 @@
 
 A feature request describes what should happen, not the tickets to build it. Splitting it by hand is slow, and everyone does it differently: blockers get missed, and features get split by layer instead of into slices you can demo on their own.
 
-A `to-issues` skill does it the same way every time. It finds the work that must come first (a schema change, a missing dataset, an open decision), makes every blocker explicit, and slices the rest into vertical tracer-bullet tickets that each go through every layer they touch.
+A `slice` skill does it the same way every time. It finds the work that must come first (a schema change, a missing dataset, an open decision), makes every blocker explicit, and slices the rest into vertical tracer-bullet tickets that each go through every layer they touch.
+
+`slice` is the step after `research` from [Structured agentic workflows](./lab-4-structured-agentic-workflows.md): `research` turns a requirement into a specification, `slice` turns a specification or feature request that's too big for one agent session into tickets. Each ticket has the same shape as a specification: a title that names the outcome, a sentence or two of context, and testable acceptance criteria.
 
 ## Your Task
 
@@ -19,7 +21,7 @@ task lab/tracer-bullets
 >
 > [![Open Lab 8 in GitHub Codespaces](https://github.com/codespaces/badge.svg)](https://codespaces.new/Zuehlke/ai-augmented-software-engineering?ref=lab%2Ftracer-bullets)
 
-The `to-issues` skill below is already in the repository. Paste the feature request below to your agent and ask it to invoke the skill on it:
+The `slice` skill below is already in the repository. Paste the feature request below to your agent and ask it to invoke the skill on it:
 
 <details>
 <summary>Feature request: Flight Delays Dashboard</summary>
@@ -75,11 +77,11 @@ After the skill proposes a breakdown, complete the following tasks:
 ## Solution
 
 <details>
-<summary><code>.agents/skills/to-issues/SKILL.md</code></summary>
+<summary><code>.agents/skills/slice/SKILL.md</code></summary>
 
 ```markdown
 ---
-name: to-issues
+name: slice
 description: Break a feature request, spec, or plan into a backlog of tracer-bullet tickets, each declaring what blocks it; use when asked to turn a requirements document into issues or a backlog.
 disable-model-invocation: true
 ---

@@ -4,16 +4,16 @@
 
 In the last lab, you picked the tickets, created the worktrees, started every Ralph loop and checked every branch yourself. Now one workflow, `pipeline`, does all of that, with a role for each step:
 
-| Role | What it does |
-| --- | --- |
-| **Planner** | A read-only agent picks the tickets that are safe to hand to unattended agents. |
-| **Implementers** | One Ralph loop per ticket, each in its own worktree, all at the same time. |
-| **Reviewer** | A fresh, read-only agent reviews every branch, with no memory of how it was built. |
-| **Merger** | Merges the approved branches into a new branch `integration` and runs the tests. |
+| Role | Runs as | What it does |
+| --- | --- | --- |
+| **Dispatcher** | read-only agent | Picks, from the `ready` tickets, the ones that are safe to hand to unattended agents at the same time. |
+| **Implementers** | Ralph loops | One Ralph loop per ticket, each in its own worktree, all at the same time. |
+| **Reviewer** | read-only agent | Reviews every finished branch, with no memory of how it was built. |
+| **Merger** | workflow code, no agent | Merges the approved branches into a new branch `integration` and runs the tests. |
 
 You step in only twice, where a human decision matters:
 
-**Planner** → ✋ *you approve the picks* → **Implementers** → **Reviewer** → ✋ *you decide whether to merge* → **Merger**
+**Dispatcher** → ✋ *you approve the picks* → **Implementers** → **Reviewer** → ✋ *you decide whether to merge* → **Merger**
 
 Two new Temporal terms make that work:
 
@@ -35,7 +35,7 @@ task lab/orchestration
 >
 > [![Open Lab 12 in GitHub Codespaces](https://github.com/codespaces/badge.svg)](https://codespaces.new/Zuehlke/ai-augmented-software-engineering?ref=lab%2Forchestration)
 
-The dashboard has grown: TICKET-1 to TICKET-3 are `done`, TICKET-4 is still `blocked`, and two new tickets are `ready`. The Planner and Reviewer prompts are in `.harness/prompts/`, the `pipeline` workflow in `.harness/flows/src/workflows/pipeline.ts`.
+The dashboard has grown: TICKET-1 to TICKET-3 are `done`, TICKET-4 is still `blocked`, and two new tickets are `ready`. The Dispatcher and Reviewer prompts are in `.harness/prompts/`, the `pipeline` workflow in `.harness/flows/src/workflows/pipeline.ts`.
 
 <details>
 <summary>New tickets in <code>backlog/</code></summary>
@@ -81,10 +81,10 @@ The dashboard shows which airlines currently have the most delayed flights, with
 </details>
 
 <details>
-<summary><code>.harness/prompts/planner.md</code> and <code>.harness/prompts/reviewer.md</code></summary>
+<summary><code>.harness/prompts/dispatcher.md</code> and <code>.harness/prompts/reviewer.md</code></summary>
 
 ```markdown
-# Planner
+# Dispatcher
 
 Read every ticket in `backlog/`. Pick the tickets that are `ready` and safe to hand to an
 unattended agent: clear acceptance criteria, nothing destructive, no ordering requirement between
@@ -130,10 +130,10 @@ flows worker
 
 Use **terminal 3** for the steps below. Set `AGENT=copilot` there first if you use GitHub Copilot CLI, the default is Claude Code.
 
-### 1. Run the Planner and approve its picks
+### 1. Run the Dispatcher and approve its picks
 
 ```bash
-flows plan
+flows dispatch
 ```
 
 This starts the `pipeline` workflow. Its first part:
@@ -143,33 +143,33 @@ This starts the `pipeline` workflow. Its first part:
 ```ts [.harness/flows/src/workflows/pipeline.ts]
 // What `flows status` shows
 export const pipelineStatus = defineQuery<PipelineStatus>('status');
-// Your decisions at the two checkpoints: `flows plan` sends the first, `flows merge` the second
+// Your decisions at the two checkpoints: `flows dispatch` sends the first, `flows merge` the second
 export const approvePicks = defineSignal<[string[]]>('approvePicks');
 export const decideMerge = defineSignal<[boolean]>('decideMerge');
 
-// Planner → you approve the picks → one Ralph loop per ticket → Reviewer → you decide → merge
+// Dispatcher → you approve the picks → one Ralph loop per ticket → Reviewer → you decide → merge
 export async function pipeline({ repoDir, agent }: PipelineInput): Promise<PipelineStatus> {
-  const status: PipelineStatus = { phase: 'planning', plannerOutput: '', picks: [], reviewerOutput: '', approvedBranches: [], merged: [], conflicts: [] };
+  const status: PipelineStatus = { phase: 'dispatching', dispatcherOutput: '', picks: [], reviewerOutput: '', approvedBranches: [], merged: [], conflicts: [] };
   let approved: string[] | undefined;
   let merge: boolean | undefined;
   setHandler(pipelineStatus, () => status);
   setHandler(approvePicks, (tickets) => void (approved = tickets));
   setHandler(decideMerge, (yes) => void (merge = yes));
 
-  // Planner: a read-only agent picks the tickets
-  status.plannerOutput = await runAgent({ repoDir, agent, mode: 'read', prompt: await readHarnessFile(repoDir, 'prompts/planner.md') });
-  status.picks = captures(status.plannerOutput, /^PICK: (TICKET-\d+)/);
+  // Dispatcher: a read-only agent picks the tickets
+  status.dispatcherOutput = await runAgent({ repoDir, agent, mode: 'read', prompt: await readHarnessFile(repoDir, 'prompts/dispatcher.md') });
+  status.picks = captures(status.dispatcherOutput, /^PICK: (TICKET-\d+)/);
 
-  // Checkpoint 1: waits until `flows plan` sends the picks you approved
+  // Checkpoint 1: waits until `flows dispatch` sends the picks you approved
   status.phase = 'waiting for your approval';
   await condition(() => approved !== undefined);
 ```
 
 :::
 
-The Planner runs read-only (`mode: 'read'`) and prints one `PICK:` line per ticket. It should pick TICKET-5 and TICKET-6, and leave out TICKET-4 because it's blocked.
+The Dispatcher runs read-only (`mode: 'read'`) and prints one `PICK:` line per ticket. It should pick TICKET-5 and TICKET-6, and leave out TICKET-4 because it's blocked.
 
-Then the workflow waits in `condition(...)`. `flows plan` asks you about each pick: is it really safe to hand to an unattended agent? Answer `y` for both. `flows plan` sends your answers as the `approvePicks` signal, the signal handler sets `approved`, and the workflow continues.
+Then the workflow waits in `condition(...)`. `flows dispatch` asks you about each pick: is it really safe to hand to an unattended agent? Answer `y` for both. `flows dispatch` sends your answers as the `approvePicks` signal, the signal handler sets `approved`, and the workflow continues.
 
 ### 2. Wait for the implementers and the Reviewer
 
@@ -203,6 +203,8 @@ flows merge
 :::
 
 When both loops are done, the Reviewer gets the changes of both branches (`branchDiffs`). It's a new agent process, so it knows nothing about how the branches were built. That's what makes its review worth something.
+
+Every Ralph loop already has its step reviewer, so why another review? The step reviewer checks one small commit at a time, while the loop runs. The Reviewer sees what no step reviewer does: the finished branch as a whole, against the full ticket, next to the other branches.
 
 The implementers take a while. To check on them from another terminal, run `flows status`.
 
@@ -263,4 +265,4 @@ Stop the app (`Ctrl+C`), go back to the repository root (`cd ../../..`), and rem
 flows cleanup
 ```
 
-It stops the `pipeline` workflow if it's still running, removes every worktree under `.harness/worktrees/`, and deletes the `agent/*` and `integration` branches. After that, you can run the pipeline again from `flows plan`.
+It stops the `pipeline` workflow if it's still running, removes every worktree under `.harness/worktrees/`, and deletes the `agent/*` and `integration` branches. After that, you can run the pipeline again from `flows dispatch`.

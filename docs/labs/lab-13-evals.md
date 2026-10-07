@@ -2,7 +2,7 @@
 
 ## Context
 
-Everything you built today started with the `to-issues` skill: it turned the feature request into the backlog that the Ralph loops worked through. If someone changes the skill and it gets worse, say it starts splitting by layer or forgets a blocker, you'd only notice much later, when agents are already building the wrong tickets.
+Everything you built today started with the `slice` skill: it turned the feature request into the backlog that the Ralph loops worked through. If someone changes the skill and it gets worse, say it starts splitting by layer or forgets a blocker, you'd only notice much later, when agents are already building the wrong tickets.
 
 Trying the skill once and eyeballing the result doesn't catch that. An **eval** does it automatically, after every change:
 
@@ -26,7 +26,7 @@ task lab/evals
 >
 > [![Open Lab 13 in GitHub Codespaces](https://github.com/codespaces/badge.svg)](https://codespaces.new/Zuehlke/ai-augmented-software-engineering?ref=lab%2Fevals)
 
-The branch contains the `to-issues` skill, three eval cases in `.harness/evals/cases/`, and the `evals` workflow in `.harness/flows/src/workflows/evals.ts`.
+The branch contains the `slice` skill, three eval cases in `.harness/evals/cases/`, and the `evals` workflow in `.harness/flows/src/workflows/evals.ts`.
 
 Every case is a folder with a `request.md` (the input) and a `rubric.md` (the checklist):
 
@@ -110,7 +110,7 @@ import { lastLine } from './text';
 // Agent output varies from run to run, so every case runs three times and passes when most runs pass
 const RUNS = 3;
 
-// Runs to-issues on every case, then lets a separate judge grade the result. All runs start at once.
+// Runs slice on every case, then lets a separate judge grade the result. All runs start at once.
 export async function evals({ repoDir, agent }: EvalInput): Promise<EvalResult[]> {
   const cases = await listEvalCases(repoDir);
 
@@ -130,7 +130,7 @@ async function runOnce(repoDir: string, agent: Agent, { request, rubric }: EvalC
     repoDir,
     agent,
     mode: 'read',
-    prompt: `Use the to-issues skill in .agents/skills/to-issues/SKILL.md on the feature
+    prompt: `Use the slice skill in .agents/skills/slice/SKILL.md on the feature
 request below, as if nothing of it were built yet: ignore backlog/ and the existing code.
 Only present the breakdown, don't write any files.
 
@@ -165,7 +165,7 @@ Three things to notice:
 
 ### 2. Break the skill
 
-Now make the skill worse on purpose. Open `.agents/skills/to-issues/SKILL.md` and replace **step 2, including all of its bullet points**, with:
+Now make the skill worse on purpose. Open `.agents/skills/slice/SKILL.md` and replace **step 2, including all of its bullet points**, with:
 
 ```markdown
 2. Break the remaining scope into horizontal layers: one ticket for the database, one for the
@@ -194,7 +194,7 @@ To see each run's breakdown, open the web UI at [http://localhost:8233](http://l
 ### 3. Restore the skill
 
 ```bash
-git checkout .agents/skills/to-issues/SKILL.md
+git checkout .agents/skills/slice/SKILL.md
 ```
 
 > [!NOTE]

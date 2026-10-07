@@ -2,7 +2,7 @@
 
 ## Context
 
-Instead of using your own research → plan → implement workflow, make yourself familiar with a publicly available SDD framework and implement the same feature using that workflow.
+Instead of using your own research → design → implement workflow, make yourself familiar with a publicly available SDD framework and implement the same feature using that workflow.
 
 Popular frameworks include:
 

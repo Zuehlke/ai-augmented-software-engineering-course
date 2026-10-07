@@ -2,11 +2,15 @@
 
 ## Context
 
-We will apply the full structured workflow with these phases:
+In the last lab, the `research` skill turned a requirement into a specification. Now you add the two phases that follow, each as its own skill:
 
-- research
-- plan
-- implement
+| Phase | Skill | Writes |
+| --- | --- | --- |
+| research | `research` | `specs/<slug>/specification.md`: what to build, with testable acceptance criteria |
+| design | `design` | `specs/<slug>/design.md`: which modules, endpoints and tests change |
+| implement | `implement` | the code, and `specs/<slug>/progress.md`: which criteria are met and which decisions were made |
+
+Every phase starts in a **new session**. It doesn't remember the previous phase: the files in `specs/<slug>/` are the only thing passed on. That keeps each session's context small and focused, and the files show you exactly what one phase hands to the next. The `handoff-writing` skill defines their format.
 
 ## Your Task
 
@@ -23,15 +27,16 @@ task lab/structured-workflow
 
 After the command is finished, complete the following tasks:
 
-- Write the missing frontmatter for the skills.
-- Implement the same endpoint again using the research → plan → implement workflow:
+- Write the missing frontmatter for the `research`, `design` and `implement` skills.
+- Implement the same endpoint again using the research → design → implement workflow, **each skill in a new session** (`/clear` or a new chat):
   - `GET /delays?airline_code=AA&limit=50`
+- After each phase, read the file it wrote: could the next phase work from it alone?
+- While `implement` runs, stop it after the first acceptance criterion is met. Start a new session and invoke `implement` again: it should continue from `progress.md` instead of starting over.
 
 > [!NOTE]
 > The `TODO` markers in the relevant files will help you get started.
 
 ## Solution
-
 
 <details>
 <summary><code>.agents/skills/research/SKILL.md</code></summary>
@@ -58,26 +63,24 @@ You MUST NOT make any code changes or offer to make any code changes as part of 
 ## STEPS
 
 1. Analyze the requirement based on the user’s prompt to make sure you understand it.
-    - If necessary, read targeted parts of the codebase to understand current behavior from a user perspective.
+   - If necessary, read targeted parts of the codebase to understand current behavior from a user perspective.
 
 2. Detect and list gaps or ambiguities (missing acceptance criteria, unclear ownership, implicit assumptions, vague terms, hidden dependencies, sequencing conflicts).
 
-3. Ask the user at most the 5 highest-impact clarifying questions (only those that block correct implementation or carry high risk). Use the #askQuestions tool. Skip trivial questions.
-    - If something is uncertain but non-critical, make and state a sensible assumption instead of asking.
+3. Ask the user at most the 5 highest-impact clarifying questions (only those that block correct implementation or carry high risk). Skip trivial questions.
+   - If something is uncertain but non-critical, make and state a sensible assumption instead of asking.
 
 4. Draft improved, implementation-ready requirements:
-    - Context (1–2 sentences)
-    - Objective (single clear outcome)
-    - Acceptance Criteria (testable, numbered)
-    - Non-Functional Requirements / Constraints (if any)
-    - Risks / Mitigations (optional if any material ones)
+   - Title: the outcome, from the user's perspective
+   - Context (1–2 sentences)
+   - Acceptance Criteria (objectively testable, false at the current commit)
+   - Constraints, Non-goals, Assumptions and Risks (if any)
 
-5. Apply the **handoff-writing skill** to persist the refined specification:
-    - Write the refine-phase handoff using the structure defined in `handoff-writing.md`.
+5. Apply the **handoff-writing skill** to write the research-phase handoff, `specs/<slug>/specification.md`.
 
 6. Output a short summary to the chat (not the file):
-    - assumptions made
-    - clarifications received
+   - assumptions made
+   - clarifications received
 
 7. Ask the user for feedback and incorporate it into the handoff document in a follow-up pass.
 
@@ -112,24 +115,23 @@ If the user’s prompt is fundamentally insufficient, refuse to review it and as
 
 </details>
 
-
 <details>
-<summary><code>.agents/skills/plan/SKILL.md</code></summary>
+<summary><code>.agents/skills/design/SKILL.md</code></summary>
 
 ```markdown
 ---
-name: plan
-description: Create a detailed implementation plan from requirements, specifying architecture, tests, and integration steps.
+name: design
+description: Turn a specification into a design that names the modules, endpoints and tests to change and how they integrate.
 disable-model-invocation: true
 ---
 
 ## TASK
 
-You are creating a detailed plan and design for the implementation of a requirement.
+You are creating a design for the implementation of a requirement.
 
-The plan must be detailed enough to allow a human or less capable coding agent to implement it, but it should be as concise as possible to avoid overload.
+The design must be detailed enough to allow a human or less capable coding agent to implement it, but it should be as concise as possible to avoid overload.
 
-Do not repeat the requirements — the implementing agent will read the refine handoff for context.
+Do not repeat the requirements — the implement phase reads the specification itself.
 
 Focus on architectural building blocks:
 - which modules to change
@@ -141,7 +143,7 @@ Do not include unnecessary code-level implementation details.
 
 DO NOT refer to anything as “optional” or “not needed”. Clearly specify exactly which changes must be made, but do not write literal code.
 
-You MUST NOT make any code changes or offer to make any code changes as part of this task. This is purely to create a plan document.
+You MUST NOT make any code changes or offer to make any code changes as part of this task. This task is purely to create a design document.
 
 ---
 
@@ -157,27 +159,26 @@ You MUST NOT make any code changes or offer to make any code changes as part of 
 
 ## STEPS
 
-1. Read and understand the latest refined specification for the feature:
-    - Use the most recent research handoff in `specs/`<slug>`/specification.md` where `<slug>` is a short kebab-case identifier for the feature or change.
+1. Read the specification in `specs/<slug>/specification.md`, where `<slug>` is a short kebab-case identifier for the feature or change.
 
 2. Read and analyze the codebase to understand how the requirements can be implemented.
-    - Do not rely solely on project overview knowledge.
+   - Do not rely solely on project overview knowledge.
 
 3. If there are uncertainties:
-    - Ask the user at most the **5 highest-impact clarifying questions** using the #askQuestions tool.
-    - Only ask questions that block correct implementation or carry high risk.
-    - Skip trivial questions.
-    - If uncertainty is non-critical, make and document a sensible assumption.
+   - Ask the user at most the **5 highest-impact clarifying questions**.
+   - Only ask questions that block correct implementation or carry high risk.
+   - Skip trivial questions.
+   - If uncertainty is non-critical, make and document a sensible assumption.
 
-4. Apply the **handoff-writing skill** to create the **plan-phase handoff** containing the implementation plan.
+4. Apply the **handoff-writing skill** to write the design-phase handoff, `specs/<slug>/design.md`.
 
 5. Output a short summary to the chat (not the file):
-    - assumptions made
-    - clarifications received
+   - assumptions made
+   - clarifications received
 
-6. Ask the user for feedback and integrate the feedback into the plan document in a follow-up pass.
+6. Ask the user for feedback and integrate the feedback into the design document in a follow-up pass.
 
-7. Do **not start implementation**. The implement agent is responsible for that phase.
+7. Do **not start implementation**. That's the implement phase, in a new session.
 ```
 
 </details>
@@ -188,13 +189,13 @@ You MUST NOT make any code changes or offer to make any code changes as part of 
 ```markdown
 ---
 name: implement
-description: Implement the plan using TDD, ensuring all tests and quality checks pass, and document the result.
+description: Implement the design using TDD until every acceptance criterion is met, and record progress so a new session can continue.
 disable-model-invocation: true
 ---
 
 ## TASK
 
-You are implementing a plan. You must follow the instructions from the plan document and work until all specified changes are implemented.
+You are implementing a design. You must follow the design document and work until all specified changes are implemented.
 
 Your work is only done when:
 - All acceptance criteria are met
@@ -206,39 +207,91 @@ Your work is only done when:
 
 ## STEPS
 
-1. Read the specification to understand acceptance criteria from a user perspective.
-  - Use the latest specification in `specs/<slug>/specification.md` where `<slug>` is a short kebab-case identifier for the feature or change.
+1. Read the specification in `specs/<slug>/specification.md` to understand the acceptance criteria from a user perspective, where `<slug>` is a short kebab-case identifier for the feature or change.
 
-2. Read the latest design in `specs/<slug>/design.md` to understand the implementation details.
+2. Read the design in `specs/<slug>/design.md` to understand the implementation details.
 
-3. Implement the changes using TDD (tests before implementation).
+3. If `specs/<slug>/progress.md` exists, an earlier session already started: continue from there, don't start over.
 
-4. Iterate until all acceptance criteria are met and all test cases succeed.
-  - YOU MUST NOT STOP until all quality checks succeed.
+4. Implement the changes using TDD (tests before implementation).
 
-5. Update any further documentation such as `README.md` to reflect any changes in usage or behavior.
+5. Each time an acceptance criterion is met, apply the **handoff-writing skill** to update the implement-phase handoff, `specs/<slug>/progress.md`, so a new session could continue from it.
 
-6. Apply the **handoff-writing skill** to persist the **implement-phase handoff** documenting:
-  - what changed
-  - files changed
-  - tests added/modified
-  - how to run/verify
-  - docs/changelog updates
-  - deviations from plan
-  - validation results (tests / quality checks / acceptance criteria)
+6. Iterate until all acceptance criteria are met and all test cases succeed.
+   - YOU MUST NOT STOP until all quality checks succeed.
+
+7. Update any further documentation such as `README.md` to reflect any changes in usage or behavior.
+
 ---
 
 ## CONSTRAINTS
 
 - Run tests after each logical unit of work.
 - Do not skip tests — every piece of functionality must be tested.
-- Do not deviate from the plan without explicit approval.
+- Do not deviate from the design without explicit approval. Record every approved deviation under **Decisions** in `progress.md`.
 - Maintain all existing functionality — no breaking changes.
 - Follow TDD methodology rigorously.
 ```
 
 </details>
 
+<details>
+<summary><code>.agents/skills/handoff-writing/SKILL.md</code> (already in the branch)</summary>
+
+```markdown
+---
+name: handoff-writing
+description: Write the handoff files that pass work between the phases of the research → design → implement workflow.
+---
+
+# Handoff Writing
+
+Every phase runs in a new session and remembers nothing of the previous one. The handoff files are
+the only thing the next phase gets, so write them for a reader who has no other context.
+
+## File Location
+
+All handoffs go to `specs/<slug>/`, where `<slug>` is a short kebab-case identifier for the feature
+or change.
+
+| Phase     | File               | Template                     |
+| --------- | ------------------ | ---------------------------- |
+| research  | `specification.md` | `templates/specification.md` |
+| design    | `design.md`        | `templates/design.md`        |
+| implement | `progress.md`      | `templates/progress.md`      |
+
+The templates are in the `templates/` folder next to this file. Copy the template when you create a
+handoff, and update the existing file instead of writing a new one.
+
+## General Rules
+
+- Handoff files are Markdown.
+- Keep them concise and structured, no unnecessary explanation.
+- Don't repeat what an earlier handoff already says, refer to it.
+```
+
+</details>
+
+<details>
+<summary><code>.agents/skills/handoff-writing/templates/progress.md</code> (already in the branch)</summary>
+
+```markdown
+# Progress
+
+## Specification
+<title of specs/<slug>/specification.md>
+
+## Done
+- <acceptance criterion that is met>: <what you built for it, and the test that covers it>
+
+## Decisions
+- <choice you made and why, including every deviation from the design>
+
+## Blockers
+- <what is stuck, or "None.">
+```
+
+</details>
+
 > [!NOTE]
-> The skills folder follow a different convention in Claude Code. Rename `.agents/skills` to `.claude/skills` if you want to use Claude Code.
->
+> Claude Code uses `.claude/skills` rather than `.agents/skills`. Rename the folder if you want to use Claude Code.
