@@ -15,7 +15,7 @@ The four Temporal terms you need in this lab:
 | **Worker** | The process that runs the workflows and their activities. |
 | **Query** | A question to a running workflow, for example "how far are you?". |
 
-In this lab, you run a workflow that doesn't change any code: a read-only agent explains every ticket in the backlog. While it runs, you stop the worker and watch the workflow carry on.
+In this lab, you run a workflow that doesn't change any code: the **Planner**, an agent with the `slice` skill from [Tracer bullets](./lab-8-tracer-bullets.md), turns a feature request into tickets.
 
 ## Your Task
 
@@ -74,65 +74,56 @@ In **terminal 3**:
   <template #tab1>
 
 ```bash
-AGENT=copilot flows explain-tickets
+AGENT=copilot flows plan "Support staff can download the current delays as a CSV file, and filter the download by airline."
 ```
 
   </template>
   <template #tab2>
 
 ```bash
-flows explain-tickets
+flows plan "Support staff can download the current delays as a CSV file, and filter the download by airline."
 ```
 
   </template>
 </ContentTabs>
 
-The workflow gets the ticket ids from `backlog/`, lets an agent explain every ticket, and returns the explanations. Terminal 3 prints them at the end.
+The workflow hands the feature request to the Planner, which writes its tickets to `backlog/`, next to the four from Lab 8. Terminal 3 prints the new ticket ids at the end.
 
 ::: code-group
 
-```ts [.harness/flows/src/workflows/explain-tickets.ts]
+```ts [.harness/flows/src/workflows/plan.ts]
 import { defineQuery, log, setHandler } from '@temporalio/workflow';
-import type { Agent } from '../shared';
-import { listTickets, runAgent } from './activities';
+import type { PlanInput, PlanStatus } from '../shared';
+import { listTickets, readHarnessFile, runAgent } from './activities';
 
 // What `flows status` shows while the workflow runs
-export const progress = defineQuery<{ tickets: string[]; explained: string[] }>('status');
+export const planStatus = defineQuery<PlanStatus>('status');
 
-// Lets a read-only agent explain every ticket in backlog/, one ticket after the other
-export async function explainTickets({ repoDir, agent }: { repoDir: string; agent: Agent }) {
-  let tickets: string[] = [];
-  const explained: { ticket: string; explanation: string }[] = [];
-  setHandler(progress, () => ({ tickets, explained: explained.map((e) => e.ticket) }));
+// The Planner: an agent with the slice skill turns a feature request into tickets in backlog/
+export async function plan({ repoDir, agent, request }: PlanInput): Promise<string[]> {
+  const status: PlanStatus = { phase: 'planning', newTickets: [] };
+  setHandler(planStatus, () => status);
 
-  // Activity: reads the ticket ids from backlog/
-  tickets = await listTickets(repoDir);
+  // Activities: read the tickets already in backlog/ and the Planner's prompt
+  const before = await listTickets(repoDir);
+  const slice = await readHarnessFile(repoDir, 'prompts/slice.md');
 
-  for (const ticket of tickets) {
-    log.info(`== ${ticket}`);
+  // Activity: one agent run. It takes minutes, and it's the one you'll interrupt.
+  log.info('== Planner');
+  await runAgent({ repoDir, agent, mode: 'write', prompt: `${slice}\nFeature request: ${request}` });
 
-    // Activity: one agent run. Its answer goes into the workflow's history.
-    const answer = await runAgent({
-      repoDir,
-      agent,
-      mode: 'read',
-      prompt: `Read ${ticket} in backlog/ and the code it touches. Reply in at most three sentences,
-without any formatting: what does the ticket ask for, and which files will it change?`,
-    });
-    explained.push({ ticket, explanation: answer.trim() });
-  }
-
-  return explained;
+  // Activity: the tickets the Planner added
+  status.newTickets = (await listTickets(repoDir)).filter((ticket) => !before.includes(ticket));
+  status.phase = 'done';
+  return status.newTickets;
 }
 ```
 
 :::
 
-The two `await` lines are **activities**: `listTickets` reads `backlog/`, and `runAgent` runs an agent. Temporal saves the result of each activity in the workflow's **history**. The rest of the function only decides what to do next.
+Every `await` line is an **activity**. Temporal saves each activity's result in the workflow's **history**. If the worker stops, a new one runs the function again from the top, takes finished results from the history, and only reruns what didn't finish.
 
-If the worker stops, a new worker runs the function again from the top. But it skips every activity that already finished and takes its saved result from the history instead. So the workflow is quickly back where it stopped, and only the unfinished work runs again.
-
-In the web UI, click `explain-tickets` to see its history: `listTickets` completed, then one `runAgent` per ticket.
+In the web UI, click `plan` to see its history.
 
 ### 4. Ask how far it is
 
@@ -142,19 +133,19 @@ Press `Ctrl+C` in terminal 3. That only stops the waiting: the workflow runs on 
 flows status
 ```
 
-That's a **query**. The answer lists all tickets and the ones explained so far, from `progress` in the code above.
+That's a **query**. The answer shows the phase, `planning`, from `planStatus` in the code above.
 
-Run `flows explain-tickets` again. It doesn't start a second workflow, it waits for the one that's already running.
+Run `flows plan` again with the same request. It doesn't start a second workflow, it waits for the one that's already running.
 
 ### 5. Stop the worker
 
-When terminal 2 shows `[explain-tickets] == TICKET-2`, stop the worker with `Ctrl+C`. Then start it again:
+While the Planner is still working, before a new ticket shows up in `backlog/`, stop the worker in terminal 2 with `Ctrl+C`. Then start it again:
 
 ```bash
 flows worker
 ```
 
-The workflow continues where it stopped. TICKET-1 isn't explained again, its answer is already in the history. Only the agent run for TICKET-2 starts again, about 30 seconds later: that's the retry delay set for `runAgent`.
+The workflow continues where it stopped. `listTickets` and `readHarnessFile` don't run again, their results are already in the history. Only the agent run starts again, about 30 seconds later: that's the retry delay set for `runAgent`.
 
 ::: code-group
 
@@ -172,6 +163,6 @@ export const { runAgent } = proxyActivities<typeof activities>({
 
 ### 6. Check the result
 
-When the workflow is done, terminal 3 prints one explanation per ticket. Compare them with `backlog/`: do they match what the tickets ask for?
+When the workflow is done, terminal 3 prints the tickets the Planner wrote. Open them in `backlog/` and check them as you did in Lab 8: does every ticket cut a full vertical slice, and does every `ready` ticket really not depend on another one?
 
 You now have a server, a worker and a workflow that survives its worker. In the next lab, a workflow changes code.
