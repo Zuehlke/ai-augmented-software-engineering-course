@@ -2,25 +2,20 @@
 
 ## Context
 
-In the last lab, you picked the tickets, created the worktrees, started every Ralph loop and checked every branch yourself. Now one workflow, `pipeline`, does all of that, with a role for each step:
+In the last lab, you started every Ralph loop and checked every branch yourself. Now one workflow, `pipeline`, does it all, starting from a feature request:
 
-| Role | Runs as | What it does |
-| --- | --- | --- |
-| **Dispatcher** | read-only agent | Picks, from the `ready` tickets, the ones that are safe to hand to unattended agents at the same time. |
-| **Implementers** | Ralph loops | One Ralph loop per ticket, each in its own worktree, all at the same time. |
-| **Reviewer** | read-only agent | Reviews every finished branch, with no memory of how it was built. |
-| **Merger** | workflow code, no agent | Merges the approved branches into a new branch `integration` and runs the tests. |
+**Researcher** → **Planner** → **Dispatcher** → ✋ *you approve the tickets* → **Implementers** → **Reviewer** → ✋ *you decide whether to merge* → **Merger**
 
-You step in only twice, where a human decision matters:
-
-**Dispatcher** → ✋ *you approve the picks* → **Implementers** → **Reviewer** → ✋ *you decide whether to merge* → **Merger**
-
-Two new Temporal terms make that work:
-
-| Term | What it means |
+| Role | What it does |
 | --- | --- |
-| **Signal** | A message to a running workflow. Here, it carries your decision. The workflow waits for it, which costs nothing and survives restarts, so you can decide after a minute or the next morning. |
-| **Child workflow** | A workflow started by another workflow. Each implementer is the `ralph` workflow from the Ralph loop lab, started by `pipeline`. |
+| **Researcher** | An agent with the `research` skill turns the feature request into a specification. |
+| **Planner** | An agent with the `slice` skill turns the specification into tickets, each `ready` or `blocked`. |
+| **Dispatcher** | Plain code picks the `ready` tickets. |
+| **Implementers** | One Ralph loop per ticket, each in its own worktree, all at the same time. |
+| **Reviewer** | A read-only agent reviews every finished branch, with no memory of how it was built. |
+| **Merger** | Plain code merges the approved branches and runs the tests. |
+
+Agents do the steps that need judgement, plain code does the ones a rule can decide. You step in only at the two ✋ checkpoints.
 
 ## Your Task
 
@@ -35,63 +30,26 @@ task lab/orchestration
 >
 > [![Open Lab 12 in GitHub Codespaces](https://github.com/codespaces/badge.svg)](https://codespaces.new/Zuehlke/ai-augmented-software-engineering?ref=lab%2Forchestration)
 
-The dashboard has grown: TICKET-1 to TICKET-3 are `done`, TICKET-4 is still `blocked`, and two new tickets are `ready`. The Dispatcher and Reviewer prompts are in `.harness/prompts/`, the `pipeline` workflow in `.harness/flows/src/workflows/pipeline.ts`.
-
 <details>
-<summary>New tickets in <code>backlog/</code></summary>
+<summary><code>.harness/prompts/research.md</code>, <code>slice.md</code> and <code>reviewer.md</code></summary>
+
+The `research` and `slice` skills ask you questions and wait for your approval. In the pipeline, nobody answers, so the prompts tell the agents to decide by themselves and write their assumptions down. You check them at the first checkpoint.
 
 ```markdown
----
-id: TICKET-5
-status: ready
----
+# Research
 
-# Delayed flights per airport
-
-On the dashboard, support staff can enter an airport code and see which flights departing from it
-are currently delayed, and by how many minutes.
-
-## Acceptance Criteria
-
-- The dashboard page shows a search box for an airport code.
-- Submitting an airport code lists its currently delayed departing flights with their delay in
-  minutes.
-- An airport with no delayed flights shows "No delayed flights" instead of an empty list.
-- An airport code without any flights shows a clear "not found" message.
+Follow the research skill in `.agents/skills/research/SKILL.md` for the feature request below. You
+run unattended: don't ask questions and don't wait for feedback. Where the skill tells you to ask,
+make a sensible assumption and write it under Assumptions. Don't change any code.
 ```
 
 ```markdown
----
-id: TICKET-6
-status: ready
----
+# Slice
 
-# Airline delay ranking
-
-The dashboard shows which airlines currently have the most delayed flights, without any search.
-
-## Acceptance Criteria
-
-- The dashboard page shows the top 5 airlines by number of currently delayed flights, with name
-  and count, highest first.
-- Airlines without delayed flights are not listed.
-- The ranking is computed from real flight data, not hand-entered values.
-```
-
-</details>
-
-<details>
-<summary><code>.harness/prompts/dispatcher.md</code> and <code>.harness/prompts/reviewer.md</code></summary>
-
-```markdown
-# Dispatcher
-
-Read every ticket in `backlog/`. Pick the tickets that are `ready` and safe to hand to an
-unattended agent: clear acceptance criteria, nothing destructive, no ordering requirement between
-them. Never pick a `blocked` or `done` ticket.
-
-Print one line per picked ticket, `PICK: <ticket id>`, without any formatting. Then print which
-tickets you left out and why. Don't change any file.
+Follow the slice skill in `.agents/skills/slice/SKILL.md` for the specification the Researcher
+just wrote in `specs/`. You run unattended: skip the approval step and write the tickets right
+away. Number them after the highest ticket already in `backlog/`, and don't change the existing
+tickets. Don't change any code.
 ```
 
 ```markdown
@@ -130,61 +88,73 @@ flows worker
 
 Use **terminal 3** for the steps below. Set `AGENT=copilot` there first if you use GitHub Copilot CLI, the default is Claude Code.
 
-### 1. Run the Dispatcher and approve its picks
+### 1. Start the pipeline and approve the tickets
+
+Start the pipeline with the feature request:
 
 ```bash
-flows dispatch
+flows start "On the dashboard, support staff enter an airport code and see the delayed flights departing from it, with their delay. The dashboard also shows the airlines with the most delayed flights right now, without any search."
 ```
 
-This starts the `pipeline` workflow. Its first part:
+The pipeline works in a new worktree, `.harness/worktrees/integration`, on a new branch `integration`. Your checkout and `main` stay untouched. The Researcher writes a specification, the Planner writes the tickets, and the Dispatcher picks the ones marked `ready`. That takes a few minutes, and the agent output shows up in terminal 2.
+
+Then `flows start` asks you about each ready ticket: is it safe to hand to an unattended agent? Before you answer, check what the agents wrote in `.harness/worktrees/integration/`:
+
+- `specs/`: are the assumptions in the specification sensible?
+- `backlog/`: does every `ready` ticket really not depend on another one?
+
+Answer `y` for the tickets you approve. `flows start` sends your answers to the workflow as a **signal**: a message to a running workflow. The workflow waits for it in `condition(...)`, which costs nothing and survives restarts, so you could also answer the next morning.
+
+The pipeline runs one wave: only the tickets that are `ready` now. If the Planner made one ticket block the others, only that one runs.
+
+Here's the whole workflow. The next steps follow it from `// Implementers` on:
 
 ::: code-group
 
 ```ts [.harness/flows/src/workflows/pipeline.ts]
+import { condition, defineQuery, defineSignal, executeChild, setHandler } from '@temporalio/workflow';
+import type { PipelineInput, PipelineStatus } from '../shared';
+import { addWorktree, branchDiffs, commitAll, headCommit, mergeBranch, readHarnessFile, readyTickets, runAgent, runTests } from './activities';
+import { ralph } from './ralph';
+
 // What `flows status` shows
 export const pipelineStatus = defineQuery<PipelineStatus>('status');
-// Your decisions at the two checkpoints: `flows dispatch` sends the first, `flows merge` the second
-export const approvePicks = defineSignal<[string[]]>('approvePicks');
+// Your decisions at the two checkpoints: `flows start` sends the first, `flows merge` the second
+export const approveTickets = defineSignal<[string[]]>('approveTickets');
 export const decideMerge = defineSignal<[boolean]>('decideMerge');
 
-// Dispatcher → you approve the picks → one Ralph loop per ticket → Reviewer → you decide → merge
-export async function pipeline({ repoDir, agent }: PipelineInput): Promise<PipelineStatus> {
-  const status: PipelineStatus = { phase: 'dispatching', dispatcherOutput: '', picks: [], reviewerOutput: '', approvedBranches: [], merged: [], conflicts: [] };
+// Researcher → Planner → Dispatcher → you approve the tickets → one Ralph loop per ticket → Reviewer → you decide → merge
+export async function pipeline({ repoDir, agent, request }: PipelineInput): Promise<PipelineStatus> {
+  const status: PipelineStatus = { phase: 'researching', tickets: [], reviewerOutput: '', approvedBranches: [], merged: [], conflicts: [] };
   let approved: string[] | undefined;
   let merge: boolean | undefined;
   setHandler(pipelineStatus, () => status);
-  setHandler(approvePicks, (tickets) => void (approved = tickets));
+  setHandler(approveTickets, (tickets) => void (approved = tickets));
   setHandler(decideMerge, (yes) => void (merge = yes));
 
-  // Dispatcher: a read-only agent picks the tickets
-  status.dispatcherOutput = await runAgent({ repoDir, agent, mode: 'read', prompt: await readHarnessFile(repoDir, 'prompts/dispatcher.md') });
-  status.picks = captures(status.dispatcherOutput, /^PICK: (TICKET-\d+)/);
+  // Everything lands on a new local branch `integration`, in its own worktree, never on main
+  const integration = await addWorktree(repoDir, 'integration', 'integration', await headCommit(repoDir));
 
-  // Checkpoint 1: waits until `flows dispatch` sends the picks you approved
+  // Researcher: an agent turns the feature request into a specification
+  const research = await readHarnessFile(repoDir, 'prompts/research.md');
+  await runAgent({ repoDir: integration, agent, mode: 'write', prompt: `${research}\nFeature request: ${request}` });
+
+  // Planner: an agent turns the specification into tickets in backlog/
+  status.phase = 'planning';
+  const slice = await readHarnessFile(repoDir, 'prompts/slice.md');
+  await runAgent({ repoDir: integration, agent, mode: 'write', prompt: slice });
+  await commitAll(integration, 'Add the specification and its tickets');
+
+  // Dispatcher: no agent, a rule. It picks the tickets marked `ready`.
+  status.tickets = await readyTickets(integration);
+
+  // Checkpoint 1: waits until `flows start` sends the tickets you approved
   status.phase = 'waiting for your approval';
   await condition(() => approved !== undefined);
-```
 
-:::
-
-The Dispatcher runs read-only (`mode: 'read'`) and prints one `PICK:` line per ticket. It should pick TICKET-5 and TICKET-6, and leave out TICKET-4 because it's blocked.
-
-Then the workflow waits in `condition(...)`. `flows dispatch` asks you about each pick: is it really safe to hand to an unattended agent? Answer `y` for both. `flows dispatch` sends your answers as the `approvePicks` signal, the signal handler sets `approved`, and the workflow continues.
-
-### 2. Wait for the implementers and the Reviewer
-
-```bash
-flows merge
-```
-
-`flows merge` waits until the Reviewer is done. Meanwhile, the pipeline runs on by itself:
-
-::: code-group
-
-```ts [.harness/flows/src/workflows/pipeline.ts]
   // Implementers: one Ralph loop per ticket, each in its own worktree, all at the same time
   status.phase = 'implementing';
-  const base = await headCommit(repoDir);
+  const base = await headCommit(integration);
   const branches = approved!.map((ticket) => `agent/${ticket.toLowerCase()}`);
   await Promise.all(
     approved!.map(async (ticket, i) => {
@@ -196,25 +166,9 @@ flows merge
   // Reviewer: a fresh, read-only agent gets every branch's changes
   status.phase = 'reviewing';
   const reviewer = await readHarnessFile(repoDir, 'prompts/reviewer.md');
-  status.reviewerOutput = await runAgent({ repoDir, agent, mode: 'read', prompt: reviewer + (await branchDiffs(repoDir, branches)) });
+  status.reviewerOutput = await runAgent({ repoDir: integration, agent, mode: 'read', prompt: reviewer + (await branchDiffs(integration, branches)) });
   status.approvedBranches = branches.filter((branch) => status.reviewerOutput.includes(`${branch}: APPROVE`));
-```
 
-:::
-
-When both loops are done, the Reviewer gets the changes of both branches (`branchDiffs`). It's a new agent process, so it knows nothing about how the branches were built. That's what makes its review worth something.
-
-Every Ralph loop already has its step reviewer, so why another review? The step reviewer checks one small commit at a time, while the loop runs. The Reviewer sees what no step reviewer does: the finished branch as a whole, against the full ticket, next to the other branches.
-
-The implementers take a while. To check on them from another terminal, run `flows status`.
-
-### 3. Decide whether to merge
-
-Once the Reviewer is done, `flows merge` prints its verdict and asks you: do you trust it enough to merge? Answer `y`. That's the `decideMerge` signal, and the last part of the workflow runs:
-
-::: code-group
-
-```ts [.harness/flows/src/workflows/pipeline.ts]
   // Checkpoint 2: waits until `flows merge` sends your decision
   status.phase = 'waiting for your merge decision';
   await condition(() => merge !== undefined);
@@ -223,9 +177,8 @@ Once the Reviewer is done, `flows merge` prints its verdict and asks you: do you
     return status;
   }
 
-  // Merger: merges the approved branches into a new local branch `integration`, never into main
+  // Merger: merges the approved branches into `integration`
   status.phase = 'merging';
-  const integration = await addWorktree(repoDir, 'integration', 'integration', base);
   for (const branch of status.approvedBranches) {
     if (await mergeBranch(integration, branch)) {
       status.merged.push(branch);
@@ -241,12 +194,21 @@ Once the Reviewer is done, `flows merge` prints its verdict and asks you: do you
 
 :::
 
-The workflow merges only the branches the Reviewer approved, into a new branch `integration` in its own worktree, `.harness/worktrees/integration`. Your checkout and `main` stay untouched. Then it runs the tests on the result.
+### 2. Wait for the implementers and the Reviewer
 
-Both tickets change the same dashboard page, so the second merge will probably conflict, just as it would for two developers. The workflow doesn't try to fix that: the conflicting branch is left out, and `flows merge` reports it. In a real pipeline, that ticket would get another Ralph loop, started from `integration`, so the agent builds on top of the first ticket instead of next to it.
+```bash
+flows merge
+```
 
-> [!NOTE]
-> This exercise's `main` also backs the live course site, so the pipeline never merges into `main` and never pushes. `integration` is where a pull request would start.
+`flows merge` waits until the Reviewer is done. Meanwhile, the pipeline runs on by itself, through `// Implementers` and `// Reviewer` in the code above. This takes a while. To check on it from another terminal, run `flows status`.
+
+The Reviewer gets the changes of every branch. It's a new agent, so it knows nothing about how they were built. And unlike the step reviewer in each Ralph loop, it sees each finished branch as a whole.
+
+### 3. Decide whether to merge
+
+Once the Reviewer is done, `flows merge` prints its verdict and asks whether to merge. Answer `y`: that's the second signal, `decideMerge`. The workflow merges the approved branches into `integration` and runs the tests.
+
+Both features change the same dashboard page, so the second merge will probably conflict, just as it would for two developers. The workflow leaves the conflicting branch out, and `flows merge` reports it.
 
 ### 4. Look at the result
 
@@ -259,10 +221,10 @@ Open the dashboard at [http://localhost:8080/dashboard.html](http://localhost:80
 
 ### 5. Clean up
 
-Stop the app (`Ctrl+C`), go back to the repository root (`cd ../../..`), and remove everything the pipeline created:
+Stop the app (`Ctrl+C`) and clean up:
 
 ```bash
 flows cleanup
 ```
 
-It stops the `pipeline` workflow if it's still running, removes every worktree under `.harness/worktrees/`, and deletes the `agent/*` and `integration` branches. After that, you can run the pipeline again from `flows dispatch`.
+This removes the worktrees and branches the pipeline created, so you can start again.

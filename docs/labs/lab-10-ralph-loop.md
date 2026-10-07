@@ -9,7 +9,7 @@ A long agent session gets worse the longer it runs: the context fills up with ol
 - After every run, the loop checks the work. If a check fails, the next run gets the problem in `.harness/feedback.md` and fixes it first.
 - The loop stops when the ticket is `done`, or after 10 runs.
 
-You've seen the memory part before: in *Structured agentic workflows*, `implement` kept `specs/<slug>/progress.md` so that a new session could continue where the last one stopped. Ralph starts a new session after every step on purpose, and `.harness/progress.md` uses the same format, with a ticket instead of a specification.
+You've seen the memory part before: in [Structured agentic workflows](./lab-4-structured-agentic-workflows.md), `implement` kept `specs/<slug>/progress.md` so that a new session could continue where the last one stopped. Ralph starts a new session after every step on purpose, and `.harness/progress.md` uses the same format, with a ticket instead of a specification.
 
 You start with one run and watch it. Once that looks good, you let the loop run on its own, inside the sandbox.
 

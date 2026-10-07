@@ -128,9 +128,9 @@ without any formatting: what does the ticket ask for, and which files will it ch
 
 :::
 
-The two lines with `await` call **activities**: `listTickets` reads `backlog/`, and `runAgent` runs a read-only agent. The worker runs them, and Temporal saves each result in the workflow's **history**. Everything else, the loop and the list of explanations, is the workflow itself: it only decides what comes next.
+The two `await` lines are **activities**: `listTickets` reads `backlog/`, and `runAgent` runs an agent. Temporal saves the result of each activity in the workflow's **history**. The rest of the function only decides what to do next.
 
-That's what makes the workflow durable. When a workflow has to continue on a new worker, the worker runs the function from the start again. Activities that already finished don't run again, their results come from the history. So the workflow gets back to the step where it stopped.
+If the worker stops, a new worker runs the function again from the top. But it skips every activity that already finished and takes its saved result from the history instead. So the workflow is quickly back where it stopped, and only the unfinished work runs again.
 
 In the web UI, click `explain-tickets` to see its history: `listTickets` completed, then one `runAgent` per ticket.
 
