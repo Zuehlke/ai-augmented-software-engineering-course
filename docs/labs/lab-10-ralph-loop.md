@@ -2,16 +2,17 @@
 
 ## Context
 
-A long agent session gets worse the longer it runs: the context fills up with old attempts, and the agent loses track. A **Ralph loop** avoids that by running the same prompt again and again, each time in a **fresh context**:
+The longer an agent session runs, the worse it gets. The context fills up with old attempts and the agent loses track. A **Ralph loop** avoids this. It runs the same prompt again and again, each time with a fresh context:
 
-- Every run does one small step on the ticket and commits it.
-- Between runs, the agent remembers nothing. Its memory is `.harness/progress.md` and the git history.
-- After every run, the loop checks the work. If a check fails, the next run gets the problem in `.harness/feedback.md` and fixes it first.
+- Each run does one small step on the ticket and commits it.
+- The agent forgets everything between runs. It reads `.harness/progress.md` and the git history to see where it left off.
+- After each run, a **judge** checks the work. First the tests run. Then a second, read-only agent checks the commit against a short checklist in its prompt. It didn't write the code, so it has no reason to defend it.
+- If the judge finds a problem, the next run gets it as feedback and fixes it first.
 - The loop stops when the ticket is `done`, or after 10 runs.
 
-You've seen the memory part before: in [Structured agentic workflows](./lab-4-structured-agentic-workflows.md), `implement` kept `specs/<slug>/progress.md` so that a new session could continue where the last one stopped. Ralph starts a new session after every step on purpose, and `.harness/progress.md` uses the same format, with a ticket instead of a specification.
+<RalphDiagram />
 
-You start with one run and watch it. Once that looks good, you let the loop run on its own, inside the sandbox.
+First you start one run and watch it. Then you let the loop run on its own.
 
 ## Your Task
 
@@ -26,81 +27,44 @@ task lab/ralph-loop
 >
 > [![Open Lab 10 in GitHub Codespaces](https://github.com/codespaces/badge.svg)](https://codespaces.new/Zuehlke/ai-augmented-software-engineering?ref=lab%2Fralph-loop)
 
-The branch contains the tracer-bullet `backlog/`. Only TICKET-1 (normalize the delay data model) is `ready`, the other three are `blocked` until it has landed. `.harness/prompts/ralph.md` is the prompt every run gets:
+The branch contains the tracer-bullet `backlog/`. Only TICKET-1 (normalize the delay data model) is `ready`, the other three are `blocked` until it has landed.
 
-<details>
-<summary><code>.harness/prompts/ralph.md</code> (already in the branch)</summary>
+> [!IMPORTANT]
+> The agent runs unattended. Nobody answers permission prompts, so they are turned off. The sandbox keeps this safe. The agent can change files and commit, but it has no network access. Never run an unattended agent without the sandbox. It also needs the [agent token from the setup](/getting-started/setup#agent-token).
 
-````markdown
-# Ralph
+In **terminal 1**, start the Temporal server:
 
-You work on one ticket in `backlog/`, one small step per run. Your ticket is given at the end. You
-don't remember earlier runs: `.harness/progress.md`, `.harness/learnings.md` and the git history are
-your memory.
+```bash
+temporal server start-dev --db-filename ~/temporal.db
+```
 
-1. Read `.harness/feedback.md`, `.harness/progress.md` and `.harness/learnings.md` (if they exist)
-   and `git log --oneline -10`.
-2. If `.harness/feedback.md` exists, the script found a problem with your last step: fix that.
-   Otherwise do the next small step towards the ticket's acceptance criteria. One logical change,
-   not the whole ticket.
-3. Run `task test`. If it fails, fix it before you continue.
-4. Update `.harness/progress.md` and commit it together with your change. Use this format:
+In **terminal 2**, start the worker. It shows what the agent and the judge do:
 
-   ```markdown
-   # Progress
+```bash
+flows worker
+```
 
-   ## Ticket
-   <ticket id> <ticket title>
-
-   ## Done
-   - <acceptance criterion that is met>: <what you built for it>
-
-   ## Decisions
-   - <choice you made and why>
-
-   ## Blockers
-   - <what is stuck, or "None.">
-   ```
-
-5. When every acceptance criterion is met: set the ticket's `status` to `done`. Copy the decisions
-   that later tickets need to know to `.harness/learnings.md`, one line each, then delete
-   `.harness/progress.md` and commit.
-
-Do exactly one step per run, then stop. Don't push.
-````
-
-</details>
+Use **terminal 3** for the steps below. If you use GitHub Copilot CLI, set `AGENT=copilot` there first. The default is Claude Code.
 
 ### 1. One run, watching
 
-Start a single run in a normal, interactive session:
-
-<ContentTabs :tabs="['GitHub Copilot CLI', 'Claude Code']">
-  <template #tab1>
+Start the loop with only one run:
 
 ```bash
-AGENT=copilot .harness/workflows/ralph-once.sh TICKET-1
+flows ralph TICKET-1 --runs 1
 ```
 
-  </template>
-  <template #tab2>
-
-```bash
-.harness/workflows/ralph-once.sh TICKET-1
-```
-
-  </template>
-</ContentTabs>
-
-Watch what the agent does and answer its permission prompts. When it's done, exit the session and check what it left behind:
+Watch terminal 2. First the agent does one step and commits. Then the judge checks it. When it's done, look at what changed:
 
 ```bash
 git log --oneline -3
 cat .harness/progress.md
 ```
 
+Check three things. Is the step small? Do the tests pass? Could the next run continue using only `.harness/progress.md`? If not, improve `.harness/prompts/implement.md` and try again.
+
 <details>
-<summary>After the first run</summary>
+<summary><code>.harness/progress.md</code> after the first run</summary>
 
 ```markdown
 # Progress
@@ -123,7 +87,7 @@ TICKET-1 Normalize delay data model
 </details>
 
 <details>
-<summary>After a few more runs</summary>
+<summary><code>.harness/progress.md</code> after a few runs</summary>
 
 ```markdown
 # Progress
@@ -143,164 +107,182 @@ TICKET-1 Normalize delay data model
   table keeps both: `code` (`LX`, `LH`) and `name` (`SWISS`, `Lufthansa`).
 - The existing data has no airport codes. `departure_airport` and `arrival_airport` are nullable
   for now instead of made up.
-- The flat `flights` table stays until `/delays` reads from the new tables, so the endpoint keeps
-  working in between. It gets removed in the last step.
 
 ## Blockers
 - None.
 ```
 
-Two criteria are still open, no data loss for `/delays` and efficient lookups, so the next run knows what to do without reading any old conversation.
+Two criteria are still open. The next run finds that out from this file.
 
 </details>
 
-Is the step small? Are the tests green? Would the next run know where to continue just from `.harness/progress.md`? If not, improve `.harness/prompts/ralph.md` and run it again.
-
 ### 2. Let it loop
 
-The loop runs unattended, so it needs the [agent token from the setup](/getting-started/setup#agent-token).
-
-In **terminal 1**, start the Temporal server:
-
-```bash
-temporal server start-dev --db-filename ~/temporal.db
-```
-
-In **terminal 2**, start the worker. The agent output shows up there:
-
-```bash
-flows worker
-```
-
-Then start the loop in **terminal 3**:
-
-<ContentTabs :tabs="['GitHub Copilot CLI', 'Claude Code']">
-  <template #tab1>
-
-```bash
-AGENT=copilot flows ralph TICKET-1
-```
-
-  </template>
-  <template #tab2>
+Now start the loop without a limit. It continues where the first run stopped, for at most 10 runs:
 
 ```bash
 flows ralph TICKET-1
 ```
 
-  </template>
-</ContentTabs>
+> [!IMPORTANT]
+> Sometimes the judge can't decide alone, for example when the ticket contradicts the code. Then terminal 3 shows a question. Send your answer like this. The next run receives it:
+>
+> ```bash
+> flows answer ralph-TICKET-1 "Keep the flat flights table until TICKET-4."
+> ```
 
-The `ralph` workflow runs one agent after another. After every run, it checks the work itself instead of trusting the agent:
+Pressing `Ctrl+C` in terminal 3 doesn't stop the loop. Run the same command again to follow it.
 
-1. It runs the tests: the same check as the hook from *Automated feedback loops*, now run by the workflow.
-2. A second agent reviews the last commit against the ticket. It's read-only and didn't write the code, so it has nothing to defend.
-3. It reads the ticket's `status`. Once it's `done`, the loop stops.
-
-If check 1 or 2 fails, the reason goes to `.harness/feedback.md` and the next run starts.
+While the loop runs, read the code. `ralph.ts` is short. It calls `runPhase` with the phase `implement` and the ticket. `runPhase` does the actual work. It runs the agent, then the judge, and decides what happens next. It doesn't know about tickets, so later labs use it for other agents too.
 
 ::: code-group
 
 ```ts [.harness/flows/src/workflows/ralph.ts]
-import { defineQuery, log, setHandler } from '@temporalio/workflow';
-import type { RalphInput, RalphResult, RalphStatus } from '../shared';
-import { lastCommit, readHarnessFile, runAgent, runTests, setFeedback, ticketDone } from './activities';
-import { lastLine } from './text';
+import { defineQuery, setHandler } from '@temporalio/workflow';
+import type { RalphInput, RalphStatus } from '../shared';
+import { ticketDone } from './activities';
+import { runPhase } from './phase';
 
 export const ralphStatus = defineQuery<RalphStatus>('status');
 
-const MAX_RUNS = 10;
-
-// One agent run after another, until the ticket is done, at most 10 runs
-export async function ralph({ repoDir, agent, ticket }: RalphInput): Promise<RalphResult> {
-  const status: RalphStatus = { ticket, run: 0, lastCheck: 'none yet' };
+// Ralph is one phase: the agent takes one small step per run, until the ticket is done.
+// `--runs 1` sets maxRuns to 1. Returns whether the ticket is done.
+export async function ralph({ repoDir, agent, ticket, maxRuns = 10 }: RalphInput): Promise<boolean> {
+  const status: RalphStatus = { ticket };
   setHandler(ralphStatus, () => status);
 
-  await ticketDone(repoDir, ticket); // fails the workflow right here if the ticket doesn't exist
-  const prompt = `${await readHarnessFile(repoDir, 'prompts/ralph.md')}\n\nYour ticket: ${ticket}`;
-  const stepReviewer = await readHarnessFile(repoDir, 'prompts/step-reviewer.md');
+  await runPhase(repoDir, agent, {
+    name: 'implement', // picks the prompts: prompts/implement.md and prompts/judge-implement.md
+    input: `Your ticket: ${ticket}`,
+    maxAttempts: maxRuns,
+    done: () => ticketDone(repoDir, ticket),
+  }, status);
+  return ticketDone(repoDir, ticket);
+}
+```
+
+```ts [.harness/flows/src/workflows/phase.ts]
+import { ApplicationFailure, condition, defineSignal, log, setHandler } from '@temporalio/workflow';
+import type { Agent, Phase, PhaseStatus, Verdict } from '../shared';
+import { checkRules, lastCommit, readHarnessFile, runAgent, setFeedback } from './activities';
+import { parseVerdict } from './text';
+
+// Your answer when the judge asks a question. `flows answer` sends it.
+export const answerSignal = defineSignal<[string]>('answer');
+
+// The agent does the work. A separate judge checks it.
+export async function runPhase(repoDir: string, agent: Agent, phase: Phase, status: PhaseStatus): Promise<void> {
+  let answer: string | undefined;
+  setHandler(answerSignal, (text) => void (answer = text));
+  const prompt = await readHarnessFile(repoDir, `prompts/${phase.name}.md`);
   let feedback: string | null = null;
 
-  for (let run = 1; run <= MAX_RUNS; run++) {
-    status.run = run;
-    log.info(`== Run ${run}`);
+  let verdict: Verdict | undefined;
+
+  for (status.attempt = 1; status.attempt <= phase.maxAttempts; status.attempt++) {
     await setFeedback(repoDir, feedback); // .harness/feedback.md, the agent reads it first
-    await runAgent({ repoDir, agent, mode: 'write', prompt });
-    await setFeedback(repoDir, null); // the agent has read it
+    await runAgent({ repoDir, agent, mode: 'write', prompt: `${prompt}\n\n${phase.input}` });
+
+    verdict = await judge(repoDir, agent, phase);
+    log.info(`== ${phase.name}: ${verdict.kind} ${verdict.reason}`);
     feedback = null;
 
-    // After every run, the workflow checks the work itself. A failed check becomes the
-    // feedback for the next run.
-
-    // Check 1: the tests pass
-    const tests = await runTests(repoDir);
-    if (!tests.pass) {
-      feedback = `The tests fail. The end of their output:\n\n${tests.tail}`;
-      status.lastCheck = 'tests fail';
-      log.info('== Tests fail');
-      continue;
+    if (verdict.kind === 'PASS' && (!phase.done || (await phase.done()))) return;
+    if (verdict.kind === 'RETRYABLE') feedback = `The judge rejected your work: ${verdict.reason}`;
+    if (verdict.kind === 'AMBIGUOUS') {
+      status.question = verdict.reason;
+      await condition(() => answer !== undefined); // waits for your answer, costs nothing meanwhile
+      feedback = `The judge asked: ${verdict.reason}\nA human answered: ${answer}`;
+      status.question = answer = undefined;
     }
-
-    // Check 2: a second, read-only agent approves the last commit
-    const review = await runAgent({ repoDir, agent, mode: 'read', prompt: `${stepReviewer}\n\n${await lastCommit(repoDir)}` });
-    const verdict = lastLine(review, /^(PASS|FAIL)/) ?? 'FAIL: the reviewer gave no verdict';
-    status.lastCheck = `reviewer: ${verdict}`;
-    log.info(`== Reviewer: ${verdict}`);
-    if (!verdict.startsWith('PASS')) {
-      feedback = `A reviewer rejected your last commit: ${verdict}`;
-      continue;
-    }
-
-    // Check 3: the ticket is done
-    if (await ticketDone(repoDir, ticket)) {
-      status.lastCheck = 'ticket done';
-      return { ticket, done: true, runs: run };
-    }
+    if (verdict.kind === 'FAILED') throw ApplicationFailure.nonRetryable(verdict.reason);
   }
-  return { ticket, done: false, runs: MAX_RUNS };
+  // Out of attempts. If the last step passed, the work so far is good: stop without an error.
+  if (verdict?.kind !== 'PASS') throw ApplicationFailure.nonRetryable(`No PASS after ${phase.maxAttempts} attempts`);
+}
+
+// The tests first: if they fail, there's no need to ask the judge agent
+async function judge(repoDir: string, agent: Agent, phase: Phase): Promise<Verdict> {
+  const broken = await checkRules(repoDir, phase.name); // for `implement`: the tests
+  if (broken) return { kind: 'RETRYABLE', reason: broken };
+
+  const prompt = await readHarnessFile(repoDir, `prompts/judge-${phase.name}.md`);
+  const commit = await lastCommit(repoDir);
+  const answer = await runAgent({ repoDir, agent, mode: 'read', prompt: `${prompt}\n\n${phase.input}\n\n${commit}` });
+  return parseVerdict(answer); // its last line: PASS, RETRYABLE: …, AMBIGUOUS: … or FAILED: …
 }
 ```
 
 :::
 
-The agent output shows up in the worker in terminal 2. In the web UI at [http://localhost:8233](http://localhost:8233), `ralph-TICKET-1` lists every run, test result and verdict.
+<details>
+<summary><code>.harness/prompts/implement.md</code>, the prompt every run gets</summary>
 
-> [!NOTE]
-> `Ctrl+C` in terminal 3 only stops waiting, the loop goes on. Run the same command again to follow it.
+````markdown
+# Implement
+
+You work on one ticket in `backlog/`, one small step per run. Your ticket is given at the end. You
+don't remember earlier runs: `.harness/progress.md`, `.harness/learnings.md` and the git history are
+your memory.
+
+1. Read `.harness/feedback.md`, `.harness/progress.md` and `.harness/learnings.md` (if they exist)
+   and `git log --oneline -10`.
+2. If `.harness/feedback.md` exists, the judge found a problem with your last step: fix that.
+   Otherwise do the next step: work on one acceptance criterion that isn't met yet, never more.
+3. Run `task test`. If it fails, fix it before you continue.
+4. Update `.harness/progress.md`. Use this format:
+
+   ```markdown
+   # Progress
+
+   ## Ticket
+   <ticket id> <ticket title>
+
+   ## Done
+   - <acceptance criterion that is met>: <what you built for it>
+
+   ## Decisions
+   - <choice you made and why>
+
+   ## Blockers
+   - <what is stuck, or "None.">
+   ```
+
+5. If your step met the last open acceptance criterion: set the ticket's `status` to `done`. Copy
+   the decisions that later tickets need to know to `.harness/learnings.md`, one line each, then
+   delete `.harness/progress.md`.
+6. Commit everything in exactly one commit. Then stop, even if criteria are still open: the next run
+   does the next step. Don't push.
+````
+
+</details>
 
 <details>
-<summary><code>.harness/prompts/step-reviewer.md</code> (already in the branch)</summary>
+<summary><code>.harness/prompts/judge-implement.md</code>, the judge's prompt</summary>
+
+The judge can't change files because its tools are removed, not because the prompt asks it not to. For the same reason, the workflow passes it the commit. The judge can't run `git` itself.
 
 ```markdown
-# Step reviewer
+# Judge: implement
 
-Another agent just made one small step towards a ticket in `backlog/`. Its last commit is below. You
-don't know how it was built, review it like a stranger's commit. The ticket it works on is named in
-`.harness/progress.md` (in the commit, or in the repository).
+Another agent just did one small step on the ticket below. Its last commit is at the end. Judge it
+like a stranger's work. Read any file you need, but don't change any.
 
-Read the ticket. Then check the step, not the whole ticket, which may still be in progress:
+Check the step, not the whole ticket, which may still be in progress:
 
-- Does it move towards an acceptance criterion, without changing anything outside the ticket's scope?
-- Is what it claims under **Done** in `.harness/progress.md` really done, and covered by a test?
-- If the ticket is set to `done`: is every acceptance criterion met?
+- It works on one acceptance criterion at most, without changing anything outside the ticket's scope.
+- What `.harness/progress.md` claims under **Done** is really done, and covered by a test.
+- If the ticket is set to `done`: every acceptance criterion is met.
 
-The tests already ran and are green, you don't need to run them. Don't change any file.
-
-End with exactly one line, without any formatting: `PASS` or `FAIL: <what to fix>`.
+End with exactly one line, without any formatting: `PASS`, `RETRYABLE: <what to fix>`,
+`AMBIGUOUS: <question for a human>` or `FAILED: <why no further attempt can fix it>`.
 ```
 
 </details>
 
-Both agents run headless with a fresh context, one with write access and one read-only.
-
-The reviewer is read-only because its tools are taken away, not because the prompt asks nicely. That's also why the workflow puts the commit into its prompt: it can't run `git` itself.
-
-> [!IMPORTANT]
-> Nobody answers permission prompts during the loop, so they are switched off for the Ralph run. The sandbox keeps it safe: the agent can change files and commit, but it can't reach the network. Never run an unattended loop without it.
-
 ### 3. Check the result
 
-When the loop stops, look at what it did:
+When the loop stops, terminal 3 tells you whether the ticket is done or why the loop stopped. Then check the result:
 
 ```bash
 git log --oneline
@@ -308,8 +290,8 @@ task test
 cat .harness/learnings.md
 ```
 
-You should see one small commit per step, green tests, TICKET-1 set to `done` and no `.harness/progress.md` left. A `== Reviewer: FAIL: ...` in the worker output, followed by a run that fixes it, is the loop doing its job.
+You should see one small commit per step, passing tests and TICKET-1 set to `done`. If terminal 2 shows the judge rejecting a step and the next run fixing it, the judge did its job.
 
-Before deleting `.harness/progress.md`, the agent copied the decisions later tickets need into `.harness/learnings.md`. Every run reads it first, so review it like code: a wrong line misleads every later run.
+`.harness/learnings.md` contains the decisions that later tickets need. Every run reads it, so review it like code. A wrong line misleads every later run.
 
 Next, you'll run several Ralph loops at once.

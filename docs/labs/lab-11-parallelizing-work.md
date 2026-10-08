@@ -135,15 +135,10 @@ Open the dashboard at [http://localhost:8080/dashboard.html](http://localhost:80
 
 ### 4. Clean up
 
-Stop the app (`Ctrl+C`). Then go back to the repository root (`cd ../../..`) and remove the worktrees and their branches:
+Stop the app (`Ctrl+C`), go back to the repository root (`cd ../../..`) and clean up:
 
 ```bash
-# Removes the folders and Git's record of them
-git worktree remove .harness/worktrees/ticket-2
-git worktree remove .harness/worktrees/ticket-3
-
-# Deletes the branches, with the agents' work on them
-git branch -D agent/ticket-2 agent/ticket-3
+flows cleanup
 ```
 
-Use `git worktree remove` rather than deleting the folder, so Git doesn't keep a stale entry for it. The branches were never merged, so deleting them needs `-D` and discards the agents' work.
+This runs `git worktree remove` on every worktree under `.harness/worktrees/` and deletes the `agent/*` branches. `git worktree remove`, rather than deleting the folder, keeps Git from holding on to a stale entry for it. The branches were never merged, so deleting them discards the agents' work.
