@@ -27,14 +27,6 @@ Pick **one** tool, GitHub Copilot CLI or Claude Code, and use it for every step 
 <ContentTabs :tabs="['GitHub Copilot CLI', 'Claude Code']">
   <template #tab1>
 
-### Setup: start a session
-
-```bash
-copilot --experimental
-```
-
-The sandbox is still experimental in Copilot CLI. `/sandbox` is only available when you start the session with `--experimental`.
-
 ### 1. Enable the sandbox
 
 ```text
@@ -45,10 +37,10 @@ The sandbox now restricts file writes, but outbound internet access is still **a
 
 ### 2. Check what it allows
 
-Ask Copilot to run this and report the exact output:
+Run this in the session. The `!` prefix runs it as a shell command, inside the sandbox:
 
-```bash
-curl -s -o /dev/null -w "%{http_code}\n" https://example.com
+```text
+! curl -s -o /dev/null -w "%{http_code}\n" https://example.com
 ```
 
 It prints `200`: the request went through. A sandbox doesn't block the network unless you configure it to.
@@ -68,7 +60,7 @@ On the **Network** tab, turn **off** "Allow outbound connections".
 
 ### 4. Check again
 
-Run the same `curl` again in the same session. It now fails right away.
+Run the same `! curl` again in the same session. It now fails right away.
 
 ### 5. Turn the network back on
 
@@ -103,10 +95,10 @@ All network traffic now goes through the sandbox's proxy, and no domains are all
 
 ### 2. Check what it allows
 
-Ask Claude to run this and report the exact output:
+Run this in the session. The `!` prefix runs it as a shell command, inside the sandbox:
 
-```bash
-curl -s -o /dev/null -w "%{http_code}\n" https://example.com
+```text
+! curl -s -o /dev/null -w "%{http_code}\n" https://example.com
 ```
 
 `example.com` isn't on the allowlist, so the request needs an approval. Who gives it depends on your permission mode:
@@ -114,7 +106,7 @@ curl -s -o /dev/null -w "%{http_code}\n" https://example.com
 - **Default mode:** Claude Code asks you whether to allow `example.com`.
 - **Auto mode:** the auto mode classifier decides, without asking you. Often `curl` prints `200` right away, and you don't notice that anything was approved.
 
-If the request is denied, `curl` prints `000`. Claude then often retries, with `example.com` allowed for this one command, and that retry needs an approval again.
+If the request is denied, `curl` prints `000`.
 
 Most likely the request gets through one way or the other, and you end up with `200`. So the sandbox doesn't mean "no internet access". It means "no *unapproved* internet access", and the approval doesn't have to come from a human.
 
@@ -148,7 +140,7 @@ claude --settings "$(cat .harness/sandbox/no-network.json)"
 
 ### 4. Check again
 
-Run the same `curl` again. Now it prints `000`, in every permission mode. Nobody is asked for an approval anymore: Claude can't allow `example.com` for one command, and it can't run `curl` outside the sandbox.
+Run the same `! curl` again. Now it prints `000`, in every permission mode. Nobody is asked for an approval anymore: Claude can't allow `example.com` for one command, and it can't run `curl` outside the sandbox.
 
   </template>
 </ContentTabs>
