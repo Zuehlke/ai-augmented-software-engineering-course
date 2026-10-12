@@ -41,16 +41,16 @@ const phases: Phase[] = [
   },
 ];
 
-// Which phases (and checkpoint) each lab step is about
-const steps: Record<number, { phases: number[]; checkpoint?: number; label: string }> = {
-  1: { phases: [0, 1], label: "1. Start the pipeline" },
-  2: { phases: [1], checkpoint: 1, label: "2. Approve the tickets" },
-  3: { phases: [2, 3], label: "3. Wait for the implementers and the Reviewer" },
-  4: { phases: [3], checkpoint: 3, label: "4. Decide whether to merge" },
+// The one phase (and checkpoint) each lab step is about
+const steps: Record<number, { phase: number; checkpoint?: boolean; label: string }> = {
+  1: { phase: 0, label: "1. Start the pipeline" },
+  2: { phase: 1, checkpoint: true, label: "2. Approve the tickets" },
+  3: { phase: 2, label: "3. Wait for the implementers and the Reviewer" },
+  4: { phase: 3, checkpoint: true, label: "4. Decide whether to merge" },
 };
 
 const current = computed(() => (props.step ? steps[props.step] : undefined));
-const isActive = (i: number) => !current.value || current.value.phases.includes(i);
+const isActive = (i: number) => !current.value || current.value.phase === i;
 </script>
 
 <template>
@@ -72,7 +72,7 @@ const isActive = (i: number) => !current.value || current.value.phases.includes(
           <div
             v-if="phase.checkpoint"
             class="gate"
-            :class="{ here: current?.checkpoint === i }"
+            :class="{ here: current?.checkpoint && current.phase === i }"
             :title="`Human gateway: you ${phase.checkpoint}`"
           >
             <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="3.5" /><path d="M5 20c0-3.9 3.1-7 7-7s7 3.1 7 7" /></svg>
