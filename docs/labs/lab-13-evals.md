@@ -2,16 +2,17 @@
 
 ## Context
 
-Everything you built today started with the `slice` skill: it turned the feature request into the backlog that the Ralph loops worked through. If someone changes the skill and it gets worse, say it starts splitting by layer or forgets a blocker, you'd only notice much later, when agents are already building the wrong tickets.
+A skill only helps when the agent loads it. Nobody types "use the testing skill" in a real session: the agent reads every skill's `description` and decides on its own. If someone rewrites a description, renames a skill, or adds a new one that overlaps, the agent may quietly stop loading it. Nothing fails. The agent just writes code without the tests the skill asks for.
 
-Trying the skill once and eyeballing the result doesn't catch that. An **eval** does it automatically, after every change:
+Trying it once by hand doesn't catch that. An **eval** does it automatically, after every change. This one checks whether the agent loads the skills from the earlier labs when it should, and only then:
 
 | Term | What it means |
 | --- | --- |
-| **Case** | A fixed input for the skill, here a feature request. |
-| **Rubric** | What a good result for that case looks like, written down as a short checklist. |
-| **Judge** | A separate agent that grades the skill's result against the rubric and answers `PASS` or `FAIL`. |
-| **Runs** | Agent output varies from run to run, so every case runs three times. It passes when most runs pass. |
+| **Case** | A prompt, written the way a developer would ask, and whether the skill should load for it. |
+| **Grader** | Plain code that reads the agent's tool calls and checks if it loaded the skill. No agent judges anything. |
+| **Runs** | Agent output varies from run to run, so every case runs three times. It passes when most runs do what the case expects. |
+
+Both directions count. A skill that doesn't load when it should is a bug. A skill that loads when it shouldn't fills the context with rules that don't apply.
 
 ## Your Task
 
@@ -26,42 +27,40 @@ task lab/evals
 >
 > [![Open Lab 13 in GitHub Codespaces](https://github.com/codespaces/badge.svg)](https://codespaces.new/Zuehlke/ai-augmented-software-engineering?ref=lab%2Fevals)
 
-The branch contains the `slice` skill, three eval cases in `.harness/evals/cases/`, and the `evals` workflow in `.harness/flows/src/workflows/evals.ts`.
-
-Every case is a folder with a `request.md` (the input) and a `rubric.md` (the checklist):
+The eval checks, for a few typical prompts, whether the agent loads the right skills, and leaves out the ones that don't apply. Every skill keeps its prompts next to its `SKILL.md`, in `evals.json`:
 
 <details>
-<summary>The cases in <code>.harness/evals/cases/</code></summary>
+<summary>The cases of <code>testing</code> and <code>api-design</code></summary>
 
-**`dashboard/`**: the Flight Delays Dashboard feature request from the tracer-bullet lab. Its rubric:
+::: code-group
 
-```markdown
-- The data model cleanup is its own ticket, and it comes first.
-- There is no horizontal ticket such as "build the UI" or "add the endpoints". Prefactoring, such as
-  the data model cleanup or loading the airport dataset, may have its own ticket.
-- The airport details work is blocked by the missing airport dataset, directly or through a ticket
-  that waits for it.
-- The airline overview and flight status tickets are blocked by the data model ticket.
+```json [.agents/skills/testing/evals.json]
+[
+  { "prompt": "Add an endpoint that returns all flights of one airline.", "loads": true },
+  { "prompt": "The flight status lookup shows the wrong status when two delay events have the same timestamp. Fix it.", "loads": true },
+  { "prompt": "Fix the typos in README.md.", "loads": false },
+  { "prompt": "Add a task to Taskfile.yml that prints the Java version.", "loads": false },
+  { "prompt": "Explain how DelaysController computes the delay of a flight.", "loads": false }
+]
 ```
 
-**`airport-data-available/`**: the same feature request, but the data team has delivered the airport dataset. Its rubric:
-
-```markdown
-- No ticket is blocked because the airport dataset is missing.
-- The data model cleanup is still blocked, by the pending architecture review.
+```json [.agents/skills/api-design/evals.json]
+[
+  { "prompt": "Add an endpoint that returns all flights of one airline.", "loads": true },
+  { "prompt": "Add paging to GET /delays.", "loads": true },
+  { "prompt": "The flight status lookup shows the wrong status when two delay events have the same timestamp. Fix it.", "loads": false },
+  { "prompt": "Fix the typos in README.md.", "loads": false }
+]
 ```
 
-**`single-change/`**: "Add a `GET /health` endpoint that returns `200 OK` while the app is running." Its rubric:
+:::
 
-```markdown
-- There is exactly one ticket, and it is ready.
-- It doesn't add scope the request didn't ask for (no monitoring, no auth, no dashboard).
-```
+None of the prompts mentions tests or a skill. Some prompts appear in both files: every skill is checked on its own.
 
 </details>
 
 > [!NOTE]
-> The agents in this lab run unattended, so they need the [agent token from the setup](/getting-started/setup#agent-token).
+> The agents in this lab run unattended, so they need the [agent token from the setup](/getting-started/setup#agent-token). This eval reads Claude Code's tool calls, so it runs with Claude Code only.
 
 In **terminal 1**, start the Temporal server:
 
@@ -69,13 +68,13 @@ In **terminal 1**, start the Temporal server:
 temporal server start-dev --db-filename ~/temporal.db
 ```
 
-In **terminal 2**, start the worker. The agent output shows up there:
+In **terminal 2**, start the worker:
 
 ```bash
 flows worker
 ```
 
-Use **terminal 3** for the steps below. Set `AGENT=copilot` there first if you use GitHub Copilot CLI, the default is Claude Code.
+Use **terminal 3** for the steps below.
 
 ### 1. Run the eval
 
@@ -83,93 +82,96 @@ Use **terminal 3** for the steps below. Set `AGENT=copilot` there first if you u
 flows eval
 ```
 
-After a minute or two, you get one block per case: the result, then the judge's verdict of each run:
+After a minute or two, you get one block per skill, with one line per case: did it pass, and in how many runs did the agent load the skill:
 
 ```text
-== airport-data-available: PASS, 3 of 3 runs pass
-- PASS: No ticket is blocked because the airport dataset is missing, ...
+== api-design: 4 of 4 cases pass
+PASS  should load      loaded in 3 of 3 runs  Add an endpoint that returns all flights of one airline.
+PASS  should load      loaded in 3 of 3 runs  Add paging to GET /delays.
 ...
-== dashboard: PASS, 3 of 3 runs pass
+== testing: 5 of 5 cases pass
+PASS  should load      loaded in 3 of 3 runs  Add an endpoint that returns all flights of one airline.
+PASS  should load      loaded in 2 of 3 runs  The flight status lookup shows the wrong status when two delay events have the same timestamp. Fix it.
+PASS  shouldn't load   loaded in 0 of 3 runs  Fix the typos in README.md.
 ...
-== single-change: PASS, 3 of 3 runs pass
-...
-3 cases passed, 0 failed.
+9 cases passed, 0 failed.
 ```
 
-All three cases should pass. A single failed run is fine, that's what the three runs are for.
+All cases should pass.
 
 Here's the workflow:
 
 ::: code-group
 
 ```ts [.harness/flows/src/workflows/evals.ts]
-import type { Agent, EvalCase, EvalInput, EvalResult } from '../shared';
-import { listEvalCases, runAgent } from './activities';
-import { lastLine } from './text';
+import type { EvalInput, EvalReport, EvalResult } from '../shared';
+import { listEvalCases, loadsSkill } from './activities';
+import { plan } from './plan';
 
-// Agent output varies from run to run, so every case runs three times and passes when most runs pass
-const RUNS = 3;
-
-// Runs slice on every case, then lets a separate judge grade the result. All runs start at once.
-export async function evals({ repoDir, agent }: EvalInput): Promise<EvalResult[]> {
+// Runs every case three times, because agent output varies from run to run. A case passes when
+// most runs do what it expects. All runs start at once.
+export async function evals({ repoDir, agent }: EvalInput): Promise<EvalReport> {
+  // The cases from every .agents/skills/<skill>/evals.json
   const cases = await listEvalCases(repoDir);
 
-  return Promise.all(
-    cases.map(async (evalCase) => {
-      const verdicts = await Promise.all(Array.from({ length: RUNS }, () => runOnce(repoDir, agent, evalCase)));
-      const passed = verdicts.filter((verdict) => verdict.startsWith('PASS')).length;
-      return { name: evalCase.name, pass: passed > RUNS / 2, verdicts };
+  const results: EvalResult[] = await Promise.all(
+    cases.map(async ({ skill, prompt, loads }) => {
+      const runs = await Promise.all([1, 2, 3].map(() => loadsSkill(repoDir, skill, prompt)));
+      const loaded = runs.filter(Boolean).length;
+      return { skill, prompt, loads, loaded, pass: loads ? loaded >= 2 : loaded <= 1 };
     }),
   );
+
+  // A failing eval becomes a ticket, like any other bug: the Planner writes it with the slice skill
+  const failing = results.filter((result) => !result.pass);
+  if (failing.length === 0) return { results, tickets: [] };
+  const request = `flows eval fails. Fix the skill descriptions in .agents/skills/, so that these cases pass:
+${failing.map(({ skill, prompt, loads }) => `- ${skill} should ${loads ? '' : 'not '}load for: ${prompt}`).join('\n')}`;
+  return { results, tickets: await plan({ repoDir, agent, request }) };
 }
+```
 
-// One run of a case: the skill, then the judge. Both agents are read-only: the skill only presents a
-// breakdown, the judge only grades it.
-async function runOnce(repoDir: string, agent: Agent, { request, rubric }: EvalCase): Promise<string> {
-  const breakdown = await runAgent({
-    repoDir,
-    agent,
-    mode: 'read',
-    prompt: `Use the slice skill in .agents/skills/slice/SKILL.md on the feature
-request below, as if nothing of it were built yet: ignore backlog/ and the existing code.
-Only present the breakdown, don't write any files.
+```ts [.harness/flows/src/activities/agent.ts (excerpt)]
+// One short, read-only agent run: does the agent load the skill for this prompt? It only needs its
+// first few turns to decide, so it stops after ten.
+export async function loadsSkill(repoDir: string, skill: string, prompt: string): Promise<boolean> {
+  const sandbox = await readFile(path.join(repoDir, '.harness/sandbox/no-network.json'), 'utf8');
+  const { output } = await exec(repoDir, 'claude', [
+    '-p', prompt,
+    '--tools', 'Read,Grep,Glob,Skill',
+    '--max-turns', '10',
+    '--output-format', 'stream-json', '--verbose', // one JSON event per line, tool calls included
+    '--strict-mcp-config', '--settings', sandbox,
+  ], { quiet: true });
+  // The exit code is 1 when the agent used up its turns, so look for the final result event instead
+  if (!output.includes('"type":"result"')) throw ApplicationFailure.retryable('claude stopped without a result');
 
-${request}`,
-  });
+  const toolCalls = output
+    .split('\n')
+    .filter((line) => line.startsWith('{'))
+    .flatMap((line) => JSON.parse(line).message?.content ?? [])
+    .filter((block) => block.type === 'tool_use');
 
-  const answer = await runAgent({
-    repoDir,
-    agent,
-    mode: 'read',
-    prompt: `Grade the BREAKDOWN below against the RUBRIC. Reply with exactly one line, without any formatting:
-'PASS: <reason>' or 'FAIL: <reason>'. Every rubric item must be met.
-
-RUBRIC:
-${rubric}
-
-BREAKDOWN:
-${breakdown}`,
-  });
-
-  return lastLine(answer, /^(PASS|FAIL)/) ?? `FAIL: the judge gave no verdict: ${answer.trim()}`;
+  // The agent loads a skill through the Skill tool, or by reading its SKILL.md
+  return toolCalls.some(({ name, input }) =>
+    (name === 'Skill' && input.skill === skill) ||
+    (name === 'Read' && input.file_path?.endsWith(`skills/${skill}/SKILL.md`)));
 }
 ```
 
 :::
 
-Three things to notice:
+Two things to notice:
 
-- **The judge is its own agent process**, not a continuation of the run it grades. A judge that remembers producing the answer tends to defend it instead of grading it.
-- **Both agents run with `mode: 'read'`**: the skill can only present a breakdown, not write tickets to `backlog/`, and the judge can only grade.
-- **All runs start at once** (`Promise.all`): 3 cases × 3 runs, each run being two activities, first the skill, then the judge. Reading the case folders is I/O, so that's an activity too, `listEvalCases`.
+- **There is no judge.** Whether a skill was loaded is a fact in the tool calls, so code checks it. That's faster, cheaper, and gives the same answer every time. Use an agent as a judge only for what code can't check.
+- **The runs are short and read-only.** The eval only needs the agent's decision, not the code it would write, so it stops the agent after ten turns.
 
-### 2. Break the skill
+### 2. Make the description too broad
 
-Now make the skill worse on purpose. Open `.agents/skills/slice/SKILL.md` and replace **step 2, including all of its bullet points**, with:
+Now change the description the way people often do when a skill doesn't load often enough: make it apply to everything. Open `.agents/skills/testing/SKILL.md` and replace the `description` line with:
 
 ```markdown
-2. Break the remaining scope into horizontal layers: one ticket for the database, one for the
-   endpoints, one for the UI.
+description: Use for every task in this repository.
 ```
 
 Run the eval again:
@@ -178,24 +180,29 @@ Run the eval again:
 flows eval
 ```
 
-This time, `dashboard` fails, and the judge names the reason, for example a "database layer" or "UI" ticket:
+The cases that should load `testing` still pass. But the ones that shouldn't now fail, for example:
 
 ```text
-== dashboard: FAIL, 0 of 3 runs pass
-- FAIL: The breakdown uses horizontal tickets (TICKET-3 database layer, TICKET-4 endpoints, TICKET-5 UI), ...
+== api-design: 4 of 4 cases pass
 ...
-2 cases passed, 1 failed.
+== testing: 2 of 5 cases pass
+...
+FAIL  shouldn't load   loaded in 3 of 3 runs  Fix the typos in README.md.
+FAIL  shouldn't load   loaded in 3 of 3 runs  Add a task to Taskfile.yml that prints the Java version.
+...
+6 cases passed, 3 failed.
+The Planner wrote TICKET-5 for the failing cases, see backlog/.
 ```
 
-That's the point of an eval: a change that makes the skill worse shows up right away, not weeks later in the backlog.
+Only `testing` broke: `api-design` still passes. And because cases failed, the workflow handed them to the Planner from Lab 9: a failing eval becomes a ticket, like any other bug. Open the ticket in `backlog/`: is it one `ready` ticket, with acceptance criteria you could check?
 
-To see each run's breakdown, open the web UI at [http://localhost:8233](http://localhost:8233) and click the `evals` workflow. Every `runAgent` activity's result is in its event history. In **GitHub Codespaces**, open the **Ports** tab and click the globe icon next to port `8233` (**Temporal UI**).
-
-### 3. Restore the skill
+### 3. Let the Ralph loop fix it
 
 ```bash
-git checkout .agents/skills/slice/SKILL.md
+flows ralph TICKET-5
 ```
 
+The Ralph loop from Lab 10 works on it like on any other ticket.
+
 > [!NOTE]
-> An eval is only as good as its cases. `airport-data-available` exists because a skill that simply copies blockers from the request would pass `dashboard` but fail here. When the skill fails in real use, add that input as a new case, so it can't break the same way twice. These cases already found a weakness: the skill sometimes added an empty "page shell" ticket, so the line about shared pages in step 2 was added.
+> An eval is only as good as its cases. When a skill doesn't load in real use, add that prompt to its `evals.json`, so the description can't break the same way twice.
