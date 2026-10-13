@@ -26,63 +26,47 @@ task lab/orchestration
 > [!NOTE]
 > The agents in this lab run unattended, so they need the [agent token from the setup](/getting-started/setup#agent-token).
 
-In **terminal 1**, start the Temporal server:
+Temporal and the worker already run in the background. In **terminal 1**, open the pipeline view. If you use GitHub Copilot CLI, set `AGENT=copilot` there first. The default is Claude Code.
 
 ```bash
-temporal server start-dev --db-filename ~/temporal.db
+flows watch
 ```
 
-In **terminal 2**, start the worker. It shows the agent output:
-
-```bash
-flows worker
-```
-
-Use **terminal 3** for the steps below. If you use GitHub Copilot CLI, set `AGENT=copilot` there first. The default is Claude Code.
+It shows the pipeline as in the diagram above. Blue is what runs, purple is what waits for you. Use **terminal 2** for everything else. `flows logs` there shows the agent output.
 
 ### 1. Start the pipeline
 
 <PipelineDiagram :step="1" />
 
-Start the pipeline with a feature request:
-
-```bash
-flows start "<feature request>"
-```
+In `flows watch`, the Researcher is selected. Press `s`, paste the feature request and press `Enter`:
 
 <details>
 <summary>The feature request</summary>
 
 ```text
-On the dashboard, support staff enter an airport code and see the delayed flights departing from
-it, with their delay. The dashboard also shows the airlines with the most delayed flights right
-now, without any search.
+On the dashboard, support staff enter an airport code and see the delayed flights departing from it, with their delay. The dashboard also shows the airlines with the most delayed flights right now, without any search.
 ```
 
 </details>
 
-The Researcher writes a specification and the Planner writes tickets, both on your current branch. This takes a few minutes. Terminal 2 shows what the agents and judges do.
+The Researcher writes a specification and the Planner writes tickets, both on your current branch. This takes a few minutes. `flows watch` shows which agent works and when its judge checks the result.
 
 ### 2. Approve the tickets
 
 <PipelineDiagram :step="2" />
 
-Next, `flows start` asks you about each `ready` ticket. Before you answer, read what the agents wrote:
+When the Planner is done, `flows watch` shows that the tickets wait for you. Before you answer, read what the agents wrote:
 
 - In `specs/`: do the assumptions make sense?
 - In `backlog/`: is each `ready` ticket really independent of the others?
 
-Answer `y` for each ticket an agent should build. Only those get a Ralph loop.
+Press `Enter`, select each ticket an agent should build with `Space` and press `Enter` again. Only those get a Ralph loop.
 
 ### 3. Wait for the implementers and the Reviewer
 
 <PipelineDiagram :step="3" />
 
-```bash
-flows merge
-```
-
-`flows merge` waits until the Reviewer is done, which takes a while. Use the time to read the workflow below. Look for the two checkpoints. Each one is a `condition(...)` that waits for your answer.
+The implementers and the Reviewer take a while. Press `Tab` to see the Ralph loops move across the backlog board, and `Tab` again to get back to the pipeline. Use the time to read the workflow below. Look for the two checkpoints. Each one is a `condition(...)` that waits for your answer. `flows watch` sends your answer as the same signal as `flows start` and `flows merge` do.
 
 ::: code-group
 
@@ -245,11 +229,17 @@ End with one line per branch, without any formatting: `<branch>: APPROVE` or
 
 <PipelineDiagram :step="4" />
 
-`flows merge` shows the Reviewer's verdict for each branch and asks whether to merge. Answer `y`. The workflow merges the approved branches into your branch and runs the tests.
+When the Reviewer is done, `flows watch` shows that the merge decision waits for you. Press `Enter` to see the Reviewer's verdict for each branch, then press `y`. The workflow merges the approved branches into your branch and runs the tests.
 
-Both tickets change the same dashboard page, so the second merge will probably conflict. The workflow skips that branch and `flows merge` tells you about it.
+Both tickets change the same dashboard page, so the second merge will probably conflict. The workflow skips that branch. In terminal 2, see which branches were merged, which conflicted and whether the tests pass:
+
+```bash
+flows status pipeline
+```
 
 ### 5. Look at the result
+
+In terminal 2:
 
 ```bash
 task run
@@ -259,7 +249,7 @@ Open the dashboard at [http://localhost:8080/dashboard.html](http://localhost:80
 
 ### 6. Clean up
 
-Stop the app (`Ctrl+C`) and clean up:
+Stop the app (`Ctrl+C`), quit `flows watch` (`q`) and clean up:
 
 ```bash
 flows cleanup
