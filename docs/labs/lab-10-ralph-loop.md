@@ -33,36 +33,27 @@ The branch contains the tracer-bullet `backlog/`. Only TICKET-1 (normalize the d
 > [!IMPORTANT]
 > The agent runs unattended. Nobody answers permission prompts, so they are turned off. The sandbox keeps this safe. The agent can change files and commit, but it has no network access. Never run an unattended agent without the sandbox. It also needs the [agent token from the setup](/getting-started/setup#agent-token).
 
-In **terminal 1**, start Temporal and the worker, and follow the worker's output. It shows what the agent and the judge do:
+In **terminal 1**, start Temporal and the worker, and open `flows watch`. If you use GitHub Copilot CLI, set `AGENT=copilot` there first. The default is Claude Code.
 
 ```bash
 task flows:start
-flows logs
+task flows:watch
 ```
 
-Use **terminal 2** for the steps below. If you use GitHub Copilot CLI, set `AGENT=copilot` there first. The default is Claude Code.
+`flows watch` shows the loops, and below them the worker's output: what the agent and the judge do. Press `Tab` to switch to the backlog board. Use **terminal 2** to look at the code.
 
 ### 1. One run, watching
 
-Start the loop with only one run:
+In `flows watch`, press `Tab` to see the backlog board. Select TICKET-1 in **Ready** with the arrow keys, press `s`, then `1` for one run.
 
-```bash
-flows ralph TICKET-1 --runs 1
-```
-
-Watch terminal 1. First the agent does one step and commits. Then the judge checks it. When it's done, look at what changed on the loop's branch:
+Watch the worker output: press `Tab` to get back to it. First the agent does one step and commits. Then the judge checks it. When it's done, look at what changed on the loop's branch, in terminal 2:
 
 ```bash
 git log --oneline -3 agent/ticket-1
 git show agent/ticket-1:.harness/progress.md
 ```
 
-Check three things. Is the step small? Do the tests pass? Could the next run continue using only `.harness/progress.md`? If not, improve `.agents/skills/implement/SKILL.md` and commit it. Then throw the run away, so the next one starts fresh with your skill, and try again:
-
-```bash
-flows cleanup
-git branch -D agent/ticket-1
-```
+Check three things. Is the step small? Do the tests pass? Could the next run continue using only `.harness/progress.md`? If not, improve `.agents/skills/implement/SKILL.md` and commit it. Then throw the run away, so the next one starts fresh with your skill, and try again: on the board, select TICKET-1, press `Enter` to open it, `x` to throw the run away, and `y`. That removes the loop's worktree and deletes `agent/ticket-1`.
 
 <details>
 <summary><code>.harness/progress.md</code> after the first run</summary>
@@ -119,20 +110,12 @@ Two criteria are still open. The next run finds that out from this file.
 
 ### 2. Let it loop
 
-Now start the loop without a limit. It continues where the first run stopped, for at most 10 runs:
-
-```bash
-flows ralph TICKET-1
-```
+Now start the loop without a limit: select TICKET-1 on the board, press `s`, then `y`. It continues where the first run stopped, for at most 10 runs.
 
 > [!IMPORTANT]
-> Sometimes the judge can't decide alone, for example when the ticket contradicts the code. Then terminal 2 shows a question. Send your answer like this. The next run receives it:
->
-> ```bash
-> flows answer ralph-TICKET-1 "Keep the flat flights table until TICKET-4."
-> ```
+> Sometimes the judge can't decide alone, for example when the ticket contradicts the code. Then `flows watch` shows that the loop needs you. Press `n`, type your answer, for example `Keep the flat flights table until TICKET-4.`, and press `Enter`. The next run receives it.
 
-Pressing `Ctrl+C` in terminal 2 doesn't stop the loop. Run the same command again to follow it.
+Quitting `flows watch` with `q` doesn't stop the loop. It runs on the server. Open `flows watch` again to follow it.
 
 While the loop runs, read the code. `ralph.ts` is short. It calls `runPhase` with the phase `implement` and the ticket. `runPhase` does the actual work. It runs the agent, then the judge, and decides what happens next. It doesn't know about tickets, so later labs use it for other agents too.
 
@@ -146,7 +129,7 @@ import { runPhase } from './phase';
 import { ralphStatus } from './signals';
 
 // Ralph is one phase: the agent takes one small step per run, until the ticket is done.
-// `--runs 1` sets maxRuns to 1. Returns whether the ticket is done.
+// One run in `flows watch` (or `--runs 1`) sets maxRuns to 1. Returns whether the ticket is done.
 export async function ralph({ repoDir, agent, ticket, maxRuns = 10, base }: RalphInput): Promise<boolean> {
   const status: RalphStatus = { ticket };
   setHandler(ralphStatus, () => status);
@@ -404,16 +387,15 @@ End with exactly one line, without any formatting: `PASS`, `RETRYABLE: <what to 
 
 ### 3. Check the result
 
-When the loop stops, terminal 2 tells you whether the ticket is done or why the loop stopped. The work is on `agent/ticket-1`. Bring it onto your branch, then check the result:
+When the loop stops, `flows watch` shows whether the ticket is done or why the loop stopped. The work is on `agent/ticket-1`. When the ticket is done, its card waits for you with `ready to merge`. Select it, press `Enter`, then `m`: `flows watch` shows the commits the branch brings. Press `y` to bring them onto your branch. Then check the result in terminal 2:
 
 ```bash
-git merge --ff-only agent/ticket-1
 git log --oneline
 task test
 cat .harness/learnings.md
 ```
 
-You should see one small commit per step, passing tests and TICKET-1 set to `done`. If terminal 1 shows the judge rejecting a step and the next run fixing it, the judge did its job.
+You should see one small commit per step, passing tests and TICKET-1 set to `done`. If the worker output shows the judge rejecting a step and the next run fixing it, the judge did its job.
 
 `.harness/learnings.md` contains the decisions that later tickets need. Every run reads it, so review it like code. A wrong line misleads every later run.
 
