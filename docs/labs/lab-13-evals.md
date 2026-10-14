@@ -122,7 +122,7 @@ export async function evals({ repoDir, agent }: EvalInput): Promise<EvalReport> 
     }),
   );
 
-  // A failing eval becomes a ticket, like any other bug: the Planner writes it with the slice skill
+  // A failing eval becomes a ticket, like any other bug: the plan agent writes it with the slice skill
   const failing = results.filter((result) => !result.pass);
   if (failing.length === 0) return { results, tickets: [] };
   const request = `flows eval fails. Fix the skill descriptions in .agents/skills/, so that these cases pass:
@@ -174,6 +174,12 @@ Now change the description the way people often do when a skill doesn't load oft
 description: Use for every task in this repository.
 ```
 
+Commit the change. A failing eval becomes a ticket, and the tickets can only come onto your branch if it has no uncommitted changes:
+
+```bash
+git commit -am "Make the testing skill apply to everything"
+```
+
 Run the eval again:
 
 ```bash
@@ -191,18 +197,10 @@ FAIL  shouldn't load   loaded in 3 of 3 runs  Fix the typos in README.md.
 FAIL  shouldn't load   loaded in 3 of 3 runs  Add a task to Taskfile.yml that prints the Java version.
 ...
 6 cases passed, 3 failed.
-The Planner wrote TICKET-5 for the failing cases, see backlog/.
+The plan agent wrote TICKET-5 for the failing cases, see backlog/.
 ```
 
-Only `testing` broke: `api-design` still passes. And because cases failed, the workflow handed them to the Planner from Lab 9: a failing eval becomes a ticket, like any other bug. Open the ticket in `backlog/`: is it one `ready` ticket, with acceptance criteria you could check?
-
-### 3. Let the Ralph loop fix it
-
-```bash
-flows ralph TICKET-5
-```
-
-The Ralph loop from Lab 10 works on it like on any other ticket.
+Only `testing` broke: `api-design` still passes. And because cases failed, the workflow handed them to the plan agent from Lab 9: a failing eval becomes a ticket, like any other bug. Open the ticket in `backlog/`: is it one `ready` ticket, with acceptance criteria you could check?
 
 > [!NOTE]
 > An eval is only as good as its cases. When a skill doesn't load in real use, add that prompt to its `evals.json`, so the description can't break the same way twice.

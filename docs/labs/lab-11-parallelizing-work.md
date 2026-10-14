@@ -85,40 +85,49 @@ In **terminal 2**, start the worker. The agent output shows up there:
 flows worker
 ```
 
-### 1. Create one worktree per ticket
+### 1. Run one Ralph loop per ticket
 
-```bash
-# git worktree add -b <new branch> <folder>
-git worktree add -b agent/ticket-2 .harness/worktrees/ticket-2
-git worktree add -b agent/ticket-3 .harness/worktrees/ticket-3
-
-# Shows your original checkout and the two new worktrees, each with its branch
-git worktree list
-```
-
-Each `git worktree add` creates a new branch from your current commit and checks it out in a new folder. Both live under `.harness/worktrees/`, which the branch already ignores in `.gitignore`, so the worktrees don't show up as changes in your original checkout.
-
-### 2. Run one Ralph loop per worktree
-
-`flows ralph` works on the repository you're in, and a worktree is one. Start one loop from each worktree. Set `AGENT=copilot` first if you use GitHub Copilot CLI.
+Set `AGENT=copilot` first if you use GitHub Copilot CLI.
 
 In **terminal 3**:
 
 ```bash
-cd .harness/worktrees/ticket-2
 flows ralph TICKET-2
 ```
 
 In **terminal 4**:
 
 ```bash
-cd .harness/worktrees/ticket-3
 flows ralph TICKET-3
 ```
 
 Both loops run at the same time, in the same worker: `ralph-TICKET-2` and `ralph-TICKET-3`, each on its own ticket, its own branch and with its own `.harness/progress.md`. Their agents' output is mixed in terminal 2, each line prefixed with its workflow. In the web UI at [http://localhost:8233](http://localhost:8233), you see them side by side.
 
-While they work, run `git status` in your original checkout, in a new terminal: it stays clean, because each loop only changes its own worktree.
+### 2. Find the worktrees
+
+While they work, open a new terminal in your original checkout:
+
+```bash
+# Shows your original checkout and one worktree per loop, each with its branch
+git worktree list
+git status
+```
+
+You didn't create these worktrees. Each loop does it itself, with `git worktree add -b agent/ticket-2 .harness/worktrees/ticket-2`: a new branch from your current commit, checked out in a new folder. Both live under `.harness/worktrees/`, which the branch already ignores in `.gitignore`, so the worktrees don't show up as changes in your original checkout. `git status` stays clean, because each loop only changes its own worktree.
+
+The loop in Lab 10 did the same. That's why your checkout stayed as it was until you merged `agent/ticket-1`.
+
+::: code-group
+
+```ts [.harness/flows/src/workflows/ralph.ts (excerpt)]
+  // The loop works in a worktree of its own, on the branch agent/<ticket>: its commits, and the reset of a
+  // retry, stay out of your checkout. In the pipeline it starts fresh from `base`. On its own (`flows ralph`)
+  // it goes on where an earlier run on the same ticket stopped.
+  const fresh = base !== undefined;
+  const workDir = await addWorktree(repoDir, worktreeName(ticket), branchOf(ticket), base ?? (await headCommit(repoDir)), fresh);
+```
+
+:::
 
 > [!NOTE]
 > Worktrees only separate files. Ports, databases and caches are still shared. If both agents start the app at once, the second fails with `Port 8080 was already in use`. Give it another port, for example `SERVER_PORT=8081`.
@@ -128,6 +137,7 @@ While they work, run `git status` in your original checkout, in a new terminal: 
 The branch comes with a dashboard page, still empty, and each ticket adds a lookup to it. Once both loops are done (terminals 3 and 4 are back at the prompt), start the app from the TICKET-2 worktree, in terminal 3:
 
 ```bash
+cd .harness/worktrees/ticket-2
 task run
 ```
 
@@ -141,4 +151,4 @@ Stop the app (`Ctrl+C`), go back to the repository root (`cd ../../..`) and clea
 flows cleanup
 ```
 
-This runs `git worktree remove` on every worktree under `.harness/worktrees/` and deletes the `agent/*` branches. `git worktree remove`, rather than deleting the folder, keeps Git from holding on to a stale entry for it. The branches were never merged, so deleting them discards the agents' work.
+This stops any workflow still running, runs `git worktree remove` on every worktree under `.harness/worktrees/` and deletes the `agent/*` branches that are merged. `git worktree remove`, rather than deleting the folder, keeps Git from holding on to a stale entry for it. These branches were never merged, so `flows cleanup` keeps them and prints how to look at them or delete them with `git branch -D`. Deleting them discards the agents' work.

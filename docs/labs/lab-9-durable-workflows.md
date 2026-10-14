@@ -15,7 +15,7 @@ The four Temporal terms you need in this lab:
 | **Worker** | The process that runs the workflows and their activities. |
 | **Query** | A question to a running workflow, for example "how far are you?". |
 
-In this lab, you run a workflow that doesn't change any code: the **Planner**, an agent with the `slice` skill from [Tracer bullets](./lab-8-tracer-bullets.md), turns a feature request into tickets.
+In this lab, you run a workflow that doesn't change any code: the **plan agent**, an agent with the `slice` skill from [Tracer bullets](./lab-8-tracer-bullets.md), turns a feature request into tickets.
 
 ## Your Task
 
@@ -87,34 +87,51 @@ flows plan "Support staff can download the current delays as a CSV file, and fil
   </template>
 </ContentTabs>
 
-The workflow hands the feature request to the Planner, which writes its tickets to `backlog/`, next to the four from Lab 8. Terminal 3 prints the new ticket ids at the end.
+The workflow hands the feature request to the plan agent, which writes its tickets to `backlog/`, next to the four from Lab 8. It works on a branch of its own and commits the tickets there. At the end, the workflow brings them onto your branch, and terminal 3 prints the new ticket ids.
+
+> [!NOTE]
+> The plan agent only sees what's committed, and the tickets can only come onto your branch if it has no uncommitted changes. Commit or stash your changes before you run `flows plan`. If you change the `slice` skill, commit it, or the workflow refuses to start.
 
 ::: code-group
 
 ```ts [.harness/flows/src/workflows/plan.ts]
-import { defineQuery, log, setHandler } from '@temporalio/workflow';
+import { ApplicationFailure, log, setHandler, workflowInfo } from '@temporalio/workflow';
 import type { PlanInput, PlanStatus } from '../shared';
-import { listTickets, readHarnessFile, runAgent } from './activities';
+import { addWorktree, currentBranch, headCommit, listTickets, mergeBranch, removeWorktree, requireCommitted, runAgent } from './activities';
+import { skillFile, workPrompt } from './prompts';
+import { planStatus } from './signals';
 
-// What `flows status` shows while the workflow runs
-export const planStatus = defineQuery<PlanStatus>('status');
-
-// The Planner: an agent with the slice skill turns a feature request into tickets in backlog/
-export async function plan({ repoDir, agent, request }: PlanInput): Promise<string[]> {
-  const status: PlanStatus = { phase: 'planning', newTickets: [] };
+// The plan agent: it uses the slice skill to turn a feature request or a specification into tickets in backlog/
+export async function plan({ repoDir, agent, request, spec }: PlanInput): Promise<string[]> {
+  const status: PlanStatus = { step: 'planning', newTickets: [] };
   setHandler(planStatus, () => status);
 
-  // Activities: read the tickets already in backlog/ and the Planner's prompt
-  const before = await listTickets(repoDir);
-  const slice = await readHarnessFile(repoDir, 'prompts/slice.md');
+  // The plan agent works in a worktree of its own. A retry throws away uncommitted changes, and that
+  // never touches your checkout. Its tickets come onto the branch you're on now.
+  if (spec) await requireCommitted(repoDir, spec);
+  await requireCommitted(repoDir, skillFile('slice'));
+  const into = await currentBranch(repoDir);
+  const name = `plan-${workflowInfo().runId.slice(0, 8)}`;
+  const branch = `agent/${name}`;
+  const workDir = await addWorktree(repoDir, name, branch, await headCommit(repoDir));
+
+  // Activity: read the tickets already in backlog/
+  const before = await listTickets(workDir);
 
   // Activity: one agent run. It takes minutes, and it's the one you'll interrupt.
-  log.info('== Planner');
-  await runAgent({ repoDir, agent, mode: 'write', prompt: `${slice}\nFeature request: ${request}` });
+  log.info('== plan');
+  await runAgent({ repoDir, workDir, agent, mode: 'write', step: 'slice', prompt: workPrompt('slice', spec ? `Specification: ${spec}` : `Feature request: ${request}`) });
 
-  // Activity: the tickets the Planner added
-  status.newTickets = (await listTickets(repoDir)).filter((ticket) => !before.includes(ticket));
-  status.phase = 'done';
+  // Activity: the tickets the plan agent added
+  status.newTickets = (await listTickets(workDir)).filter((ticket) => !before.includes(ticket));
+
+  // Activities: the tickets come onto your branch, and the worktree goes
+  const problem = await mergeBranch(repoDir, branch, into);
+  if (problem) {
+    throw ApplicationFailure.nonRetryable(`The tickets are on ${branch}, not on ${into}: ${problem}. Then: git rebase ${into} ${branch} && git merge --ff-only ${branch}`);
+  }
+  await removeWorktree(repoDir, name, branch);
+  status.step = 'done';
   return status.newTickets;
 }
 ```
@@ -133,19 +150,19 @@ Press `Ctrl+C` in terminal 3. That only stops the waiting: the workflow runs on 
 flows status
 ```
 
-That's a **query**. The answer shows the phase, `planning`, from `planStatus` in the code above.
+That's a **query**. The answer shows the step, `planning`, from `status` in the code above.
 
 Run `flows plan` again with the same request. It doesn't start a second workflow, it waits for the one that's already running.
 
 ### 5. Stop the worker
 
-While the Planner is still working, before a new ticket shows up in `backlog/`, stop the worker in terminal 2 with `Ctrl+C`. Then start it again:
+While the plan agent is still working (terminal 2 shows its output), stop the worker in terminal 2 with `Ctrl+C`. Then start it again:
 
 ```bash
 flows worker
 ```
 
-The workflow continues where it stopped. `listTickets` and `readHarnessFile` don't run again, their results are already in the history. Only the agent run starts again, about 30 seconds later: that's the retry delay set for `runAgent`.
+The workflow continues where it stopped. `addWorktree` and `listTickets` don't run again, their results are already in the history. Only the agent run starts again, about 30 seconds later: that's the retry delay set for `runAgent`.
 
 ::: code-group
 
@@ -163,6 +180,6 @@ export const { runAgent } = proxyActivities<typeof activities>({
 
 ### 6. Check the result
 
-When the workflow is done, terminal 3 prints the tickets the Planner wrote. Open them in `backlog/` and check them as you did in Lab 8: does every ticket cut a full vertical slice, and does every `ready` ticket really not depend on another one?
+When the workflow is done, terminal 3 prints the tickets the plan agent wrote. Open them in `backlog/` and check them as you did in Lab 8: does every ticket cut a full vertical slice, and does every `ready` ticket really not depend on another one?
 
 You now have a server, a worker and a workflow that survives its worker. In the next lab, a workflow changes code.

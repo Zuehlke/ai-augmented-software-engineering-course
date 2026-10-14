@@ -91,8 +91,6 @@ disable-model-invocation: true
 Break a feature request, a spec, or the plan already discussed in this conversation into a set of
 tickets under `backlog/`. You do not implement anything.
 
-Adapted from Matt Pocock's `to-tickets` skill.
-
 ## STEPS
 
 1. Read the feature request in full. Look for prefactoring: work that has to land before a feature
@@ -116,8 +114,9 @@ Adapted from Matt Pocock's `to-tickets` skill.
    delivers. Ask whether the granularity and the blocking edges are right. Iterate until the user
    approves.
 
-5. Only after approval, write one file per ticket to `backlog/TICKET-<n>-<slug>.md`, numbered in
-   dependency order (blockers first):
+5. Only after approval, write one file per ticket to `backlog/TICKET-<n>-<slug>.md`, numbered after
+   the highest ticket already in `backlog/`, in dependency order (blockers first). Don't change the
+   existing tickets:
 
    \```markdown
    ---
@@ -143,6 +142,8 @@ Adapted from Matt Pocock's `to-tickets` skill.
   something outside the repo that hasn't landed yet.
 - Don't invent scope the feature request doesn't ask for.
 ```
+
+Adapted from Matt Pocock's `to-tickets` skill.
 
 </details>
 

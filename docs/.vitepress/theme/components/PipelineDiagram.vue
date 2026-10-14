@@ -1,5 +1,5 @@
 <script setup lang="ts">
-// Lab 12: the pipeline as four phases. Each phase can have a judge and a human gateway at its edge.
+// Lab 12: the pipeline as four stages, as in `flows watch`. Each stage can have a judge and a human gateway at its edge.
 // Pass `step` (1-4) to highlight where you are in the lab's "Your Task" steps.
 import { computed } from "vue";
 
@@ -15,37 +15,37 @@ const props = defineProps<{ step?: 1 | 2 | 3 | 4 }>();
 
 const phases: Phase[] = [
   {
-    role: "Researcher",
+    role: "Research agent",
     title: "Specification",
     text: "Turns the feature request into a specification.",
     judge: "Covers the request, with its assumptions written down?",
   },
   {
-    role: "Planner & Dispatcher",
-    title: "Tickets",
+    role: "Plan agent & dispatch",
+    title: "Plan",
     text: "Slices the specification into tickets. Code picks the ready ones.",
     judge: "Vertical slices, and each ready ticket independent?",
     checkpoint: "approve",
   },
   {
-    role: "Implementers",
+    role: "Implement loops",
     title: "Implementation",
     text: "One Ralph loop per ticket, each in its own worktree.",
     judge: "Tests pass, and the commit fits the ticket?",
   },
   {
-    role: "Reviewer & Merger",
+    role: "Review agent & merge",
     title: "Review and merge",
     text: "A read-only agent reviews every branch. Code merges the approved ones.",
     checkpoint: "decide",
   },
 ];
 
-// The one phase (and checkpoint) each lab step is about
+// The one stage (and checkpoint) each lab step is about
 const steps: Record<number, { phase: number; checkpoint?: boolean; label: string }> = {
   1: { phase: 0, label: "1. Start the pipeline" },
   2: { phase: 1, checkpoint: true, label: "2. Approve the tickets" },
-  3: { phase: 2, label: "3. Wait for the implementers and the Reviewer" },
+  3: { phase: 2, label: "3. Wait for the implement loops and the review agent" },
   4: { phase: 3, checkpoint: true, label: "4. Decide whether to merge" },
 };
 
