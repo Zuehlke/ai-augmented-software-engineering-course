@@ -15,7 +15,7 @@ The four Temporal terms you need in this lab:
 | **Worker** | The process that runs the workflows and their activities. |
 | **Query** | A question to a running workflow, for example "how far are you?". |
 
-In this lab, you run a workflow that doesn't change any code: the **plan agent**, an agent with the `slice` skill from [Tracer bullets](./lab-8-tracer-bullets.md), turns a feature request into tickets.
+In this lab, you run a workflow that doesn't change any code: the **plan agent**, an agent with the `slice` skill from [Tracer bullets](./lab-8-tracer-bullets.md), turns a specification into tickets.
 
 ## Your Task
 
@@ -30,7 +30,7 @@ task lab/durable-workflows
 >
 > [![Open Lab 9 in GitHub Codespaces](https://github.com/codespaces/badge.svg)](https://codespaces.new/Zuehlke/ai-augmented-software-engineering?ref=lab%2Fdurable-workflows)
 
-The branch contains the tracer-bullet `backlog/`, the sandbox profile in `.harness/sandbox/` and the workflows in `.harness/flows/`. The dev container already has the Temporal CLI and the `flows` command. Check both:
+The branch contains the tracer-bullet `backlog/`, a specification in `specs/`, the sandbox profile in `.harness/sandbox/` and the workflows in `.harness/flows/`. The dev container already has the Temporal CLI and the `flows` command. Check both:
 
 ```bash
 temporal --version
@@ -56,41 +56,28 @@ This starts a local Temporal server and the worker, both in the background. The 
 
 Open the web UI at [http://localhost:8233](http://localhost:8233). In **GitHub Codespaces**, open the **Ports** tab and click the globe icon next to `Temporal UI` (port `8233`).
 
-### 2. Follow the worker
+### 2. Watch the workflows
 
-Still in **terminal 1**:
-
-```bash
-flows logs
-```
-
-The worker's output shows up here, the agents' output included. Leave it open.
-
-### 3. Run the workflow
-
-In **terminal 2**:
-
-<ContentTabs :tabs="['GitHub Copilot CLI', 'Claude Code']">
-  <template #tab1>
+Still in **terminal 1**. If you use GitHub Copilot CLI, set `AGENT=copilot` there first. The default is Claude Code.
 
 ```bash
-AGENT=copilot flows plan "Support staff can download the current delays as a CSV file, and filter the download by airline."
+task flows:watch
 ```
 
-  </template>
-  <template #tab2>
+`flows watch` is a terminal UI that shows what runs: the workflows, and below them the worker's output, the agents' output included. `↑` and `↓` scroll the output, `End` follows the new lines again. Leave it open.
 
-```bash
-flows plan "Support staff can download the current delays as a CSV file, and filter the download by airline."
-```
+### 3. Read the specification
 
-  </template>
-</ContentTabs>
+The plan agent works from a specification, like the one the research phase wrote in [Structured agentic workflows](./lab-4-structured-agentic-workflows.md). The branch already has one, committed: `specs/delays-csv-export/specification.md`. Support staff want to download the current delays as a CSV file, filtered by airline. Read it before you hand it to the plan agent.
 
-The workflow hands the feature request to the plan agent, which writes its tickets to `backlog/`, next to the four from Lab 8. It works on a branch of its own and commits the tickets there. At the end, the workflow brings them onto your branch, and terminal 2 prints the new ticket ids.
+### 4. Run the workflow
+
+In `flows watch` in terminal 1, press `→` to select the **Plan tickets** phase and press `Enter`. Pick `specs/delays-csv-export/specification.md` and press `Enter` again.
+
+The workflow hands the specification to the plan agent, which writes its tickets to `backlog/`, next to the four from Lab 8. It works on a branch of its own and commits the tickets there. At the end, the workflow brings them onto your branch. `flows watch` shows the workflow under **Other workflows**, and the agent's output below.
 
 > [!NOTE]
-> The plan agent only sees what's committed, and the tickets can only come onto your branch if it has no uncommitted changes. Commit or stash your changes before you run `flows plan`. If you change the `slice` skill, commit it, or the workflow refuses to start.
+> The plan agent only sees what's committed, and the tickets can only come onto your branch if it has no uncommitted changes. Commit or stash your changes before you start the plan agent. If you change the specification or the `slice` skill, commit the change, or the workflow refuses to start.
 
 ::: code-group
 
@@ -141,27 +128,17 @@ Every `await` line is an **activity**. Temporal saves each activity's result in 
 
 In the web UI, click `plan` to see its history.
 
-### 4. Ask how far it is
-
-Press `Ctrl+C` in terminal 2. That only stops the waiting: the workflow runs on the server, and the web UI still shows it as **Running**. Ask it how far it is:
-
-```bash
-flows status
-```
-
-That's a **query**. The answer shows the step, `planning`, from `status` in the code above.
-
-Run `flows plan` again with the same request. It doesn't start a second workflow, it waits for the one that's already running.
+`flows watch` doesn't read the history. Every few seconds, it asks each running workflow for its `status`: a **query**. In the code above, `setHandler(planStatus, ...)` answers it.
 
 ### 5. Stop the worker
 
-While the plan agent is still working (terminal 1 shows its output), stop the worker, and the Temporal server with it. In terminal 2 (press `Ctrl+C` first if `flows plan` still waits there):
+While the plan agent is still working (terminal 1 shows its output), stop the worker, and the Temporal server with it. In terminal 2:
 
 ```bash
 task flows:stop
 ```
 
-Then start both again:
+`flows watch` in terminal 1 keeps running and shows that Temporal isn't running. Then start both again:
 
 ```bash
 task flows:start
@@ -185,6 +162,6 @@ export const { runAgent } = proxyActivities<typeof activities>({
 
 ### 6. Check the result
 
-When the workflow is done, terminal 2 prints the tickets the plan agent wrote. Open them in `backlog/` and check them as you did in Lab 8: does every ticket cut a full vertical slice, and does every `ready` ticket really not depend on another one?
+When the workflow is done, press `Tab` in `flows watch`: the backlog board shows the new tickets next to the four from Lab 8. Select one with the arrow keys and press `Enter` to read it, or open them in `backlog/`. Check them as you did in Lab 8: does every ticket cut a full vertical slice, and does every `ready` ticket really not depend on another one?
 
 You now have a server, a worker and a workflow that survives its worker. In the next lab, a workflow changes code.
