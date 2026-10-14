@@ -38,7 +38,7 @@ It shows the pipeline as in the diagram above. Blue is what runs, purple is what
 
 <PipelineDiagram :step="1" />
 
-In `flows watch`, the Researcher is selected. Press `s`, paste the feature request and press `Enter`:
+In `flows watch`, the Researcher is selected. Press `Enter`, paste the feature request and press `Enter` again:
 
 <details>
 <summary>The feature request</summary>
@@ -60,13 +60,13 @@ When the Planner is done, `flows watch` shows that the tickets wait for you. Bef
 - In `specs/`: do the assumptions make sense?
 - In `backlog/`: is each `ready` ticket really independent of the others?
 
-Press `Enter`, select each ticket an agent should build with `Space` and press `Enter` again. Only those get a Ralph loop.
+Press `n` to open it, select each ticket an agent should build with `Space` and press `Enter`. Only those get a Ralph loop.
 
 ### 3. Wait for the implementers and the Reviewer
 
 <PipelineDiagram :step="3" />
 
-The implementers and the Reviewer take a while. Press `Tab` to see the Ralph loops move across the backlog board, and `Tab` again to get back to the pipeline. Use the time to read the workflow below. Look for the two checkpoints. Each one is a `condition(...)` that waits for your answer. `flows watch` sends your answer as the same signal as `flows start` and `flows merge` do.
+The implementers and the Reviewer take a while. Press `Tab` to see the Ralph loops move across the backlog board, and `Tab` again to get back to the pipeline. On the board, select a card with the arrow keys and press `Enter` to read its ticket. In the pipeline view, `↑` and `↓` scroll the agents' output, and `End` follows the new lines again. Use the time to read the workflow below. Look for the two checkpoints. Each one is a `condition(...)` that waits for your answer. `flows watch` sends your answer as the same signal as `flows start` and `flows merge` do.
 
 ::: code-group
 
@@ -127,7 +127,7 @@ export async function pipeline({ repoDir, agent, request }: PipelineInput): Prom
   // Reviewer: a fresh, read-only agent gets every branch's changes
   status.phase = 'reviewing';
   const reviewer = await readHarnessFile(repoDir, 'prompts/reviewer.md');
-  status.reviewerOutput = await runAgent({ repoDir, agent, mode: 'read', prompt: reviewer + (await branchDiffs(repoDir, branches)) });
+  status.reviewerOutput = await runAgent({ repoDir, agent, mode: 'read', step: 'review', prompt: reviewer + (await branchDiffs(repoDir, branches)) });
   status.approvedBranches = branches.filter((branch) => status.reviewerOutput.includes(`${branch}: APPROVE`));
 
   // Checkpoint 2: waits until `flows merge` sends your decision
@@ -138,7 +138,7 @@ export async function pipeline({ repoDir, agent, request }: PipelineInput): Prom
     return status;
   }
 
-  // Merger: merges the approved branches into the branch you're on
+  // Merger: rebases the approved branches onto the branch you're on and fast-forwards it, one after the other
   status.phase = 'merging';
   for (const branch of status.approvedBranches) {
     if (await mergeBranch(repoDir, branch)) {
@@ -229,9 +229,13 @@ End with one line per branch, without any formatting: `<branch>: APPROVE` or
 
 <PipelineDiagram :step="4" />
 
-When the Reviewer is done, `flows watch` shows that the merge decision waits for you. Press `Enter` to see the Reviewer's verdict for each branch, then press `y`. The workflow merges the approved branches into your branch and runs the tests.
+When the Reviewer is done, `flows watch` shows that the merge decision waits for you. Press `n` to see the Reviewer's verdict for each branch.
 
-Both tickets change the same dashboard page, so the second merge will probably conflict. The workflow skips that branch. In terminal 2, see which branches were merged, which conflicted and whether the tests pass:
+To check a branch's changes yourself before you decide, press `Esc` and `Tab` to the board. The finished tickets wait under **Needs you** as *ready to merge*. Open one with `Enter` and press `d`: VS Code shows what its branch changes, one side-by-side diff per file. Press `Esc`, `Tab` back to the pipeline and press `n` to open the merge decision again.
+
+Press `y`. The workflow rebases each approved branch onto your branch and fast-forwards it, one after the other, so there's no merge commit. Then it runs the tests.
+
+Both tickets change the same dashboard page, so the second branch will probably conflict when it's rebased. The workflow skips that branch. It stays on the board as *ready to merge*: open it with `Enter` and press `m` to see its commits and the command to rebase it by hand. If a branch applies cleanly, `y` there rebases and fast-forwards it. In terminal 2, see which branches were merged, which conflicted and whether the tests pass:
 
 ```bash
 flows status pipeline
