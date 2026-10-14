@@ -62,19 +62,14 @@ None of the prompts mentions tests or a skill. Some prompts appear in both files
 > [!NOTE]
 > The agents in this lab run unattended, so they need the [agent token from the setup](/getting-started/setup#agent-token). This eval reads Claude Code's tool calls, so it runs with Claude Code only.
 
-In **terminal 1**, start the Temporal server:
+In **terminal 1**, start Temporal and the worker, and follow the worker's output:
 
 ```bash
-temporal server start-dev --db-filename ~/temporal.db
+task flows:start
+flows logs
 ```
 
-In **terminal 2**, start the worker:
-
-```bash
-flows worker
-```
-
-Use **terminal 3** for the steps below.
+Use **terminal 2** for the steps below.
 
 ### 1. Run the eval
 

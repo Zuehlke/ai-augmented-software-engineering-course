@@ -73,35 +73,30 @@ delayed / cancelled) and its delay in minutes, without knowing the query API.
 > [!NOTE]
 > The agents in this lab run unattended, so they need the [agent token from the setup](/getting-started/setup#agent-token).
 
-In **terminal 1**, start the Temporal server:
+In **terminal 1**, start Temporal and the worker, and follow the worker's output. The agent output shows up there:
 
 ```bash
-temporal server start-dev --db-filename ~/temporal.db
-```
-
-In **terminal 2**, start the worker. The agent output shows up there:
-
-```bash
-flows worker
+task flows:start
+flows logs
 ```
 
 ### 1. Run one Ralph loop per ticket
 
 Set `AGENT=copilot` first if you use GitHub Copilot CLI.
 
-In **terminal 3**:
+In **terminal 2**:
 
 ```bash
 flows ralph TICKET-2
 ```
 
-In **terminal 4**:
+In **terminal 3**:
 
 ```bash
 flows ralph TICKET-3
 ```
 
-Both loops run at the same time, in the same worker: `ralph-TICKET-2` and `ralph-TICKET-3`, each on its own ticket, its own branch and with its own `.harness/progress.md`. Their agents' output is mixed in terminal 2, each line prefixed with its workflow. In the web UI at [http://localhost:8233](http://localhost:8233), you see them side by side.
+Both loops run at the same time, in the same worker: `ralph-TICKET-2` and `ralph-TICKET-3`, each on its own ticket, its own branch and with its own `.harness/progress.md`. Their agents' output is mixed in terminal 1, each line prefixed with its workflow. In the web UI at [http://localhost:8233](http://localhost:8233), you see them side by side.
 
 ### 2. Find the worktrees
 
@@ -134,7 +129,7 @@ The loop in Lab 10 did the same. That's why your checkout stayed as it was until
 
 ### 3. Look at the results
 
-The branch comes with a dashboard page, still empty, and each ticket adds a lookup to it. Once both loops are done (terminals 3 and 4 are back at the prompt), start the app from the TICKET-2 worktree, in terminal 3:
+The branch comes with a dashboard page, still empty, and each ticket adds a lookup to it. Once both loops are done (terminals 2 and 3 are back at the prompt), start the app from the TICKET-2 worktree, in terminal 2:
 
 ```bash
 cd .harness/worktrees/ticket-2

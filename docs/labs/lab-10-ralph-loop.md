@@ -33,19 +33,14 @@ The branch contains the tracer-bullet `backlog/`. Only TICKET-1 (normalize the d
 > [!IMPORTANT]
 > The agent runs unattended. Nobody answers permission prompts, so they are turned off. The sandbox keeps this safe. The agent can change files and commit, but it has no network access. Never run an unattended agent without the sandbox. It also needs the [agent token from the setup](/getting-started/setup#agent-token).
 
-In **terminal 1**, start the Temporal server:
+In **terminal 1**, start Temporal and the worker, and follow the worker's output. It shows what the agent and the judge do:
 
 ```bash
-temporal server start-dev --db-filename ~/temporal.db
+task flows:start
+flows logs
 ```
 
-In **terminal 2**, start the worker. It shows what the agent and the judge do:
-
-```bash
-flows worker
-```
-
-Use **terminal 3** for the steps below. If you use GitHub Copilot CLI, set `AGENT=copilot` there first. The default is Claude Code.
+Use **terminal 2** for the steps below. If you use GitHub Copilot CLI, set `AGENT=copilot` there first. The default is Claude Code.
 
 ### 1. One run, watching
 
@@ -55,7 +50,7 @@ Start the loop with only one run:
 flows ralph TICKET-1 --runs 1
 ```
 
-Watch terminal 2. First the agent does one step and commits. Then the judge checks it. When it's done, look at what changed on the loop's branch:
+Watch terminal 1. First the agent does one step and commits. Then the judge checks it. When it's done, look at what changed on the loop's branch:
 
 ```bash
 git log --oneline -3 agent/ticket-1
@@ -131,13 +126,13 @@ flows ralph TICKET-1
 ```
 
 > [!IMPORTANT]
-> Sometimes the judge can't decide alone, for example when the ticket contradicts the code. Then terminal 3 shows a question. Send your answer like this. The next run receives it:
+> Sometimes the judge can't decide alone, for example when the ticket contradicts the code. Then terminal 2 shows a question. Send your answer like this. The next run receives it:
 >
 > ```bash
 > flows answer ralph-TICKET-1 "Keep the flat flights table until TICKET-4."
 > ```
 
-Pressing `Ctrl+C` in terminal 3 doesn't stop the loop. Run the same command again to follow it.
+Pressing `Ctrl+C` in terminal 2 doesn't stop the loop. Run the same command again to follow it.
 
 While the loop runs, read the code. `ralph.ts` is short. It calls `runPhase` with the phase `implement` and the ticket. `runPhase` does the actual work. It runs the agent, then the judge, and decides what happens next. It doesn't know about tickets, so later labs use it for other agents too.
 
@@ -336,7 +331,7 @@ The skills are the same ones you could use yourself. The harness only adds what'
 // same skills you use yourself in the earlier labs. This only adds what's different when nobody watches.
 import type { PhaseName } from '../shared';
 
-// Where an agent finds a skill, in its worktree
+// Where an agent finds a skill
 export const skillFile = (name: string) => `.agents/skills/${name}/SKILL.md`;
 
 // An agent that does the work, unattended
@@ -409,7 +404,7 @@ End with exactly one line, without any formatting: `PASS`, `RETRYABLE: <what to 
 
 ### 3. Check the result
 
-When the loop stops, terminal 3 tells you whether the ticket is done or why the loop stopped. The work is on `agent/ticket-1`. Bring it onto your branch, then check the result:
+When the loop stops, terminal 2 tells you whether the ticket is done or why the loop stopped. The work is on `agent/ticket-1`. Bring it onto your branch, then check the result:
 
 ```bash
 git merge --ff-only agent/ticket-1
@@ -418,7 +413,7 @@ task test
 cat .harness/learnings.md
 ```
 
-You should see one small commit per step, passing tests and TICKET-1 set to `done`. If terminal 2 shows the judge rejecting a step and the next run fixing it, the judge did its job.
+You should see one small commit per step, passing tests and TICKET-1 set to `done`. If terminal 1 shows the judge rejecting a step and the next run fixing it, the judge did its job.
 
 `.harness/learnings.md` contains the decisions that later tickets need. Every run reads it, so review it like code. A wrong line misleads every later run.
 

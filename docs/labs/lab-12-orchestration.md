@@ -26,10 +26,11 @@ task lab/orchestration
 > [!NOTE]
 > The agents in this lab run unattended, so they need the [agent token from the setup](/getting-started/setup#agent-token).
 
-Temporal and the worker already run in the background. In **terminal 1**, open the pipeline view. If you use GitHub Copilot CLI, set `AGENT=copilot` there first. The default is Claude Code.
+In **terminal 1**, start Temporal and the worker in the background, and open the pipeline view. If you use GitHub Copilot CLI, set `AGENT=copilot` there first. The default is Claude Code.
 
 ```bash
-flows watch
+task flows:start
+task flows:watch
 ```
 
 It shows the pipeline as in the diagram above. Blue is what runs, purple is what waits for you. Use **terminal 2** for everything else. `flows logs` there shows the agent output.

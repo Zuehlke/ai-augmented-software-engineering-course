@@ -42,33 +42,33 @@ flows
 > [!NOTE]
 > The agents in this lab run unattended, so they need the [agent token from the setup](/getting-started/setup#agent-token).
 
-You'll use three terminals.
+You'll use two terminals.
 
-### 1. Start the Temporal server
+### 1. Start Temporal and the worker
 
 In **terminal 1**:
 
 ```bash
-temporal server start-dev --db-filename ~/temporal.db
+task flows:start
 ```
 
-This starts a local Temporal server. `--db-filename` saves the workflows in a file, so they also survive a restart of the server.
+This starts a local Temporal server and the worker, both in the background. The server saves the workflows in a file, so they also survive a restart of the server. The worker runs the workflows and starts the agents.
 
 Open the web UI at [http://localhost:8233](http://localhost:8233). In **GitHub Codespaces**, open the **Ports** tab and click the globe icon next to `Temporal UI` (port `8233`).
 
-### 2. Start the worker
+### 2. Follow the worker
 
-In **terminal 2**:
+Still in **terminal 1**:
 
 ```bash
-flows worker
+flows logs
 ```
 
-The worker runs the workflows and starts the agents. Their output shows up here. Leave it open.
+The worker's output shows up here, the agents' output included. Leave it open.
 
 ### 3. Run the workflow
 
-In **terminal 3**:
+In **terminal 2**:
 
 <ContentTabs :tabs="['GitHub Copilot CLI', 'Claude Code']">
   <template #tab1>
@@ -87,7 +87,7 @@ flows plan "Support staff can download the current delays as a CSV file, and fil
   </template>
 </ContentTabs>
 
-The workflow hands the feature request to the plan agent, which writes its tickets to `backlog/`, next to the four from Lab 8. It works on a branch of its own and commits the tickets there. At the end, the workflow brings them onto your branch, and terminal 3 prints the new ticket ids.
+The workflow hands the feature request to the plan agent, which writes its tickets to `backlog/`, next to the four from Lab 8. It works on a branch of its own and commits the tickets there. At the end, the workflow brings them onto your branch, and terminal 2 prints the new ticket ids.
 
 > [!NOTE]
 > The plan agent only sees what's committed, and the tickets can only come onto your branch if it has no uncommitted changes. Commit or stash your changes before you run `flows plan`. If you change the `slice` skill, commit it, or the workflow refuses to start.
@@ -106,8 +106,7 @@ export async function plan({ repoDir, agent, request, spec }: PlanInput): Promis
   const status: PlanStatus = { step: 'planning', newTickets: [] };
   setHandler(planStatus, () => status);
 
-  // The plan agent works in a worktree of its own. A retry throws away uncommitted changes, and that
-  // never touches your checkout. Its tickets come onto the branch you're on now.
+  // The plan agent works on a branch of its own. Its tickets come onto the branch you're on now.
   if (spec) await requireCommitted(repoDir, spec);
   await requireCommitted(repoDir, skillFile('slice'));
   const into = await currentBranch(repoDir);
@@ -125,7 +124,7 @@ export async function plan({ repoDir, agent, request, spec }: PlanInput): Promis
   // Activity: the tickets the plan agent added
   status.newTickets = (await listTickets(workDir)).filter((ticket) => !before.includes(ticket));
 
-  // Activities: the tickets come onto your branch, and the worktree goes
+  // Activities: the tickets come onto your branch
   const problem = await mergeBranch(repoDir, branch, into);
   if (problem) {
     throw ApplicationFailure.nonRetryable(`The tickets are on ${branch}, not on ${into}: ${problem}. Then: git rebase ${into} ${branch} && git merge --ff-only ${branch}`);
@@ -144,7 +143,7 @@ In the web UI, click `plan` to see its history.
 
 ### 4. Ask how far it is
 
-Press `Ctrl+C` in terminal 3. That only stops the waiting: the workflow runs on the server, and the web UI still shows it as **Running**. Ask it how far it is:
+Press `Ctrl+C` in terminal 2. That only stops the waiting: the workflow runs on the server, and the web UI still shows it as **Running**. Ask it how far it is:
 
 ```bash
 flows status
@@ -156,13 +155,19 @@ Run `flows plan` again with the same request. It doesn't start a second workflow
 
 ### 5. Stop the worker
 
-While the plan agent is still working (terminal 2 shows its output), stop the worker in terminal 2 with `Ctrl+C`. Then start it again:
+While the plan agent is still working (terminal 1 shows its output), stop the worker, and the Temporal server with it. In terminal 2 (press `Ctrl+C` first if `flows plan` still waits there):
 
 ```bash
-flows worker
+task flows:stop
 ```
 
-The workflow continues where it stopped. `addWorktree` and `listTickets` don't run again, their results are already in the history. Only the agent run starts again, about 30 seconds later: that's the retry delay set for `runAgent`.
+Then start both again:
+
+```bash
+task flows:start
+```
+
+The workflow continues where it stopped, even though the server restarted too: its history was saved in the server's file. `addWorktree` and `listTickets` don't run again, their results are already in the history. Only the agent run starts again, about 30 seconds later: that's the retry delay set for `runAgent`.
 
 ::: code-group
 
@@ -180,6 +185,6 @@ export const { runAgent } = proxyActivities<typeof activities>({
 
 ### 6. Check the result
 
-When the workflow is done, terminal 3 prints the tickets the plan agent wrote. Open them in `backlog/` and check them as you did in Lab 8: does every ticket cut a full vertical slice, and does every `ready` ticket really not depend on another one?
+When the workflow is done, terminal 2 prints the tickets the plan agent wrote. Open them in `backlog/` and check them as you did in Lab 8: does every ticket cut a full vertical slice, and does every `ready` ticket really not depend on another one?
 
 You now have a server, a worker and a workflow that survives its worker. In the next lab, a workflow changes code.
