@@ -5,7 +5,7 @@ import ContentTabs from "./components/ContentTabs.vue";
 import CourseAccessOverlay from "./components/CourseAccessOverlay.vue";
 import DownloadLink from "./components/DownloadLink.vue";
 import RalphDiagram from "./components/RalphDiagram.vue";
-import PipelineDiagram from "./components/PipelineDiagram.vue";
+import FlowsWatch from "./components/FlowsWatch.vue";
 
 // Zühlke-branded theme with custom components.
 export default {
@@ -15,6 +15,6 @@ export default {
     app.component("ContentTabs", ContentTabs);
     app.component("DownloadLink", DownloadLink);
     app.component("RalphDiagram", RalphDiagram);
-    app.component("PipelineDiagram", PipelineDiagram);
+    app.component("FlowsWatch", FlowsWatch);
   },
 };

@@ -66,11 +66,15 @@ task flows:watch
 
 `flows watch` is a terminal UI that shows what runs: the workflows, and below them the worker's output, the agents' output included. `↑` and `↓` scroll the output, `End` follows the new lines again. Leave it open.
 
+<FlowsWatch scene="lab9-watch" />
+
 ### 3. Read the specification
 
 The plan agent works from a specification, like the one the research phase wrote in [Structured agentic workflows](./lab-4-structured-agentic-workflows.md). The branch already has one, committed: `specs/delays-csv-export/specification.md`. Support staff want to download the current delays as a CSV file, filtered by airline. Read it before you hand it to the plan agent.
 
 ### 4. Run the workflow
+
+<FlowsWatch scene="lab9-plan" />
 
 In `flows watch` in terminal 1, press `→` to select the **Plan tickets** phase and press `Enter`. Pick `specs/delays-csv-export/specification.md` and press `Enter` again.
 
@@ -132,6 +136,8 @@ In the web UI, click `plan` to see its history.
 
 ### 5. Stop the worker
 
+<FlowsWatch scene="lab9-restart" />
+
 While the plan agent is still working (terminal 1 shows its output), stop the worker, and the Temporal server with it. In terminal 2:
 
 ```bash
@@ -161,6 +167,8 @@ export const { runAgent } = proxyActivities<typeof activities>({
 :::
 
 ### 6. Check the result
+
+<FlowsWatch scene="lab9-board" />
 
 When the workflow is done, press `Tab` in `flows watch`: the backlog board shows the new tickets next to the four from Lab 8. Select one with the arrow keys and press `Enter` to read it, or open them in `backlog/`. Check them as you did in Lab 8: does every ticket cut a full vertical slice, and does every `ready` ticket really not depend on another one?
 

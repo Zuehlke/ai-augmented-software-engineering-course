@@ -4,7 +4,7 @@
 
 In the last lab, you started each Ralph loop and checked each branch yourself. In this lab, one workflow called `pipeline` does all of that. You give it a feature request:
 
-<PipelineDiagram />
+<FlowsWatch scene="lab12-overview" />
 
 - Agents do the steps that need judgement. Steps that follow a fixed rule, like picking the `ready` tickets or merging, are plain code.
 - The research agent, the plan agent and the implement loops all run through `runPhase` from the Ralph loop. So each of them has a judge, with the `judge` skill's checks for its phase. A bad specification is caught before tickets or code are built on it.
@@ -33,11 +33,11 @@ task flows:start
 task flows:watch
 ```
 
-It shows the pipeline as in the diagram above. Blue is what runs, purple is what waits for you. Use **terminal 2** for everything else. `flows logs` there shows the agent output.
+It shows the pipeline as in the recording above. Blue is what runs, purple is what waits for you. Use **terminal 2** for everything else. `flows logs` there shows the agent output.
 
 ### 1. Start the pipeline
 
-<PipelineDiagram :step="1" />
+<FlowsWatch scene="lab12-start" />
 
 In `flows watch`, the **Specification** stage is selected. Press `Enter`, paste the feature request and press `Enter` again:
 
@@ -54,7 +54,7 @@ The research agent writes a specification and the plan agent writes tickets. The
 
 ### 2. Approve the tickets
 
-<PipelineDiagram :step="2" />
+<FlowsWatch scene="lab12-approve" />
 
 When the plan agent is done, `flows watch` shows that the tickets wait for you. Before you answer, read what the agents wrote:
 
@@ -65,7 +65,7 @@ Press `n` to open it, select each ticket an agent should build with `Space` and 
 
 ### 3. Wait for the implement loops and the review agent
 
-<PipelineDiagram :step="3" />
+<FlowsWatch scene="lab12-implement" />
 
 The implement loops and the review agent take a while. A loop that fails or runs out of runs doesn't stop the others: only the finished tickets go on to review. Press `Tab` to see the Ralph loops move across the backlog board, and `Tab` again to get back to the pipeline. On the board, select a card with the arrow keys and press `Enter` to read its ticket. In the pipeline view, `↑` and `↓` scroll the agents' output, and `End` follows the new lines again. Use the time to read the workflow below. Look for the two checkpoints. Each one is a `condition(...)` that waits for your answer. `flows watch` sends your answer as the same signal as `flows start` and `flows merge` do.
 
@@ -322,7 +322,7 @@ End with one line per branch, without any formatting: `<branch>: APPROVE` or
 
 ### 4. Decide whether to merge
 
-<PipelineDiagram :step="4" />
+<FlowsWatch scene="lab12-merge" />
 
 When the review agent is done, `flows watch` shows that the merge decision waits for you. Press `n` to see the review agent's verdict for each branch.
 

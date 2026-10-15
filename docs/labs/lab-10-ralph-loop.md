@@ -44,6 +44,8 @@ task flows:watch
 
 ### 1. One run, watching
 
+<FlowsWatch scene="lab10-one-run" />
+
 In `flows watch`, press `Tab` to see the backlog board. Select TICKET-1 in **Ready** with the arrow keys, press `s`, then `1` for one run.
 
 Watch the worker output: press `Tab` to get back to it. First the agent does one step and commits. Then the judge checks it. When it's done, look at what changed on the loop's branch, in terminal 2:
@@ -54,6 +56,8 @@ git show agent/ticket-1:.harness/progress.md
 ```
 
 Check three things. Is the step small? Do the tests pass? Could the next run continue using only `.harness/progress.md`? If not, improve `.agents/skills/implement/SKILL.md` and commit it. Then throw the run away, so the next one starts fresh with your skill, and try again: on the board, select TICKET-1, press `Enter` to open it, `x` to throw the run away, and `y`. That removes the loop's worktree and deletes `agent/ticket-1`.
+
+<FlowsWatch scene="lab10-discard" />
 
 <details>
 <summary><code>.harness/progress.md</code> after the first run</summary>
@@ -109,6 +113,8 @@ Two criteria are still open. The next run finds that out from this file.
 </details>
 
 ### 2. Let it loop
+
+<FlowsWatch scene="lab10-loop" />
 
 Now start the loop without a limit: select TICKET-1 on the board, press `s`, then `y`. It continues where the first run stopped, for at most 10 runs.
 
@@ -386,6 +392,8 @@ End with exactly one line, without any formatting: `PASS`, `RETRYABLE: <what to 
 </details>
 
 ### 3. Check the result
+
+<FlowsWatch scene="lab10-merge" />
 
 When the loop stops, `flows watch` shows whether the ticket is done or why the loop stopped. The work is on `agent/ticket-1`. When the ticket is done, its card waits for you with `ready to merge`. Select it, press `Enter`, then `m`: `flows watch` shows the commits the branch brings. Press `y` to bring them onto your branch. Then check the result in terminal 2:
 
