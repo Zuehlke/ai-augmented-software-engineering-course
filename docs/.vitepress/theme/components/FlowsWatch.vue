@@ -191,32 +191,10 @@ onBeforeUnmount(() => {
 </template>
 
 <style scoped>
-/* The palettes of `flows watch` (.harness/flows/src/watch/grid.ts), plus a terminal's own text and background */
+/* The palette of `flows watch` is in zuhlke.css (--tui-*), shared with RalphDiagram */
 .flows-watch {
-  --tui-bg: #ffffff;
-  --tui-text: #1f1f1f;
-  --tui-muted: #8c8c8c;
-  --tui-line: #e2e2e2;
-  --tui-run: #0099cc;
-  --tui-you: #985b9c;
-  --tui-you-tint: #f6f0f6;
-  --tui-raised: #fbfafb;
-  --tui-selected: #efe7f0;
-  --tui-chrome: #f3f2f4;
   container-type: inline-size;
   margin: 24px 0;
-}
-:root.dark .flows-watch {
-  --tui-bg: #1b1a1d;
-  --tui-text: #e6e6e6;
-  --tui-muted: #8c8c8c;
-  --tui-line: #3a3a3a;
-  --tui-run: #40b3d9;
-  --tui-you: #b284b5;
-  --tui-you-tint: #2b2430;
-  --tui-raised: #252427;
-  --tui-selected: #332e37;
-  --tui-chrome: #242326;
 }
 .window {
   overflow: hidden;
