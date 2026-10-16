@@ -8,6 +8,7 @@ The longer an agent session runs, the worse it gets. The context fills up with o
 - The agent forgets everything between runs. It reads `.harness/progress.md` and the git history to see where it left off.
 - After each run, a **judge** checks the work. First plain code checks the run: did it commit, did it leave anything uncommitted, did it change `.agents/` or `.harness/`? Then the tests run. Then a second, read-only agent checks the run's commits with the `judge` skill. It didn't write the code, so it has no reason to defend it.
 - If the judge finds a problem, the next run gets it as feedback and fixes it first.
+- The loop and its judge don't have to use the same model. The Ralph loop runs often, so it uses Sonnet. The judge is the quality gate and uses Opus: a weaker judge would approve bad work.
 - The loop commits on its own branch, `agent/<ticket>`. Your checkout stays as it is until you merge it.
 - The loop stops when the ticket is `done`, or after 10 runs.
 
@@ -162,6 +163,7 @@ export async function ralph({ repoDir, agent, ticket, maxRuns = 10, base }: Ralp
 ```ts [.harness/flows/src/workflows/phase.ts]
 import { ApplicationFailure, condition, log, setHandler } from '@temporalio/workflow';
 import type { Agent, Changes, Phase, PhaseStatus, Verdict } from '../shared';
+import { MODELS } from '../shared';
 import { changesSince, headCommit, requireCommitted, resetTo, runAgent, setFeedback } from './activities';
 import { judgePrompt, skillFile, workPrompt } from './prompts';
 import { answerSignal } from './signals';
@@ -194,7 +196,7 @@ export async function runPhase(repoDir: string, workDir: string, agent: Agent, p
       status.run = run;
       await setFeedback(workDir, feedback); // .harness/run/feedback.md, the agent reads it first
       const before = await headCommit(workDir);
-      await runAgent({ repoDir, workDir, agent, mode: 'write', step: phase.name, prompt: workPrompt(phase.name, phase.input) });
+      await runAgent({ repoDir, workDir, agent, mode: 'write', model: MODELS[phase.name], step: phase.name, prompt: workPrompt(phase.name, phase.input) });
 
       status.judging = true; // `flows watch` lights up the judge
       try {
@@ -238,7 +240,7 @@ async function judge(repoDir: string, workDir: string, agent: Agent, phase: Phas
   const broken = brokenRule(changes) ?? (phase.check ? await phase.check() : null);
   if (broken) return { kind: 'RETRYABLE', reason: broken };
 
-  const answer = await runAgent({ repoDir, workDir, agent, mode: 'read', step: `judge ${phase.name}`, prompt: judgePrompt(phase.name, phase.input, changes.commits) });
+  const answer = await runAgent({ repoDir, workDir, agent, mode: 'read', model: MODELS.judge, step: `judge ${phase.name}`, prompt: judgePrompt(phase.name, phase.input, changes.commits) });
   return parseVerdict(answer); // its last line: PASS, RETRYABLE: …, AMBIGUOUS: … or FAILED: …
 }
 

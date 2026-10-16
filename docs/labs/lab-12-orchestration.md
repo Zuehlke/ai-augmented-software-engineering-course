@@ -8,6 +8,7 @@ In the last lab, you started each Ralph loop and checked each branch yourself. I
 
 - Agents do the steps that need judgement. Steps that follow a fixed rule, like picking the `ready` tickets or merging, are plain code.
 - The research agent, the plan agent and the implement loops all run through `runPhase` from the Ralph loop. So each of them has a judge, with the `judge` skill's checks for its phase. A bad specification is caught before tickets or code are built on it.
+- Each role gets the model that fits it, set in `MODELS` in `src/shared.ts`. The roles that run once and shape everything after them, research, plan and review, get Opus. The implement loops run most often, so they get the cheaper Sonnet. The judge is Opus too: it should be at least as strong as the agent it checks.
 - You only step in twice, at the two human gateways.
 
 ## Your Task
@@ -74,7 +75,7 @@ The implement loops and the review agent take a while. A loop that fails or runs
 ```ts [.harness/flows/src/workflows/pipeline.ts]
 import { ApplicationFailure, condition, executeChild, setHandler, workflowInfo } from '@temporalio/workflow';
 import type { PipelineInput, PipelineStatus } from '../shared';
-import { branchOf, worktreeName } from '../shared';
+import { branchOf, MODELS, worktreeName } from '../shared';
 import { addWorktree, branchDiffs, checkoutProblem, currentBranch, headCommit, mergeBranch, readyTickets, requireCommitted, removeWorktree, runAgent, runTests } from './activities';
 import { runPhase } from './phase';
 import { reviewPrompt, skillFile } from './prompts';
@@ -156,7 +157,7 @@ export async function pipeline({ repoDir, agent, request }: PipelineInput): Prom
   status.step = 'reviewing';
   const branches = finished.map(branchOf);
   await requireCommitted(repoDir, skillFile('review'));
-  status.review = await runAgent({ repoDir, agent, mode: 'read', step: 'review', prompt: reviewPrompt(await branchDiffs(repoDir, branches)) });
+  status.review = await runAgent({ repoDir, agent, mode: 'read', model: MODELS.review, step: 'review', prompt: reviewPrompt(await branchDiffs(repoDir, branches)) });
   // Its verdict per branch, as its last line about it: `agent/ticket-5: APPROVE` or `agent/ticket-5: REJECT, <why>`
   status.approvedBranches = branches.filter((branch) => findVerdict(status.review, ['APPROVE', 'REJECT'], branch)?.kind === 'APPROVE');
 

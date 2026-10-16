@@ -88,6 +88,7 @@ The workflow hands the specification to the plan agent, which writes its tickets
 ```ts [.harness/flows/src/workflows/plan.ts]
 import { ApplicationFailure, log, setHandler, workflowInfo } from '@temporalio/workflow';
 import type { PlanInput, PlanStatus } from '../shared';
+import { MODELS } from '../shared';
 import { addWorktree, currentBranch, headCommit, listTickets, mergeBranch, removeWorktree, requireCommitted, runAgent } from './activities';
 import { skillFile, workPrompt } from './prompts';
 import { planStatus } from './signals';
@@ -110,7 +111,7 @@ export async function plan({ repoDir, agent, request, spec }: PlanInput): Promis
 
   // Activity: one agent run. It takes minutes, and it's the one you'll interrupt.
   log.info('== plan');
-  await runAgent({ repoDir, workDir, agent, mode: 'write', step: 'slice', prompt: workPrompt('slice', spec ? `Specification: ${spec}` : `Feature request: ${request}`) });
+  await runAgent({ repoDir, workDir, agent, mode: 'write', model: MODELS.slice, step: 'slice', prompt: workPrompt('slice', spec ? `Specification: ${spec}` : `Feature request: ${request}`) });
 
   // Activity: the tickets the plan agent added
   status.newTickets = (await listTickets(workDir)).filter((ticket) => !before.includes(ticket));
