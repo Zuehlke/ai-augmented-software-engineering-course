@@ -252,4 +252,4 @@ Every blocker is explicit: TICKET-2 and TICKET-3 wait on the data model, TICKET-
 </details>
 
 > [!NOTE]
-> Claude Code uses `.claude/skills` rather than `.agents/skills`. Rename the folder if you want to use Claude Code.
+> Claude Code uses `.claude/skills` rather than `.agents/skills`. The branch has a symlink, `.claude/skills` → `.agents/skills`, so Claude Code uses the same files. There is nothing to rename.

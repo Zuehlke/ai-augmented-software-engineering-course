@@ -141,4 +141,4 @@ The change is done only when every modified Java artifact is accounted for again
 > ln -s AGENTS.md CLAUDE.md
 > ```
 > 
-> Also the skills folder follow a different convention in Claude Code. Rename `.agents/skills` to `.claude/skills` if you want to use Claude Code.
+> Claude Code looks for skills in `.claude/skills` rather than `.agents/skills`. The branch has a symlink, `.claude/skills` → `.agents/skills`, so Claude Code uses the same files. There is nothing to rename.

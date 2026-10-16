@@ -294,4 +294,4 @@ handoff, and update the existing file instead of writing a new one.
 </details>
 
 > [!NOTE]
-> Claude Code uses `.claude/skills` rather than `.agents/skills`. Rename the folder if you want to use Claude Code.
+> Claude Code uses `.claude/skills` rather than `.agents/skills`. The branch has a symlink, `.claude/skills` → `.agents/skills`, so Claude Code uses the same files. There is nothing to rename.
