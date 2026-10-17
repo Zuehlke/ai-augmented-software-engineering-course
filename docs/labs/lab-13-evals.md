@@ -6,8 +6,8 @@ A skill only helps when the agent loads it. Nobody types "use the testing skill"
 
 Trying it once by hand doesn't catch that. An **eval** does it automatically, after every change. This lab has two:
 
-- The **skill-loaded evals** check whether the agent loads the skills from the earlier labs when it should, and only then. They are short and cheap.
-- The **evals** grade the whole setup, the skills, the harness and the models together: the pipeline from [Orchestration](./lab-12-orchestration.md) builds a few fixed features, unattended, and each result is graded against tests and criteria the agents never saw. They are slow and cost real money.
+- The **skill-loaded evals** check whether the agent loads the skills from the earlier labs when it should, and only then. They take a few minutes and cost about $5.
+- The **evals** grade the whole setup, the skills, the harness and the models together: the pipeline from [Orchestration](./lab-12-orchestration.md) builds a few fixed features, unattended, and each result is graded against tests and criteria the agents never saw. They are slow, and they cost real money: this lab shows them, but you won't run them.
 
 | Term | What it means |
 | --- | --- |
@@ -64,7 +64,7 @@ None of the prompts mentions tests or a skill. Some prompts appear in both files
 </details>
 
 > [!NOTE]
-> The agents in this lab run unattended, so they need the [agent token from the setup](/getting-started/setup#agent-token). The skill-loaded evals read Claude Code's tool calls, so they run with Claude Code, also when you use Copilot for the rest.
+> The skill-loaded evals run unattended, so they need the [agent token from the setup](/getting-started/setup#agent-token). They read Claude Code's tool calls, so they run with Claude Code, also when you use Copilot for the rest. A run of all cases costs about $5.
 
 In **terminal 1**, start Temporal and the worker, and open `flows watch`:
 
@@ -73,31 +73,17 @@ task flows:start
 task flows:watch
 ```
 
-This branch has `.harness/evals/`, so `flows watch` now has a third tab, **Evals**. Use **terminal 2** for the steps below.
-
 ### 1. Run the skill-loaded evals
 
-```bash
-flows skill-loaded-evals
-```
+<FlowsWatch scene="lab13-skills" />
 
-After a minute or two, you get one block per skill, with one line per case: did it pass, and in how many runs did the agent load the skill:
+This branch has `.harness/evals/`, so `flows watch` has a third tab now. Press `Tab` until you see **Evals**. It opens on **E2E**, the evals of the whole setup: press `→` to switch to **Skill loaded**.
 
-```text
-== api-design: 4 of 4 cases pass
-PASS  should load      loaded in 3 of 3 runs  Add an endpoint that returns all flights of one airline.
-PASS  should load      loaded in 3 of 3 runs  Add paging to GET /delays.
-...
-== testing: 5 of 5 cases pass
-PASS  should load      loaded in 3 of 3 runs  Add an endpoint that returns all flights of one airline.
-PASS  should load      loaded in 2 of 3 runs  The flight status lookup shows the wrong status when two delay events have the same timestamp. Fix it.
-PASS  shouldn't load   loaded in 0 of 3 runs  Fix the typos in README.md.
-...
-9 cases passed, 0 failed. Cost $0.85.
-Results: .harness/evals/results/20261017-101500/
-```
+Press `s`. The dialog says what runs: every case 3 times, 27 runs, and what that will cost, by the last skill-loaded evals. The first time, it can't know yet. Press `Enter` to start.
 
-All cases should pass. In `flows watch`, press `Tab` until you see **Evals**, and `→` to **Skill loaded**: the run you just did is a column there, every case a row.
+All runs start at once, so it takes a few minutes. When they're done, you see one row per case and one `✓` per run that did what the case expects. `not:` marks a prompt the skill shouldn't load for. A case passes when at least 2 of its 3 runs do, so a single `✗` is fine: agent output varies from run to run. Every case should pass. Pick a run with the arrow keys and press `Enter` to see what it did.
+
+Above the grid, the **trend** has one column per skill-loaded evals, with the commit it checked. It grows with every run, so you see when a change to a skill broke something.
 
 Here's the workflow:
 
@@ -202,36 +188,19 @@ Two things to notice:
 
 ### 2. Make the description too broad
 
+<FlowsWatch scene="lab13-proposals" />
+
 Now change the description the way people often do when a skill doesn't load often enough: make it apply to everything. Open `.agents/skills/testing/SKILL.md` and replace the `description` line with:
 
 ```markdown
 description: Use for every task in this repository.
 ```
 
-The skill-loaded evals check your checkout as it is, so there's no need to commit. Run them again:
+The skill-loaded evals check your checkout as it is, so there's no need to commit. In the Evals tab, press `s` again: the dialog notes that `.agents/skills/testing/SKILL.md` isn't committed, and checks it as it is. Press `Enter`.
 
-```bash
-flows skill-loaded-evals
-```
+The trend gets a second column, and it drops: the cases that should load `testing` still pass, but the three that shouldn't now fail in every run. `api-design` still passes: every skill is checked on its own.
 
-The cases that should load `testing` still pass. But the ones that shouldn't now fail, for example:
-
-```text
-== api-design: 4 of 4 cases pass
-...
-== testing: 2 of 5 cases pass
-...
-FAIL  shouldn't load   loaded in 3 of 3 runs  Fix the typos in README.md.
-FAIL  shouldn't load   loaded in 3 of 3 runs  Add a task to Taskfile.yml that prints the Java version.
-...
-6 cases passed, 3 failed. Cost $0.90.
-Checked with changes not committed: .agents/skills/testing/SKILL.md
-
-The improve agent proposes, for the failing cases:
-...
-```
-
-Only `testing` broke: `api-design` still passes. And because cases failed, the **improve agent** read the results, and the ones of the evals before, and proposes a description that makes the failing cases pass without breaking the others. In `flows watch`, press `p` in the Evals tab to read the proposal.
+Because cases failed, one more agent runs at the end: the **improve agent**. It reads the results, and the ones of the evals before, and proposes a description that makes the failing cases pass without breaking the others. Press `p` to read the proposal.
 
 A failing eval doesn't become a ticket for a Ralph loop: since Lab 10, no agent may change `.agents/`. The skills are what the agents follow and get judged by, so a change to them is yours to make. The improve agent only proposes.
 
@@ -244,9 +213,9 @@ git checkout .agents/skills/testing/SKILL.md
 > [!NOTE]
 > An eval is only as good as its cases. When a skill doesn't load in real use, add that prompt to its `skill-loaded-evals.json`, so the description can't break the same way twice.
 
-### 3. Grade the whole setup
+### 3. The evals of the whole setup
 
-A skill that loads can still lead to bad code. Whether the setup builds features you would ship is a question for the whole pipeline. Each task is a folder in `.harness/evals/tasks/<id>/`:
+A skill that loads can still lead to bad code. Whether the setup builds features you would ship is a question for the whole pipeline. The **evals** answer it on a few fixed tasks. Each task is a folder in `.harness/evals/tasks/<id>/`:
 
 - `request.md`: the feature request, what the pipeline gets.
 - `base`: the commit its app code starts from.
@@ -282,36 +251,31 @@ answer is an empty list, not an error. A `min_delay` that is negative or not a n
 
 </details>
 
-Each run works in a copy of your repository under `~/.flows/evals/`, with the skills and the harness of your last commit and the task's app code, and runs the pipeline unattended: nobody approves the tickets or decides the merge. A run is **accepted** when its pipeline merged something, `task test` passes with the hidden tests added, and the grader would ship it. The pipeline's own judges and its review don't grade: they belong to the setup under test.
+Each run works in a copy of your repository under `~/.flows/evals/`, with the skills and the harness of your last commit and the task's app code, and runs the pipeline from Lab 12 unattended: nobody approves the tickets or decides the merge. A run is **accepted** when its pipeline merged something, `task test` passes with the hidden tests added, and the grader would ship it. The pipeline's own judges and its review don't grade: they belong to the setup under test.
 
-A full pipeline run costs a few dollars, so start with one task:
+> [!CAUTION]
+> Don't start the evals unless you have (almost) unlimited credits. Every run is a whole pipeline: research, plan, the Ralph loops with their judges, the review and the grader. In our runs, one task, 3 runs, cost $5 to $16, and all 5 tasks, 15 runs, cost $58.64 and took about 18 minutes per run.
 
-```bash
-flows evals min-delay-filter
-```
+<FlowsWatch scene="lab13-e2e-start" />
 
-It says what the runs will cost, by the evals before, and asks before it starts. At most 3 runs work at the same time. The runs show up in the Evals tab while they work. At the end, it prints three numbers, for example:
+To see what you would start, press `←` in the Evals tab to switch back to **E2E**, and `s`. You pick all tasks or one of them, and the dialog says how many runs that is. The cost is unknown until an evals has run: then it estimates by the cost per run of the last one. Press `Esc` to close it without starting anything.
 
-```text
-min-delay-filter  ✓ ✓ ✗
+Here is one of our evals, all 5 tasks:
 
-Not accepted:
-  min-delay-filter run 3: the grader rejects it: no test covers a min_delay that isn't a number (change-quality, item 2)
+<FlowsWatch scene="lab13-e2e-results" />
 
-Quality      2 / 3 runs accepted
-Reliability  0 / 1 tasks with every run accepted
-First time   1 / 3 runs accepted without a judge or a test rejecting a step
-Cost         $4.10 per accepted change, $8.20 in total
-```
+While it runs, at most 3 runs work at the same time, and the box shows each one's step and what they cost so far. When it's done, the trend has four numbers:
 
-- **Quality**: the runs accepted, of all runs.
-- **Reliability**: the tasks whose 3 runs were all accepted. Only these are candidates for unattended work.
-- **Cost per accepted change**: what all runs cost, the ones not accepted too, divided by the accepted ones.
-- **First time right**: accepted, and no judge or test rejected a step on the way. A run that got there after a rejection counts for Quality, but cost more.
+- **Quality, runs accepted**: 8 of 15.
+- **Reliability, tasks**: the tasks whose 3 runs were all accepted, 1 of 5. Only these are candidates for unattended work.
+- **First time right**: accepted, and no judge or test rejected a step on the way. Only 1 of 15: most accepted runs got there after a rejection, and paid for it.
+- **Cost per accepted**: what all runs cost, the ones not accepted too, divided by the accepted ones: $7.33.
 
-For the runs that weren't right the first time, the improve agent proposes changes to the skills or the harness, as rules for any feature request, never for one task: a fix for one task only games the evals. Read them with `p` in the Evals tab, and `⏎` on a run shows why it was or wasn't accepted, and what the grader said.
+Below, the grid has one row per task, with why its first run that wasn't accepted wasn't. Pick a run and press `Enter` to read what the grader said. All 3 runs of `airline-delay-summary` rounded the average delay, a rule nobody asked for: the research added it as an assumption, and the plan, the loops and the review built on it.
 
-The Evals tab keeps the trend: every evals is a column, so after you change a skill, the next evals shows whether it helped. A change within noise is dimmed: 5 tasks of 3 runs are few. Evals whose models differ from the one before are marked with `*`: `opus` and `sonnet` always resolve to the latest version, so a new model release changes the setup without a commit.
+Press `p` for what the improve agent proposes for the whole setup, as rules for any feature request, never for one task: a fix for one task only games the evals. We made the first one: the `judge` skill's research checks now reject an assumption that changes a value the request defines. The next evals shows in the trend whether it helped.
 
-> [!IMPORTANT]
-> The evals grade what's committed. Commit a skill change before you start them, or the runs won't see it. `flows evals --stop` stops a running evals: the runs that finished keep their results.
+An evals whose models differ from the one before is marked with `*` in the trend: `opus` and `sonnet` always resolve to the latest version, so a new model release changes the setup without a commit.
+
+> [!TIP]
+> Everything in the Evals tab also works from the command line: `flows skill-loaded-evals`, `flows evals [task]`, and `flows evals --stop` to stop a running evals. The results go to `.harness/evals/results/`, not committed.
