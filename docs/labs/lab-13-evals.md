@@ -7,16 +7,9 @@ A skill only helps when the agent loads it. Nobody types "use the testing skill"
 Trying it once by hand doesn't catch that. An **eval** does it automatically, after every change. This lab has two:
 
 - The **skill-loaded evals** check whether the agent loads the skills from the earlier labs when it should, and only then. They take a few minutes and cost about $5.
-- The **evals** grade the whole setup, the skills, the harness and the models together: the pipeline from [Orchestration](./lab-12-orchestration.md) builds a few fixed features, unattended, and each result is graded against tests and criteria the agents never saw. They are slow, and they cost real money: this lab shows them, but you won't run them.
+- The **e2e evals** grade the whole setup end to end, the skills, the harness and the models together: the pipeline from [Orchestration](./lab-12-orchestration.md) builds a few fixed features, unattended, and each result is graded against tests and criteria the agents never saw. They are slow, and they cost real money: this lab shows them, but you won't run them.
 
-| Term | What it means |
-| --- | --- |
-| **Case** | A skill-loaded eval: a prompt, written the way a developer would ask, and whether the skill should load for it. |
-| **Task** | An eval of the whole setup: a feature request, the commit its app code starts from, hidden acceptance tests and hidden criteria. |
-| **Runs** | Agent output varies from run to run, so every case and every task runs three times. |
-| **Grader** | What decides whether a run counts. For a case, plain code that reads the agent's tool calls. For a task, the hidden tests and the `review` skill from Lab 12, with the hidden criteria. |
-
-Both directions count for a skill. A skill that doesn't load when it should is a bug. A skill that loads when it shouldn't fills the context with rules that don't apply.
+For the skill-loaded evals, both directions count. A skill that doesn't load when it should is a bug. A skill that loads when it shouldn't fills the context with rules that don't apply.
 
 ## Your Task
 
@@ -77,7 +70,7 @@ task flows:watch
 
 <FlowsWatch scene="lab13-skills" />
 
-This branch has `.harness/evals/`, so `flows watch` has a third tab now. Press `Tab` until you see **Evals**. It opens on **E2E**, the evals of the whole setup: press `→` to switch to **Skill loaded**.
+This branch has `.harness/evals/`, so `flows watch` has a third tab now. Press `Tab` until you see **Evals**. It opens on **E2E**, the e2e evals: press `→` to switch to **Skill loaded**.
 
 Press `s`. The dialog says what runs: every case 3 times, 27 runs, and what that will cost, by the last skill-loaded evals. The first time, it can't know yet. Press `Enter` to start.
 
@@ -200,7 +193,7 @@ The skill-loaded evals check your checkout as it is, so there's no need to commi
 
 The trend gets a second column, and it drops: the cases that should load `testing` still pass, but the three that shouldn't now fail in every run. `api-design` still passes: every skill is checked on its own.
 
-Because cases failed, one more agent runs at the end: the **improve agent**. It reads the results, and the ones of the evals before, and proposes a description that makes the failing cases pass without breaking the others. Press `p` to read the proposal.
+Because cases failed, one more agent runs at the end: the **improve agent**. It reads the results, and the ones of the skill-loaded evals before, and proposes a description that makes the failing cases pass without breaking the others. Press `p` to read the proposal.
 
 A failing eval doesn't become a ticket for a Ralph loop: since Lab 10, no agent may change `.agents/`. The skills are what the agents follow and get judged by, so a change to them is yours to make. The improve agent only proposes.
 
@@ -213,9 +206,9 @@ git checkout .agents/skills/testing/SKILL.md
 > [!NOTE]
 > An eval is only as good as its cases. When a skill doesn't load in real use, add that prompt to its `skill-loaded-evals.json`, so the description can't break the same way twice.
 
-### 3. The evals of the whole setup
+### 3. The e2e evals
 
-A skill that loads can still lead to bad code. Whether the setup builds features you would ship is a question for the whole pipeline. The **evals** answer it on a few fixed tasks. Each task is a folder in `.harness/evals/tasks/<id>/`:
+A skill that loads can still lead to bad code. Whether the setup builds features you would ship is a question for the whole pipeline. The **e2e evals** answer it on a few fixed tasks. Each task is a folder in `.harness/evals/tasks/<id>/`:
 
 - `request.md`: the feature request, what the pipeline gets.
 - `base`: the commit its app code starts from.
@@ -254,13 +247,13 @@ answer is an empty list, not an error. A `min_delay` that is negative or not a n
 Each run works in a copy of your repository under `~/.flows/evals/`, with the skills and the harness of your last commit and the task's app code, and runs the pipeline from Lab 12 unattended: nobody approves the tickets or decides the merge. A run is **accepted** when its pipeline merged something, `task test` passes with the hidden tests added, and the grader would ship it. The pipeline's own judges and its review don't grade: they belong to the setup under test.
 
 > [!CAUTION]
-> Don't start the evals unless you have (almost) unlimited credits. Every run is a whole pipeline: research, plan, the Ralph loops with their judges, the review and the grader. In our runs, one task, 3 runs, cost $5 to $16, and all 5 tasks, 15 runs, cost $58.64 and took about 18 minutes per run.
+> Don't start the e2e evals unless you have (almost) unlimited credits. Every run is a whole pipeline: research, plan, the Ralph loops with their judges, the review and the grader. In our runs, one task, 3 runs, cost $5 to $16, and all 5 tasks, 15 runs, cost $58.64 and took about 18 minutes per run.
 
 <FlowsWatch scene="lab13-e2e-start" />
 
-To see what you would start, press `←` in the Evals tab to switch back to **E2E**, and `s`. You pick all tasks or one of them, and the dialog says how many runs that is. The cost is unknown until an evals has run: then it estimates by the cost per run of the last one. Press `Esc` to close it without starting anything.
+To see what you would start, press `←` in the Evals tab to switch back to **E2E**, and `s`. You pick all tasks or one of them, and the dialog says how many runs that is. The cost is unknown until an e2e evals has run: then it estimates by the cost per run of the last one. Press `Esc` to close it without starting anything.
 
-Here is one of our evals, all 5 tasks:
+Here is one of our e2e evals, all 5 tasks:
 
 <FlowsWatch scene="lab13-e2e-results" />
 
@@ -273,9 +266,9 @@ While it runs, at most 3 runs work at the same time, and the box shows each one'
 
 Below, the grid has one row per task, with why its first run that wasn't accepted wasn't. Pick a run and press `Enter` to read what the grader said. All 3 runs of `airline-delay-summary` rounded the average delay, a rule nobody asked for: the research added it as an assumption, and the plan, the loops and the review built on it.
 
-Press `p` for what the improve agent proposes for the whole setup, as rules for any feature request, never for one task: a fix for one task only games the evals. We made the first one: the `judge` skill's research checks now reject an assumption that changes a value the request defines. The next evals shows in the trend whether it helped.
+Press `p` for what the improve agent proposes for the whole setup, as rules for any feature request, never for one task: a fix for one task only games the e2e evals. We made the first one: the `judge` skill's research checks now reject an assumption that changes a value the request defines. The next e2e evals shows in the trend whether it helped.
 
-An evals whose models differ from the one before is marked with `*` in the trend: `opus` and `sonnet` always resolve to the latest version, so a new model release changes the setup without a commit.
+An e2e evals whose models differ from the one before is marked with `*` in the trend: `opus` and `sonnet` always resolve to the latest version, so a new model release changes the setup without a commit.
 
 > [!TIP]
-> Everything in the Evals tab also works from the command line: `flows skill-loaded-evals`, `flows evals [task]`, and `flows evals --stop` to stop a running evals. The results go to `.harness/evals/results/`, not committed.
+> Everything in the Evals tab also works from the command line: `flows skill-loaded-evals`, `flows evals [task]` for the e2e evals, and `flows evals --stop` to stop running e2e evals. The results go to `.harness/evals/results/`, not committed.
