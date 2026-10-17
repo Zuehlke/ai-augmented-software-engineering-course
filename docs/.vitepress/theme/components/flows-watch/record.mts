@@ -39,8 +39,15 @@ const BACKLOG = [...BASE_BACKLOG, ...NEW_TICKETS];
 const REQUEST =
   'On the dashboard, support staff enter an airport code and see the delayed flights departing from it, with their delay. The dashboard also shows the airlines with the most delayed flights right now, without any search.';
 
+// What the pipeline's agents cost by each step, about what our runs cost with two tickets. While the loops
+// implement, flows watch adds what they cost so far: none here, they only count once they're done.
+const COST: Record<string, number> = {
+  researching: 0.45, planning: 0.95, 'waiting for your approval': 1.6, implementing: 1.6,
+  reviewing: 5.9, 'waiting for your merge decision': 6.5, merging: 6.5, done: 6.5,
+};
 const status = (step: string, extra: object = {}) => ({
   step,
+  costUsd: COST[step],
   into: BRANCH,
   tickets: ['TICKET-5', 'TICKET-6'],
   unfinished: [],
