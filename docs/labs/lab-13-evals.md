@@ -2,14 +2,12 @@
 
 ## Context
 
-A skill only helps when the agent loads it. Nobody types "use the testing skill" in a real session: the agent reads every skill's `description` and decides on its own. If someone rewrites a description, renames a skill, or adds a new one that overlaps, the agent may quietly stop loading it. Nothing fails. The agent just writes code without the tests the skill asks for.
+A skill only helps when the agent loads it, and the agent decides that from the skill's `description`. Rewrite a description, rename a skill or add an overlapping one, and the agent may quietly stop loading it. Nothing fails: the code just lacks what the skill asks for.
 
-Trying it once by hand doesn't catch that. An **eval** does it automatically, after every change. This lab has two:
+An **eval** catches this automatically, after every change. This lab has two kinds:
 
-- The **skill-loaded evals** check whether the agent loads the skills from the earlier labs when it should, and only then. They take a few minutes and cost about $5.
-- The **end-to-end evals** grade the whole setup, the skills, the harness and the models together: the pipeline from [Orchestration](./lab-12-orchestration.md) builds a few fixed features, unattended, and each result is graded against tests and criteria the agents never saw. They are slow, and they cost real money: this lab shows them, but you won't run them.
-
-For the skill-loaded evals, both directions count. A skill that doesn't load when it should is a bug. A skill that loads when it shouldn't fills the context with rules that don't apply.
+- **Skill-loaded evals** check that the agent loads each skill when it should, and only then. They take a few minutes and cost about $5.
+- **End-to-end evals** grade the whole setup: the pipeline from [Orchestration](./lab-12-orchestration.md) builds fixed features unattended, and each result is graded against tests and criteria the agents never saw. They are slow and expensive: you'll see them, but not run them.
 
 ## Your Task
 
@@ -24,7 +22,7 @@ task lab/evals
 >
 > [![Open Lab 13 in GitHub Codespaces](https://github.com/codespaces/badge.svg)](https://codespaces.new/Zuehlke/ai-augmented-software-engineering?ref=lab%2Fevals)
 
-The skill-loaded evals check, for a few typical prompts, whether the agent loads the right skills, and leaves out the ones that don't apply. Every skill keeps its prompts next to its `SKILL.md`, in `skill-loaded-evals.json`:
+Each skill keeps its cases in `skill-loaded-evals.json`, next to its `SKILL.md`: a prompt, and whether the skill should load for it.
 
 <details>
 <summary>The cases of <code>testing</code> and <code>api-design</code></summary>
@@ -52,12 +50,12 @@ The skill-loaded evals check, for a few typical prompts, whether the agent loads
 
 :::
 
-None of the prompts mentions tests or a skill. Some prompts appear in both files: every skill is checked on its own.
+None of the prompts mentions a skill. Each skill is checked on its own, so some prompts appear in both files.
 
 </details>
 
 > [!NOTE]
-> The skill-loaded evals run unattended, so they need the [agent token from the setup](/getting-started/setup#agent-token). They read Claude Code's tool calls, so they run with Claude Code, also when you use Copilot for the rest. A run of all cases costs about $5.
+> The skill-loaded evals need the [agent token from the setup](/getting-started/setup#agent-token). They run with Claude Code, also if you use Copilot otherwise.
 
 In **terminal 1**, start Temporal and the worker, and open `flows watch`:
 
@@ -70,53 +68,44 @@ task flows:watch
 
 <FlowsWatch scene="lab13-skills" />
 
-This branch has `.harness/evals/`, so `flows watch` has a third tab now. Press `Tab` until you see **Evals**. It opens on **E2E**, the end-to-end evals: press `→` to switch to **Skill loaded**.
+Press `Tab` until you see **Evals**, the tab this branch adds, then `→` to switch to **Skill loaded**. Press `s`: the dialog shows the 27 runs, every case 3 times, and their cost, unknown the first time. Press `Enter`.
 
-Press `s`. The dialog says what runs: every case 3 times, 27 runs, and what that will cost, by the last skill-loaded evals. The first time, it can't know yet. Press `Enter` to start.
+After a few minutes, you see one row per case and a `✓` per run that did what the case expects. `not:` marks a prompt the skill shouldn't load for. Agent output varies, so a case passes when 2 of its 3 runs do. Every case should pass. `Enter` on a run shows what it did. The **trend** above gets a column per run of the evals, so you see when a change breaks something.
 
-All runs start at once, so it takes a few minutes. When they're done, you see one row per case and one `✓` per run that did what the case expects. `not:` marks a prompt the skill shouldn't load for. A case passes when at least 2 of its 3 runs do, so a single `✗` is fine: agent output varies from run to run. Every case should pass. Pick a run with the arrow keys and press `Enter` to see what it did.
-
-Above the grid, the **trend** has one column per skill-loaded evals, with the commit it checked. It grows with every run, so you see when a change to a skill broke something.
-
-Two things to notice about how it checks:
-
-- **There is no judge.** Whether a skill was loaded is a fact in the tool calls, so code checks it. That's faster, cheaper, and gives the same answer every time. Use an agent as a judge only for what code can't check.
-- **The runs are short and read-only.** The eval only needs the agent's decision, not the code it would write, so it stops the agent after ten turns.
+There is no judge: whether a skill loaded is a fact in the agent's tool calls, so plain code checks it. That's fast, cheap and gives the same answer every time. And each run stops after ten turns: the eval needs the agent's decision, not its code.
 
 ### 2. Make the description too broad
 
 <FlowsWatch scene="lab13-proposals" />
 
-Now change the description the way people often do when a skill doesn't load often enough: make it apply to everything. Open `.agents/skills/testing/SKILL.md` and replace the `description` line with:
+When a skill doesn't load often enough, people often make it apply to everything. Try it: in `.agents/skills/testing/SKILL.md`, replace the `description` line with:
 
 ```markdown
 description: Use for every task in this repository.
 ```
 
-The skill-loaded evals check your checkout as it is, so there's no need to commit. In the Evals tab, press `s` again: the dialog notes that `.agents/skills/testing/SKILL.md` isn't committed, and checks it as it is. Press `Enter`.
+Skill-loaded evals check your checkout as it is, so there's no need to commit. Press `s` and `Enter` again.
 
-The trend gets a second column, and it drops: the cases that should load `testing` still pass, but the three that shouldn't now fail in every run. `api-design` still passes: every skill is checked on its own.
+The trend drops to 6 of 9: the three cases that shouldn't load `testing` now fail. `api-design` still passes.
 
-Because cases failed, one more agent runs at the end: the **improve agent**. It reads the results, and the ones of the skill-loaded evals before, and proposes a description that makes the failing cases pass without breaking the others. Press `p` to read the proposal.
+Because cases failed, the **improve agent** runs last and proposes a better description. Press `p` to read it. It only proposes: since Lab 10, no agent may change `.agents/`, so the change is yours to make.
 
-A failing eval doesn't become a ticket for a Ralph loop: since Lab 10, no agent may change `.agents/`. The skills are what the agents follow and get judged by, so a change to them is yours to make. The improve agent only proposes.
-
-Undo your change before you go on:
+Undo your change:
 
 ```bash
 git checkout .agents/skills/testing/SKILL.md
 ```
 
 > [!NOTE]
-> An eval is only as good as its cases. When a skill doesn't load in real use, add that prompt to its `skill-loaded-evals.json`, so the description can't break the same way twice.
+> When a skill doesn't load in real use, add that prompt to its `skill-loaded-evals.json`, so it can't break the same way twice.
 
 ### 3. The end-to-end evals
 
-A skill that loads can still lead to bad code. Whether the setup builds features you would ship is a question for the whole pipeline. The **end-to-end evals** answer it on a few fixed tasks. Each task is a folder in `.harness/evals/tasks/<id>/`:
+A skill that loads can still lead to bad code. End-to-end evals check whether the setup builds features you would ship, on a few fixed tasks. Each task is a folder in `.harness/evals/tasks/<id>/`:
 
-- `request.md`: the feature request, what the pipeline gets.
+- `request.md`: the feature request the pipeline gets.
 - `base`: the commit its app code starts from.
-- `accept/`: the hidden acceptance tests, laid out like the repository.
+- `accept/`: the hidden acceptance tests.
 - `criteria.md`: what the grader checks.
 
 <details>
@@ -148,25 +137,23 @@ answer is an empty list, not an error. A `min_delay` that is negative or not a n
 
 </details>
 
-Each run works in a copy of your repository under `~/.flows/evals/`, with the skills and the harness of your last commit and the task's app code, and runs the pipeline from Lab 12 unattended: nobody approves the tickets or decides the merge. A run is **accepted** when its pipeline merged something, `task test` passes with the hidden tests added, and the grader would ship it. The pipeline's own judges and its review don't grade: they belong to the setup under test.
+Each run works in a copy of your repository, with your last commit and the task's app code, and runs the pipeline from Lab 12 unattended. It's **accepted** when something was merged, `task test` passes with the hidden tests, and the grader, the `review` skill with the hidden criteria, would ship it.
 
 > [!CAUTION]
-> Don't start the end-to-end evals unless you have (almost) unlimited credits. Every run is a whole pipeline: research, plan, the Ralph loops with their judges, the review and the grader. In our runs, one task, 3 runs, cost $5 to $16, and all 5 tasks, 15 runs, cost $58.64 and took about 18 minutes per run.
+> Don't start the end-to-end evals unless you have (almost) unlimited credits. In our runs, one task (3 runs) cost $5 to $16, and all 5 tasks (15 runs) cost $58.64, at about 18 minutes per run.
 
 <FlowsWatch scene="lab13-e2e-start" />
 
-To see what you would start, press `←` in the Evals tab to switch back to **E2E**, and `s`. You pick all tasks or one of them, and the dialog says how many runs that is. The cost is unknown until an end-to-end evals has run: then it estimates by the cost per run of the last one. Press `Esc` to close it without starting anything.
+To look without starting anything: press `←` to switch to **E2E**, then `s`. You can pick all tasks or one. Press `Esc` to close the dialog.
 
 Here is one of our end-to-end evals, all 5 tasks:
 
 <FlowsWatch scene="lab13-e2e-results" />
 
-While it runs, at most 3 runs work at the same time, and the box shows each one's step and what they cost so far. When it's done, the trend has four numbers:
-
-- **Quality, runs accepted**: 8 of 15.
-- **Reliability, tasks**: the tasks whose 3 runs were all accepted, 1 of 5. Only these are candidates for unattended work.
-- **First time right**: accepted, and no judge or test rejected a step on the way. Only 1 of 15: most accepted runs got there after a rejection, and paid for it.
-- **Cost per accepted**: what all runs cost, the ones not accepted too, divided by the accepted ones: $7.33.
+- **Quality**: runs accepted, 8 of 15.
+- **Reliability**: tasks with all 3 runs accepted, 1 of 5. Only these are candidates for unattended work.
+- **First time right**: runs accepted without a rejected step on the way, 1 of 15.
+- **Cost per accepted**: what all runs cost, divided by the accepted ones, $7.33.
 
 > [!TIP]
-> Everything in the Evals tab also works from the command line: `flows skill-loaded-evals`, `flows evals [task]` for the end-to-end evals, and `flows evals --stop` to stop running end-to-end evals. The results go to `.harness/evals/results/`, not committed.
+> The Evals tab has command-line equivalents: `flows skill-loaded-evals`, `flows evals [task]` and `flows evals --stop`.
