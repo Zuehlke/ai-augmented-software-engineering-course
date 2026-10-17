@@ -764,7 +764,7 @@ explanation: the 3 cases that shouldn't load it fail. The 2 that should load it 
     for (const done of [0, 3, 8, 14, 19, 24, 27]) {
       const status = { evalsId, step: 'running', runs: 27, done, asExpected: asExpected.slice(0, done).filter(Boolean).length, costUsd: (report.costUsd * done) / 27 };
       sc.s = { ...sc.s, skillLoadedEvals: { workflowId, status } };
-      sc.show(done ? 700 : 1600, { spin: 2, caption });
+      sc.show(done ? 700 : 1600, { key: done ? undefined : '⏎', spin: 2, caption });
       sc.ui.message = undefined;
     }
     if (report.proposals) {
@@ -790,10 +790,10 @@ explanation: the 3 cases that shouldn't load it fail. The 2 that should load it 
     sc.ui.evalsKind = 'skillLoaded';
     sc.show(2400, { key: '→', caption: '→ switches to the skill-loaded evals' });
     startDialog(sc);
-    sc.show(4500, { key: 's', caption: 's says what it runs, and what it will cost' });
+    sc.show(5500, { key: 's', caption: 's: every case 3 times, 27 runs. The first time, the cost is unknown' });
     sc.ui.dialog = undefined;
     sc.ui.message = 'Started skill-loaded-evals-20261017-101817: 27 runs.';
-    runSkills(sc, '20261017-101817', FIRST, 'All 27 runs start at once');
+    runSkills(sc, '20261017-101817', FIRST, '⏎ starts them, all 27 at once');
     sc.show(3500, { caption: 'Every case passes: one row per case, ✓ per run that did what it expects' });
     sc.ui.evalsTabs = false;
     sc.ui.evalsRun = 17;
@@ -813,10 +813,10 @@ explanation: the 3 cases that shouldn't load it fail. The 2 that should load it 
     sc.ui.evalsTabs = true;
     sc.show(1800, { caption: 'testing now says: Use for every task in this repository.' });
     startDialog(sc, ['.agents/skills/testing/SKILL.md']);
-    sc.show(4500, { key: 's', caption: 'Not committed, but checked as it is' });
+    sc.show(5500, { key: 's', caption: 'Not committed, but checked as it is. The cost, by the last run' });
     sc.ui.dialog = undefined;
     sc.ui.message = 'Started skill-loaded-evals-20261017-104502: 27 runs.';
-    runSkills(sc, '20261017-104502', BROKEN, 'The same 27 runs, on the new description');
+    runSkills(sc, '20261017-104502', BROKEN, '⏎: the same 27 runs, on the new description');
     sc.show(4000, { caption: '6 of 9: the cases that shouldn\'t load testing fail' });
     sc.ui.dialog = { kind: 'proposals', sections: [{ title: 'Skill loaded, 10-17 10:45', text: PROPOSAL }], scroll: 0 };
     sc.show(6500, { key: 'p', caption: 'p shows what the improve agent proposes. You decide' });
