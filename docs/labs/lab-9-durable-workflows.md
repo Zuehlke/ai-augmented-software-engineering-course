@@ -71,3 +71,6 @@ In the web UI, click `plan` to see its history: every finished step, with its re
 When the workflow is done, press `Tab`: the board shows the new tickets next to the four from Lab 8. Select one and press `Enter` to read it. Check them as you did in Lab 8: is every ticket a vertical slice, and does every `blocked` ticket name what blocks it?
 
 In the next lab, a workflow changes code.
+
+> [!NOTE]
+> `task lab/...` stops the workflows of the lab you leave and clears them from `flows watch`, so every lab starts empty. Branches with unmerged agent work stay.
