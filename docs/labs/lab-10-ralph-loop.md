@@ -5,7 +5,7 @@
 The longer an agent session runs, the worse it gets. The context fills up with old attempts and the agent loses track. A **Ralph loop** avoids this. It runs the same prompt again and again, each time with a fresh context:
 
 - Each run does one small step on the ticket and commits it.
-- The agent forgets everything between runs. It reads `.harness/progress.md` and the git history to see where it left off. In [Structured agentic workflows](./lab-4-structured-agentic-workflows.md), the progress was in `specs/<slug>/progress.md`, next to its specification. The loop works on one ticket at a time, so its progress is in one place, `.harness/progress.md`, and goes again when the ticket is done.
+- The agent forgets everything between runs. It reads `.harness/progress.md` and the git history to see where it left off. It's the same file as in [Structured agentic workflows](./lab-4-structured-agentic-workflows.md), now for one ticket: it goes again when the ticket is done.
 - After each run, a **judge** checks the work. First plain code checks the run: did it commit, did it leave anything uncommitted, did it change the skills in `.agents/`, the sandbox or the harness's own code? Then the tests run. Then a second, read-only agent checks the run's commits with the `judge` skill. It didn't write the code, so it has no reason to defend it.
 - The agent and the judge check a step against the same checklist, the `change-quality` skill: scope, tests, no shortcuts, fit. The agent before it commits, the judge after.
 - If the judge finds a problem, the next run gets it as feedback and fixes it first.

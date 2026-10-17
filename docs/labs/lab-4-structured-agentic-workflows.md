@@ -8,9 +8,9 @@ In the last lab, the `research` skill turned a requirement into a specification.
 | --- | --- | --- |
 | research | `research` | `specs/<slug>/specification.md`: what to build, with testable acceptance criteria |
 | design | `design` | `specs/<slug>/design.md`: which modules, endpoints and tests change |
-| implement | `implement` | the code, and `specs/<slug>/progress.md`: which criteria are met and which decisions were made |
+| implement | `implement` | the code, and `.harness/progress.md`: which criteria are met and which decisions were made |
 
-Every phase starts in a **new session**. It doesn't remember the previous phase: the files in `specs/<slug>/` are the only thing passed on. That keeps each session's context small and focused, and the files show you exactly what one phase hands to the next. The `handoff-writing` skill defines their format.
+Every phase starts in a **new session**. It doesn't remember the previous phase: the handoff files are the only thing passed on. The specification and the design describe the feature, so they stay in `specs/<slug>/`. The progress only matters while the work is going on: it goes to `.harness/progress.md`, and is deleted when every acceptance criterion is met. From Lab 10 on, the agents that work unattended keep their progress in the same file. That keeps each session's context small and focused, and the files show you exactly what one phase hands to the next. The `handoff-writing` skill defines their format.
 
 ## Your Task
 
@@ -31,7 +31,7 @@ After the command is finished, complete the following tasks:
 - Implement the same endpoint again using the research → design → implement workflow, **each skill in a new session** (`/clear` or a new chat):
   - `GET /delays?airline_code=AA&limit=50`
 - After each phase, read the file it wrote: could the next phase work from it alone?
-- While `implement` runs, stop it after the first acceptance criterion is met. Start a new session and invoke `implement` again: it should continue from `progress.md` instead of starting over.
+- While `implement` runs, stop it after the first acceptance criterion is met. Start a new session and invoke `implement` again: it should continue from `.harness/progress.md` instead of starting over.
 
 > [!NOTE]
 > The `TODO` markers in the relevant files will help you get started.
@@ -211,16 +211,19 @@ Your work is only done when:
 
 2. Read the design in `specs/<slug>/design.md` to understand the implementation details.
 
-3. If `specs/<slug>/progress.md` exists, an earlier session already started: continue from there, don't start over.
+3. If `.harness/progress.md` exists, an earlier session already started: continue from there, don't start over.
 
 4. Implement the changes using TDD (tests before implementation).
 
-5. Each time an acceptance criterion is met, apply the **handoff-writing skill** to update the implement-phase handoff, `specs/<slug>/progress.md`, so a new session could continue from it.
+5. Each time an acceptance criterion is met, apply the **handoff-writing skill** to update the implement-phase handoff, `.harness/progress.md`, so a new session could continue from it.
 
 6. Iterate until all acceptance criteria are met and all test cases succeed.
    - YOU MUST NOT STOP until all quality checks succeed.
 
-7. Update any further documentation such as `README.md` to reflect any changes in usage or behavior.
+7. When every acceptance criterion is met, delete `.harness/progress.md`: the work is done, and the
+   decisions are in the code and its commits.
+
+8. Update any further documentation such as `README.md` to reflect any changes in usage or behavior.
 
 ---
 
@@ -228,7 +231,7 @@ Your work is only done when:
 
 - Run tests after each logical unit of work.
 - Do not skip tests — every piece of functionality must be tested.
-- Do not deviate from the design without explicit approval. Record every approved deviation under **Decisions** in `progress.md`.
+- Do not deviate from the design without explicit approval. Record every approved deviation under **Decisions** in `.harness/progress.md`.
 - Maintain all existing functionality — no breaking changes.
 - Follow TDD methodology rigorously.
 ```
@@ -241,7 +244,7 @@ Your work is only done when:
 ```markdown
 ---
 name: handoff-writing
-description: Write the handoff files that pass work between the phases of the research → design → implement workflow.
+description: Write the handoff files that pass work between the phases of the research → design → plan → implement workflow.
 ---
 
 # Handoff Writing
@@ -251,14 +254,18 @@ the only thing the next phase gets, so write them for a reader who has no other 
 
 ## File Location
 
-All handoffs go to `specs/<slug>/`, where `<slug>` is a short kebab-case identifier for the feature
-or change.
+The specification and the design go to `specs/<slug>/`, where `<slug>` is a short kebab-case
+identifier for the feature or change. The tickets go to `backlog/`. The progress of what is being
+implemented, a ticket or a specification, goes to `.harness/progress.md`, and is deleted when it is done.
 
-| Phase     | File               | Template                     |
-| --------- | ------------------ | ---------------------------- |
-| research  | `specification.md` | `templates/specification.md` |
-| design    | `design.md`        | `templates/design.md`        |
-| implement | `progress.md`      | `templates/progress.md`      |
+| Phase     | File                               | Template                                |
+| --------- | ---------------------------------- | --------------------------------------- |
+| research  | `specs/<slug>/specification.md`    | `templates/specification.md`            |
+| design    | `specs/<slug>/design.md`           | `templates/design.md`                   |
+| plan      | `backlog/TICKET-<n>-<slug>.md`     | the ticket template in the `plan` skill |
+| implement | `.harness/progress.md`             | `templates/progress.md`                 |
+
+The design is optional: the unattended pipeline goes from the specification straight to the plan.
 
 The templates are in the `templates/` folder next to this file. Copy the template when you create a
 handoff, and update the existing file instead of writing a new one.
@@ -278,11 +285,11 @@ handoff, and update the existing file instead of writing a new one.
 ```markdown
 # Progress
 
-## Specification
-<title of specs/<slug>/specification.md>
+## Ticket
+<ticket id> <ticket title>, or without a ticket: the title of specs/<slug>/specification.md
 
 ## Done
-- <acceptance criterion that is met>: <what you built for it, and the test that covers it>
+- <acceptance criterion that is met>: <what you built for it>, covered by <test name>
 
 ## Decisions
 - <choice you made and why, including every deviation from the design>
