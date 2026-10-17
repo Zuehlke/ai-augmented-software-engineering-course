@@ -2,7 +2,7 @@
 
 ## Context
 
-A skill only helps when the agent loads it, and the agent decides that from the skill's `description`. Rewrite a description, rename a skill or add an overlapping one, and the agent may quietly stop loading it. Nothing fails: the code just lacks what the skill asks for.
+A skill only helps when the agent loads it, and the agent decides that from the skill's `description`. Rewrite a description, rename a skill or add an overlapping one, and the agent may quietly stop loading it. Nothing fails: The agent just writes code without following the skill's instructions, potentially skipping things like the tests or code style.
 
 An **eval** catches this automatically, after every change. This lab has two kinds:
 
