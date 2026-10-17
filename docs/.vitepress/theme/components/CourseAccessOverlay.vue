@@ -1,20 +1,53 @@
 <script setup lang="ts">
 import DefaultTheme from "vitepress/theme";
-import { computed, onMounted, ref } from "vue";
+import { computed, onMounted, onUnmounted, ref } from "vue";
 import { useData, useRoute, useRouter, withBase } from "vitepress";
+
+type OverlayTarget = "day1" | "day2";
 
 const router = useRouter();
 const route = useRoute();
 
 const showOverlay = ref(false);
-const activeTarget = ref<"labs" | "slides" | null>(null);
+const activeTarget = ref<OverlayTarget | null>(null);
 const activeHostName = ref<string | null>(null);
 const siteBase = import.meta.env.BASE_URL ?? "/";
 const hostNames = ["Lukas", "Marco", "Jonathan"] as const;
 const { theme } = useData();
 
-const labsEnabled = computed(() => theme.value.accessControl?.labsEnabled ?? true);
-const slidesEnabled = computed(() => theme.value.accessControl?.slidesEnabled ?? true);
+const day1LabsEnabled = computed(() => theme.value.accessControl?.day1LabsEnabled ?? true);
+const day2LabsEnabled = computed(() => theme.value.accessControl?.day2LabsEnabled ?? true);
+
+// A day stays locked until the password was entered once in this browser.
+const unlockedDays = ref<Set<string>>(new Set());
+const pendingPath = ref<string | null>(null);
+type Download = { day: "day1" | "day2"; href: string; filename: string };
+const pendingDownload = ref<Download | null>(null);
+const password = ref("");
+const passwordError = ref(false);
+const unlockStorageKey = "course-unlocked-days";
+
+function dayPassword(day: "day1" | "day2"): string | null {
+  const control = theme.value.accessControl;
+  return (day === "day1" ? control?.day1Password : control?.day2Password) ?? null;
+}
+
+function loadUnlockedDays(): void {
+  try {
+    const stored = JSON.parse(localStorage.getItem(unlockStorageKey) ?? "[]");
+    unlockedDays.value = new Set(Array.isArray(stored) ? stored : []);
+  } catch {
+    unlockedDays.value = new Set();
+  }
+}
+
+function saveUnlockedDays(): void {
+  try {
+    localStorage.setItem(unlockStorageKey, JSON.stringify([...unlockedDays.value]));
+  } catch {
+    // Storage unavailable (private mode): the day stays unlocked until reload.
+  }
+}
 
 function normalizePath(path: string): string {
   const [pathWithoutQueryOrHash] = path.split(/[?#]/);
@@ -32,38 +65,31 @@ function normalizePath(path: string): string {
   return normalizedPath || "/";
 }
 
-function isLabsPath(path: string): boolean {
+// Labs 7 and up belong to day 2, everything else under /labs to day 1.
+function getLabDay(path: string): "day1" | "day2" | null {
   const normalizedPath = normalizePath(path);
-  return normalizedPath === "/labs" || normalizedPath.startsWith("/labs/");
+  if (normalizedPath !== "/labs" && !normalizedPath.startsWith("/labs/")) return null;
+  const labNumber = Number(normalizedPath.match(/^\/labs\/lab-(\d+)/)?.[1]);
+  return labNumber >= 7 ? "day2" : "day1";
 }
 
-function isSlidesPath(path: string): boolean {
-  const normalizedPath = normalizePath(path);
-  return normalizedPath === "/slides" || normalizedPath.startsWith("/slides/");
-}
-
-function isCheatsheetPath(path: string): boolean {
-  const normalizedPath = normalizePath(path);
-  return normalizedPath === "/cheatsheet" || normalizedPath.startsWith("/cheatsheet/");
-}
-
-function isGlossaryPath(path: string): boolean {
-  const normalizedPath = normalizePath(path);
-  return normalizedPath === "/glossary" || normalizedPath.startsWith("/glossary/");
-}
-
-function getOverlayTarget(path: string): "labs" | "slides" | null {
-  if (!labsEnabled.value && isLabsPath(path)) {
-    return "labs";
+function getOverlayTarget(path: string): OverlayTarget | null {
+  const labDay = getLabDay(path);
+  if (labDay === "day1" && (!day1LabsEnabled.value || (dayPassword("day1") && !unlockedDays.value.has("day1")))) {
+    return "day1";
   }
-  if (!slidesEnabled.value && (isSlidesPath(path) || isCheatsheetPath(path) || isGlossaryPath(path))) {
-    return "slides";
+  if (labDay === "day2" && (!day2LabsEnabled.value || (dayPassword("day2") && !unlockedDays.value.has("day2")))) {
+    return "day2";
   }
   return null;
 }
 
-function openOverlay(target: "labs" | "slides"): void {
+function openOverlay(target: OverlayTarget, path: string | null, download: Download | null = null): void {
   activeTarget.value = target;
+  pendingPath.value = path;
+  pendingDownload.value = download;
+  password.value = "";
+  passwordError.value = false;
   activeHostName.value = pickHostName();
   showOverlay.value = true;
 }
@@ -76,29 +102,74 @@ function closeOverlay(): void {
 router.onBeforeRouteChange = (to: string) => {
   const target = getOverlayTarget(to);
   if (target) {
-    openOverlay(target);
+    openOverlay(target, to);
     return false;
   }
   return true;
 };
 
+// The overlay asks for a password when the day is enabled but not unlocked yet.
+const needsPassword = computed(
+  () =>
+    (activeTarget.value === "day1" && day1LabsEnabled.value) ||
+    (activeTarget.value === "day2" && day2LabsEnabled.value),
+);
+
+function startDownload({ href, filename }: Download): void {
+  const link = document.createElement("a");
+  link.href = href;
+  link.download = filename;
+  link.click();
+}
+
+function onDownloadRequest(event: Event): void {
+  const download = (event as CustomEvent<Download>).detail;
+  const unlocked = !dayPassword(download.day) || unlockedDays.value.has(download.day);
+  if (unlocked) startDownload(download);
+  else openOverlay(download.day, null, download);
+}
+
+function submitPassword(): void {
+  const day = activeTarget.value;
+  if (day !== "day1" && day !== "day2") return;
+  if (password.value !== dayPassword(day)) {
+    passwordError.value = true;
+    return;
+  }
+  unlockedDays.value = new Set(unlockedDays.value).add(day);
+  saveUnlockedDays();
+  const target = pendingPath.value;
+  const download = pendingDownload.value;
+  closeOverlay();
+  if (download) startDownload(download);
+  else if (target) void router.go(target);
+}
+
 onMounted(() => {
+  loadUnlockedDays();
+  window.addEventListener("course:download", onDownloadRequest);
   const target = getOverlayTarget(route.path);
   if (target) {
-    openOverlay(target);
+    openOverlay(target, route.path);
     void router.go(withBase("/"));
   }
 });
 
-const overlayTitle = computed(() =>
-  activeTarget.value === "labs" ? "Labs are not available yet" : "Resources are not available yet",
-);
+onUnmounted(() => window.removeEventListener("course:download", onDownloadRequest));
 
-const overlayDescription = computed(() =>
-  activeTarget.value === "labs"
-    ? "The labs will be enabled during the course."
-    : "The slides, cheatsheet, and glossary will be provided during the course.",
-);
+const overlayTitle = computed(() => {
+  if (needsPassword.value) return "We will go through the labs in the course";
+  if (activeTarget.value === "day1") return "Day 1 labs are not available yet";
+  if (activeTarget.value === "day2") return "Day 2 labs are not available yet";
+  return "Labs are not available yet";
+});
+
+const overlayDescription = computed(() => {
+  if (needsPassword.value) return "Enter the password you got from the course host.";
+  if (activeTarget.value === "day1") return "The day 1 labs will be enabled during the course.";
+  if (activeTarget.value === "day2") return "The day 2 labs will be enabled during the course.";
+  return "The labs will be enabled during the course.";
+});
 
 function pickHostName(): string | null {
   if (hostNames.length === 0) return null;
@@ -137,7 +208,21 @@ const overlayBadge = computed(() =>
         <span class="slides-overlay__badge">{{ overlayBadge }}</span>
         <h2 id="course-overlay-title">{{ overlayTitle }}</h2>
         <p id="course-overlay-description">{{ overlayDescription }}</p>
-        <button type="button" class="slides-overlay__button" @click="closeOverlay">
+        <form v-if="needsPassword" class="slides-overlay__form" @submit.prevent="submitPassword">
+          <input
+            v-model="password"
+            class="slides-overlay__input"
+            type="password"
+            autocomplete="off"
+            placeholder="Password"
+            aria-label="Password"
+            :aria-invalid="passwordError"
+            @input="passwordError = false"
+          />
+          <p v-if="passwordError" class="slides-overlay__error" role="alert">Wrong password.</p>
+          <button type="submit" class="slides-overlay__button">Unlock</button>
+        </form>
+        <button v-else type="button" class="slides-overlay__button" @click="closeOverlay">
           Got it
         </button>
       </div>
@@ -219,7 +304,7 @@ const overlayBadge = computed(() =>
 
 .slides-overlay__card h2 {
   margin: 2px 0 0;
-  font-size: 1.6rem;
+  font-size: 1rem;
   font-weight: 600;
   line-height: 1.3;
 }
@@ -227,7 +312,7 @@ const overlayBadge = computed(() =>
 .slides-overlay__card p {
   margin: 0;
   color: var(--vp-c-text-2);
-  font-size: 1rem;
+  font-size: 0.875rem;
   line-height: 1.55;
 }
 
@@ -237,13 +322,37 @@ const overlayBadge = computed(() =>
   width: fit-content;
   margin-top: 6px;
   padding: 10px 18px;
-  font-size: 0.95rem;
+  font-size: 0.875rem;
   font-weight: 600;
   line-height: 1.25;
   color: #fff;
   background: var(--vp-c-brand-1);
   cursor: pointer;
   transition: background-color 0.2s ease;
+}
+
+.slides-overlay__form {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.slides-overlay__input {
+  border: 1px solid var(--vp-c-divider);
+  border-radius: 10px;
+  padding: 10px 14px;
+  font-size: 0.875rem;
+  color: var(--vp-c-text-1);
+  background: var(--vp-c-bg-soft);
+}
+
+.slides-overlay__input[aria-invalid="true"] {
+  border-color: var(--vp-c-danger-1);
+}
+
+.slides-overlay__card .slides-overlay__error {
+  color: var(--vp-c-danger-1);
+  font-size: 0.875rem;
 }
 
 .slides-overlay__button:hover {

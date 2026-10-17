@@ -1,10 +1,20 @@
-import { defineConfig } from "vitepress";
+import { defineConfig, loadEnv } from "vitepress";
 import { resolveAccessControlFromEnv } from "./theme/access-control";
 
 const rawBase = process.env.PAGES_BASE ?? "/";
 const normalizedBase = rawBase.trim().replace(/^\/+|\/+$/g, "");
 const base = normalizedBase ? `/${normalizedBase}/` : "/";
-const accessControl = resolveAccessControlFromEnv(process.env);
+// Also reads docs/.env (git-ignored) so the passwords can be set locally.
+const accessControl = resolveAccessControlFromEnv({
+  ...loadEnv(process.env.NODE_ENV ?? "development", process.cwd(), "VITE_"),
+  ...process.env,
+});
+// Locked days are left out of the navbar and sidebar.
+const labsLink = accessControl.day1LabsEnabled
+  ? "/labs/lab-1-vibe-coding"
+  : accessControl.day2LabsEnabled
+    ? "/labs/lab-7-sandboxing"
+    : null;
 const siteDescription =
   "An introduction to AI-augmented software engineering that helps teams build software with AI in a more disciplined and systematic way - learning the key concepts and methods of modern AI coding tools and applying them directly in hands-on labs.";
 const faviconDataUrl =
@@ -28,7 +38,7 @@ export default defineConfig({
     accessControl,
     nav: [
       { text: "Getting Started", link: "/getting-started/setup" },
-      { text: "Labs", link: "/labs/lab-1-vibe-coding" },
+      ...(labsLink ? [{ text: "Labs", link: labsLink }] : []),
       { text: "Resources", link: "/slides/" },
     ],
     sidebar: [
@@ -38,8 +48,8 @@ export default defineConfig({
           { text: "Setup", link: "/getting-started/setup" },
         ],
       },
-      {
-        text: "Labs",
+      ...(accessControl.day1LabsEnabled ? [{
+        text: "Day 1 · Labs",
         items: [
           { text: "Lab 1 · Vibe Coding", link: "/labs/lab-1-vibe-coding" },
           { text: "Lab 2 · Steering Agents", link: "/labs/lab-2-steering-agents" },
@@ -47,15 +57,20 @@ export default defineConfig({
           { text: "Lab 4 · Structured Agentic Workflows", link: "/labs/lab-4-structured-agentic-workflows" },
           { text: "Lab 5 · Spec-Driven Development", link: "/labs/lab-5-spec-driven-development" },
           { text: "Lab 6 · Automated Feedback Loops", link: "/labs/lab-6-automated-feedback-loops" },
-          { text: 'Lab 7 · Sandboxing <span class="sidebar-tag-new">New</span>', link: "/labs/lab-7-sandboxing" },
-          { text: 'Lab 8 · Tracer Bullets <span class="sidebar-tag-new">New</span>', link: "/labs/lab-8-tracer-bullets" },
-          { text: 'Lab 9 · Durable Workflows <span class="sidebar-tag-new">New</span>', link: "/labs/lab-9-durable-workflows" },
-          { text: 'Lab 10 · Ralph Loop <span class="sidebar-tag-new">New</span>', link: "/labs/lab-10-ralph-loop" },
-          { text: 'Lab 11 · Parallelizing Work <span class="sidebar-tag-new">New</span>', link: "/labs/lab-11-parallelizing-work" },
-          { text: 'Lab 12 · Orchestration <span class="sidebar-tag-new">New</span>', link: "/labs/lab-12-orchestration" },
-          { text: 'Lab 13 · Evals <span class="sidebar-tag-new">New</span>', link: "/labs/lab-13-evals" },
         ],
-      },
+      }] : []),
+      ...(accessControl.day2LabsEnabled ? [{
+        text: 'Day 2 · Labs <span class="sidebar-tag-new">New</span>',
+        items: [
+          { text: "Lab 7 · Sandboxing", link: "/labs/lab-7-sandboxing" },
+          { text: "Lab 8 · Tracer Bullets", link: "/labs/lab-8-tracer-bullets" },
+          { text: "Lab 9 · Durable Workflows", link: "/labs/lab-9-durable-workflows" },
+          { text: "Lab 10 · Ralph Loop", link: "/labs/lab-10-ralph-loop" },
+          { text: "Lab 11 · Parallelizing Work", link: "/labs/lab-11-parallelizing-work" },
+          { text: "Lab 12 · Orchestration", link: "/labs/lab-12-orchestration" },
+          { text: "Lab 13 · Evals", link: "/labs/lab-13-evals" },
+        ],
+      }] : []),
       {
         text: "Resources",
         items: [
