@@ -264,11 +264,5 @@ While it runs, at most 3 runs work at the same time, and the box shows each one'
 - **First time right**: accepted, and no judge or test rejected a step on the way. Only 1 of 15: most accepted runs got there after a rejection, and paid for it.
 - **Cost per accepted**: what all runs cost, the ones not accepted too, divided by the accepted ones: $7.33.
 
-Below, the grid has one row per task, with why its first run that wasn't accepted wasn't. Pick a run and press `Enter` to read what the grader said. All 3 runs of `airline-delay-summary` rounded the average delay, a rule nobody asked for: the research added it as an assumption, and the plan, the loops and the review built on it.
-
-Press `p` for what the improve agent proposes for the whole setup, as rules for any feature request, never for one task: a fix for one task only games the e2e evals. We made the first one: the `judge` skill's research checks now reject an assumption that changes a value the request defines. The next e2e evals shows in the trend whether it helped.
-
-An e2e evals whose models differ from the one before is marked with `*` in the trend: `opus` and `sonnet` always resolve to the latest version, so a new model release changes the setup without a commit.
-
 > [!TIP]
 > Everything in the Evals tab also works from the command line: `flows skill-loaded-evals`, `flows evals [task]` for the e2e evals, and `flows evals --stop` to stop running e2e evals. The results go to `.harness/evals/results/`, not committed.
