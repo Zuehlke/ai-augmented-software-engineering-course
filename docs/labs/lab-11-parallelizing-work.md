@@ -82,6 +82,8 @@ task flows:watch
 
 ### 1. Run one Ralph loop per ticket
 
+<FlowsWatch scene="lab11-start" />
+
 Press `Tab` for the board. Select TICKET-2 in **Ready**, press `s`, then `y`. Do the same for TICKET-3.
 
 Both loops now run at the same time, each on its own ticket and branch, with its own `.harness/progress.md`. On the board, both cards move to **Running**. `Tab` back to the pipeline view: the worker output mixes both agents, each line prefixed with its loop.
@@ -112,5 +114,7 @@ task run
 Open the dashboard at [http://localhost:8080/dashboard.html](http://localhost:8080/dashboard.html). In **GitHub Codespaces**, open the **Ports** tab, click the globe icon next to port `8080` (**Flight API**) and append `/dashboard.html` to the URL. You see the airline lookup, but not the flight status lookup: that one only exists in the other worktree.
 
 ### 4. Clean up
+
+<FlowsWatch scene="lab11-cleanup" />
 
 Stop the app (`Ctrl+C`) and go back to the repository root (`cd ../../..`). On the board, open TICKET-2 with `Enter`, press `x`, then `y`: that removes its worktree with `git worktree remove` and deletes its branch, with the agent's work. Do the same for TICKET-3. Lab 12 merges such branches for you.

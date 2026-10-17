@@ -1,19 +1,20 @@
-// Records the frames that <FlowsWatch> plays in Labs 9, 10, 12 and 13, with the real `flows watch` renderer:
+// Records the frames that <FlowsWatch> plays in Labs 9 to 13, with the real `flows watch` renderer:
 // scripted snapshots in, character grids out. Each lab is recorded with the `flows watch` of its own branch of
 // Zuehlke/ai-augmented-software-engineering. Run it again when `flows watch` changes there (any tsx >= 4):
 //
 //   git worktree add /tmp/lab-10 lab/ralph-loop
 //   npx tsx docs/.vitepress/theme/components/flows-watch/record.mts /tmp/lab-10/.harness/src 10
 //
-// Lab 9 is lab/durable-workflows, Lab 10 lab/ralph-loop, Lab 12 lab/orchestration, Lab 13 lab/evals.
+// Lab 9 is lab/durable-workflows, Lab 10 lab/ralph-loop, Lab 11 lab/parallelizing-work, Lab 12 lab/orchestration,
+// Lab 13 lab/evals.
 import { writeFileSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const srcDir = path.resolve(process.argv[2]);
 const lab = process.argv[3];
-const BRANCH = ({ '9': 'lab/durable-workflows', '10': 'lab/ralph-loop', '12': 'lab/orchestration', '13': 'lab/evals' } as Record<string, string>)[lab];
-if (!BRANCH) throw new Error('Which lab? 9, 10, 12 or 13');
+const BRANCH = ({ '9': 'lab/durable-workflows', '10': 'lab/ralph-loop', '11': 'lab/parallelizing-work', '12': 'lab/orchestration', '13': 'lab/evals' } as Record<string, string>)[lab];
+if (!BRANCH) throw new Error('Which lab? 9, 10, 11, 12 or 13');
 const outDir = path.dirname(fileURLToPath(import.meta.url));
 const { render } = await import(path.join(srcDir, 'watch/view/index.ts'));
 const { needs } = await import(path.join(srcDir, 'watch/model.ts'));
@@ -126,6 +127,127 @@ function write(name: string, scene: Scene) {
   const json = `{"width":${W},"height":${H},"styles":${JSON.stringify(styles)},"rows":[${rows.join(',')}],"frames":${JSON.stringify(frames)}}`;
   writeFileSync(path.join(outDir, `${name}.json`), json + '\n');
   console.log(name, scene.frames.length, 'frames');
+}
+
+if (lab === '11') {
+  const ticket2 = { id: 'TICKET-2', title: 'Airline overview dashboard', status: 'ready' };
+  const ticket3 = { id: 'TICKET-3', title: 'Flight status lookup', status: 'ready' };
+  const BACKLOG = [
+    { id: 'TICKET-1', title: 'Normalize delay data model', status: 'done' },
+    ticket2,
+    ticket3,
+    { id: 'TICKET-4', title: 'Airport reference enrichment for flight status', status: 'blocked' },
+  ];
+  const CONTENT: Record<string, string> = {
+    'TICKET-2': `---
+id: TICKET-2
+status: ready
+---
+
+# Airline overview dashboard
+
+Support staff can open the dashboard page, enter an airline code, and see that airline's name plus how many of its flights are currently active or scheduled, without writing any query themselves.
+
+## Acceptance Criteria
+
+- The dashboard page displays a search box for an airline code.
+- Submitting a valid airline code shows the airline's name and a count of its currently active or scheduled flights.
+- Submitting an airline code that doesn't exist shows a clear "not found" message instead of an error page or a blank result.
+`,
+    'TICKET-3': `---
+id: TICKET-3
+status: ready
+---
+
+# Flight status lookup
+
+On the dashboard page, support staff can enter a flight number and see its current status (on time / delayed / cancelled) and its delay in minutes, without knowing the query API.
+
+## Acceptance Criteria
+
+- The dashboard page displays a search box for a flight number.
+- Submitting a valid flight number shows its current status as one of: on time, delayed, or cancelled.
+- Submitting a flight number that doesn't exist shows a clear "not found" message instead of an error page or a blank result.
+`,
+  };
+  const loopOf = (ticket: string, o: object = {}) => ({ workflowId: `ralph-${ticket}`, ticket, state: 'running', run: 1, ...o });
+  const L2 = '[ralph-TICKET-2]';
+  const L3 = '[ralph-TICKET-3]';
+
+  // ── 1. One Ralph loop per ticket ─────────────────────────────────────────────────────────────
+  {
+    const sc = new Scene(snap({ backlog: BACKLOG }));
+    sc.ui.view = 'board';
+    sc.ui.column = 2;
+    sc.ui.cursor[2] = 0;
+    sc.show(2200, { caption: 'Two ready tickets, independent of each other' });
+    sc.ui.dialog = { kind: 'start', ticket: 'TICKET-2', title: ticket2.title };
+    sc.show(2400, { key: 's', caption: 's on TICKET-2' });
+    sc.ui.dialog = undefined;
+    sc.ui.message = 'Started ralph-TICKET-2.';
+    sc.s = { ...sc.s, loops: [loopOf('TICKET-2')] };
+    sc.show(160, { key: 'y', spin: 8, caption: 'y lets it loop' });
+    sc.ui.message = undefined;
+    sc.ui.cursor[2] = 0; // TICKET-3 is the only one left in Ready
+    sc.ui.dialog = { kind: 'start', ticket: 'TICKET-3', title: ticket3.title };
+    sc.show(2400, { key: 's', caption: 's on TICKET-3' });
+    sc.ui.dialog = undefined;
+    sc.ui.message = 'Started ralph-TICKET-3.';
+    sc.s = { ...sc.s, loops: [loopOf('TICKET-2'), loopOf('TICKET-3')] };
+    sc.show(160, { key: 'y', spin: 10, caption: 'Both loops run at the same time' });
+    sc.ui.message = undefined;
+    sc.ui.view = 'pipeline';
+    sc.show(160, { key: 'Tab', spin: 2, caption: 'The output mixes both, each line with its loop' });
+    sc.log(
+      [
+        `${L2} == implement: claude`,
+        `${L3} == implement: claude`,
+        `${L2} Added the airline search box to the dashboard`,
+        `${L3} Added the flight number search box to the dashboard`,
+        `${L2} Committed: Show an airline's name and its active flights`,
+      ],
+      'The output mixes both, each line with its loop',
+    );
+    sc.s = { ...sc.s, loops: [loopOf('TICKET-2', { judging: true }), loopOf('TICKET-3')] };
+    sc.log([`${L2} == judge implement: claude`, `${L3} Committed: Show a flight's status and delay`], 'The output mixes both, each line with its loop');
+    sc.s = { ...sc.s, loops: [loopOf('TICKET-2', { judging: true }), loopOf('TICKET-3', { judging: true })] };
+    sc.log([`${L3} == judge implement: claude`, `${L2} PASS`], 'The output mixes both, each line with its loop');
+    sc.s = { ...sc.s, loops: [loopOf('TICKET-2', { run: 2 }), loopOf('TICKET-3', { judging: true })] };
+    sc.log([`${L2} == implement: claude`, `${L3} PASS`], 'The output mixes both, each line with its loop');
+    sc.ui.view = 'board';
+    sc.s = { ...sc.s, loops: [loopOf('TICKET-2', { run: 2 }), loopOf('TICKET-3', { run: 2 })] };
+    sc.show(160, { key: 'Tab', spin: 14, caption: 'On the board, both cards are in Running' });
+    out('lab11-start', sc);
+  }
+
+  // ── 3. Both done, and 4. throwing them away ──────────────────────────────────────────────────
+  {
+    const done = (ticket: string, run: number) => loopOf(ticket, { state: 'done', run, merged: false });
+    const sc = new Scene(snap({ backlog: BACKLOG, loops: [done('TICKET-2', 5), done('TICKET-3', 6)] }));
+    sc.ui.view = 'board';
+    sc.ui.column = 0;
+    sc.ui.cursor[0] = 0;
+    sc.show(3500, { caption: 'Both loops are done: ready to merge, each on its own branch' });
+    sc.ui.dialog = { kind: 'ticket', ticket: ticket2, content: CONTENT['TICKET-2'], scroll: 0, start: false, merge: true, discard: true };
+    sc.show(2400, { key: '⏎', caption: 'Enter opens TICKET-2' });
+    sc.ui.dialog = { kind: 'discard', ticket: 'TICKET-2', title: ticket2.title, running: false, commits: 4 };
+    sc.show(3500, { key: 'x', caption: 'x throws its worktree and branch away' });
+    sc.ui.dialog = undefined;
+    sc.ui.message = 'Threw away .harness/worktrees/ticket-2 and agent/ticket-2.';
+    sc.s = { ...sc.s, loops: [done('TICKET-3', 6)] };
+    sc.show(2400, { key: 'y' });
+    sc.ui.message = undefined;
+    sc.ui.dialog = { kind: 'ticket', ticket: ticket3, content: CONTENT['TICKET-3'], scroll: 0, start: false, merge: true, discard: true };
+    sc.show(1800, { key: '⏎', caption: 'The same for TICKET-3' });
+    sc.ui.dialog = { kind: 'discard', ticket: 'TICKET-3', title: ticket3.title, running: false, commits: 5 };
+    sc.show(2400, { key: 'x', caption: 'The same for TICKET-3' });
+    sc.ui.dialog = undefined;
+    sc.ui.message = 'Threw away .harness/worktrees/ticket-3 and agent/ticket-3.';
+    sc.s = { ...sc.s, loops: [] };
+    sc.ui.column = 2;
+    sc.show(3500, { key: 'y', caption: 'Both tickets are ready again' });
+    out('lab11-cleanup', sc);
+  }
 }
 
 if (lab === '12') {
