@@ -19,7 +19,7 @@ task lab/parallelizing-work
 >
 > [![Open Lab 11 in GitHub Codespaces](https://github.com/codespaces/badge.svg)](https://codespaces.new/Zuehlke/ai-augmented-software-engineering?ref=lab%2Fparallelizing-work)
 
-The branch continues where the tracer-bullet backlog left off: TICKET-1 being done makes the next two tickets independent of each other, one Ralph loop per ticket:
+The branch continues where the tracer-bullet backlog left off: with TICKET-1 done, TICKET-2 and TICKET-3 are independent of each other, so they can run at the same time.
 
 <details>
 <summary><code>backlog/</code> (already in the branch)</summary>
@@ -73,77 +73,44 @@ delayed / cancelled) and its delay in minutes, without knowing the query API.
 > [!NOTE]
 > The agents in this lab run unattended, so they need the [agent token from the setup](/getting-started/setup#agent-token).
 
-In **terminal 1**, start Temporal and the worker, and follow the worker's output. The agent output shows up there:
+In **terminal 1**, start Temporal and the worker, and open `flows watch`. Press `a` there to switch to GitHub Copilot CLI if you use it. Use **terminal 2** for the rest.
 
 ```bash
 task flows:start
-flows logs
+task flows:watch
 ```
 
 ### 1. Run one Ralph loop per ticket
 
-Set `AGENT=copilot` first if you use GitHub Copilot CLI.
+Press `Tab` for the board. Select TICKET-2 in **Ready**, press `s`, then `y`. Do the same for TICKET-3.
 
-In **terminal 2**:
-
-```bash
-flows ralph TICKET-2
-```
-
-In **terminal 3**:
-
-```bash
-flows ralph TICKET-3
-```
-
-Both loops run at the same time, in the same worker: `ralph-TICKET-2` and `ralph-TICKET-3`, each on its own ticket, its own branch and with its own `.harness/progress.md`. Their agents' output is mixed in terminal 1, each line prefixed with its workflow. In the web UI at [http://localhost:8233](http://localhost:8233), you see them side by side.
+Both loops now run at the same time, each on its own ticket and branch, with its own `.harness/progress.md`. On the board, both cards move to **Running**. `Tab` back to the pipeline view: the worker output mixes both agents, each line prefixed with its loop.
 
 ### 2. Find the worktrees
 
-While they work, open a new terminal in your original checkout:
+While they work, in terminal 2:
 
 ```bash
-# Shows your original checkout and one worktree per loop, each with its branch
 git worktree list
 git status
 ```
 
-You didn't create these worktrees. Each loop does it itself, with `git worktree add -b agent/ticket-2 .harness/worktrees/ticket-2`: a new branch from your current commit, checked out in a new folder. Both live under `.harness/worktrees/`, which the branch already ignores in `.gitignore`, so the worktrees don't show up as changes in your original checkout. `git status` stays clean, because each loop only changes its own worktree.
-
-The loop in Lab 10 did the same. That's why your checkout stayed as it was until you merged `agent/ticket-1`.
-
-::: code-group
-
-```ts [.harness/src/workflows/ralph.ts (excerpt)]
-  // The loop works in a worktree of its own, on the branch agent/<ticket>: its commits, and the reset of a
-  // retry, stay out of your checkout. In the pipeline it starts fresh from `base`. On its own (`flows ralph`)
-  // it goes on where an earlier run on the same ticket stopped.
-  const fresh = base !== undefined;
-  const workDir = await addWorktree(repoDir, worktreeName(ticket), branchOf(ticket), base ?? (await headCommit(repoDir)), fresh);
-```
-
-:::
+You see your checkout and one worktree per loop, each on its own branch. You didn't create them: each loop runs `git worktree add -b agent/ticket-2 .harness/worktrees/ticket-2` itself. `.gitignore` already ignores `.harness/worktrees/`, and each loop only changes its own worktree, so `git status` stays clean. The loop in Lab 10 did the same, which is why your checkout stayed as it was until you merged.
 
 > [!NOTE]
 > Worktrees only separate files. Ports, databases and caches are still shared. If both agents start the app at once, the second fails with `Port 8080 was already in use`. Give it another port, for example `SERVER_PORT=8081`.
 
 ### 3. Look at the results
 
-The branch comes with a dashboard page, still empty, and each ticket adds a lookup to it. Once both loops are done (terminals 2 and 3 are back at the prompt), start the app from the TICKET-2 worktree, in terminal 2:
+When both cards wait under **Needs you** as *ready to merge*, start the app from the TICKET-2 worktree, in terminal 2:
 
 ```bash
 cd .harness/worktrees/ticket-2
 task run
 ```
 
-Open the dashboard at [http://localhost:8080/dashboard.html](http://localhost:8080/dashboard.html). In **GitHub Codespaces**, open the **Ports** tab, click the globe icon next to port `8080` (**Flight API**) and append `/dashboard.html` to the URL. You should see the airline lookup, but not the flight status lookup: that one only exists in the other worktree.
+Open the dashboard at [http://localhost:8080/dashboard.html](http://localhost:8080/dashboard.html). In **GitHub Codespaces**, open the **Ports** tab, click the globe icon next to port `8080` (**Flight API**) and append `/dashboard.html` to the URL. You see the airline lookup, but not the flight status lookup: that one only exists in the other worktree.
 
 ### 4. Clean up
 
-Stop the app (`Ctrl+C`), go back to the repository root (`cd ../../..`) and clean up:
-
-```bash
-flows cleanup
-```
-
-This stops any workflow still running, runs `git worktree remove` on every worktree under `.harness/worktrees/` and deletes the `agent/*` branches that are merged. `git worktree remove`, rather than deleting the folder, keeps Git from holding on to a stale entry for it. These branches were never merged, so `flows cleanup` keeps them and prints how to look at them or delete them with `git branch -D`. Deleting them discards the agents' work.
+Stop the app (`Ctrl+C`) and go back to the repository root (`cd ../../..`). On the board, open TICKET-2 with `Enter`, press `x`, then `y`: that removes its worktree with `git worktree remove` and deletes its branch, with the agent's work. Do the same for TICKET-3. Lab 12 merges such branches for you.
