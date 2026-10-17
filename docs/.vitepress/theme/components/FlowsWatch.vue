@@ -13,12 +13,27 @@ interface Recording {
   frames: { rows: number[]; ms: number; key?: string; caption?: string }[];
 }
 
-const props = defineProps<{ scene: string; title?: string }>();
+// A note highlights parts of the screen in purple ([x, y, w, h] in cells) and explains them in a label at
+// (lx, ly). In its text, `code` is set as code and a line break starts a new line. With notes, the recording is a
+// still of its last frame, and the notes show one after the other.
+interface Note {
+  boxes: [number, number, number, number][];
+  lx: number;
+  ly: number;
+  label: string;
+  text: string;
+}
+
+// A note's text in parts, every other one code
+const parts = (text: string) => text.split("`").map((part, i) => ({ part, code: i % 2 === 1 }));
+
+const props = defineProps<{ scene: string; title?: string; notes?: Note[] }>();
 
 const recordings = import.meta.glob<Recording>("./flows-watch/*.json", { import: "default" });
 
 const data = shallowRef<Recording>();
 const index = ref(0);
+const noteIndex = ref(0);
 const playing = ref(false);
 const expanded = ref(false);
 const key = ref<{ label: string; id: number }>();
@@ -35,6 +50,7 @@ let observer: IntersectionObserver | undefined;
 
 const KEY_NAMES: Record<string, string> = { "⏎": "⏎ Enter", "⌘V": "Paste" };
 const LAST_FRAME_PAUSE = 2500;
+const NOTE_MS = 6000;
 
 const frame = computed(() => data.value?.frames[index.value]);
 const caption = computed(() => {
@@ -42,7 +58,11 @@ const caption = computed(() => {
   for (let i = index.value; i >= 0; i--) if (frames[i]?.caption) return frames[i].caption;
   return "";
 });
-const progress = computed(() => (data.value ? (index.value + 1) / data.value.frames.length : 0));
+const note = computed(() => props.notes?.[noteIndex.value]);
+// How many steps there are to play: the notes, or else the frames
+const steps = computed(() => props.notes?.length ?? data.value?.frames.length ?? 0);
+const step = computed(() => (props.notes ? noteIndex.value : index.value));
+const progress = computed(() => (steps.value ? (step.value + 1) / steps.value : 0));
 
 // Each run of a row in spans. Characters that some fonts draw wider than a cell (⚑, ✓, braille, …) get a
 // cell of their own, so the boxes stay aligned.
@@ -78,6 +98,13 @@ function schedule() {
   clearTimeout(timer);
   const d = data.value;
   if (!d || !playing.value || !visible) return;
+  if (props.notes) {
+    timer = setTimeout(() => {
+      noteIndex.value = (noteIndex.value + 1) % steps.value;
+      schedule();
+    }, NOTE_MS);
+    return;
+  }
   const last = index.value === d.frames.length - 1;
   timer = setTimeout(() => {
     index.value = last ? 0 : index.value + 1;
@@ -88,22 +115,24 @@ function schedule() {
 
 function toggle() {
   playing.value = !playing.value;
-  if (playing.value && data.value && index.value === data.value.frames.length - 1) index.value = 0;
+  if (playing.value && !props.notes && data.value && index.value === data.value.frames.length - 1) index.value = 0;
   schedule();
 }
 
 function restart() {
-  index.value = 0;
+  if (props.notes) noteIndex.value = 0;
+  else index.value = 0;
   playing.value = true;
   schedule();
 }
 
-// Click on the progress bar: jump to that frame
+// Click on the progress bar: jump to that frame, or that note
 function seek(event: MouseEvent) {
-  const d = data.value;
-  if (!d) return;
+  if (!steps.value) return;
   const box = (event.currentTarget as HTMLElement).getBoundingClientRect();
-  index.value = Math.min(d.frames.length - 1, Math.max(0, Math.floor(((event.clientX - box.left) / box.width) * d.frames.length)));
+  const to = Math.min(steps.value - 1, Math.max(0, Math.floor(((event.clientX - box.left) / box.width) * steps.value)));
+  if (props.notes) noteIndex.value = to;
+  else index.value = to;
   schedule();
 }
 
@@ -130,8 +159,8 @@ onMounted(async () => {
   measure();
   document.fonts?.ready.then(measure);
   const still = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-  // With reduced motion, it starts paused on the last frame, where the step ends
-  index.value = still ? data.value.frames.length - 1 : 0;
+  // With reduced motion, it starts paused on the last frame, where the step ends, or on the first note
+  index.value = still || props.notes ? data.value.frames.length - 1 : 0;
   playing.value = !still;
   observer = new IntersectionObserver(([entry]) => {
     visible = entry.isIntersecting;
@@ -171,12 +200,18 @@ onBeforeUnmount(() => {
           </button>
         </span>
       </div>
-      <div ref="screen" class="screen" :style="data ? { '--cols': data.width, '--rows': data.height, '--cell': cellWidth } : undefined" role="img" :aria-label="`flows watch: ${caption}`">
+      <div ref="screen" class="screen" :style="data ? { '--cols': data.width, '--rows': data.height, '--cell': cellWidth } : undefined" role="img" :aria-label="notes ? `flows watch: ${notes.map((n) => `${n.label}: ${n.text.replaceAll('`', '')}`).join(' ')}` : `flows watch: ${caption}`">
         <template v-if="data">
           <div v-for="(line, y) in lines" :key="y" class="line">
             <span v-for="(run, i) in line" :key="i" :class="run.cls"><template v-for="(part, j) in run.parts" :key="j"><span v-if="part.cell" class="cell">{{ part.text }}</span><template v-else>{{ part.text }}</template></template></span>
           </div>
         </template>
+        <Transition name="note" mode="out-in">
+          <div v-if="note" :key="noteIndex" class="notes">
+            <span v-for="([x, y, w, h], i) in note.boxes" :key="i" class="note-box" :style="{ '--x': x, '--y': y, '--w': w, '--h': h }"></span>
+            <span class="note" :style="{ '--x': note.lx, '--y': note.ly }"><span><b>{{ note.label }}:</b> <template v-for="({ part, code }, i) in parts(note.text)" :key="i"><code v-if="code">{{ part }}</code><template v-else>{{ part }}</template></template></span></span>
+          </div>
+        </Transition>
         <Transition name="key">
           <kbd v-if="key" :key="key.id" class="key">{{ key.label }}</kbd>
         </Transition>
@@ -185,7 +220,8 @@ onBeforeUnmount(() => {
     </div>
     <figcaption>
       <span class="dot" :class="{ paused: !playing }"></span>
-      <span>{{ caption }}</span>
+      <span v-if="note">{{ note.label }} ({{ noteIndex + 1 }} of {{ notes!.length }})</span>
+      <span v-else>{{ caption }}</span>
     </figcaption>
   </figure>
 </template>
@@ -304,6 +340,58 @@ onBeforeUnmount(() => {
 }
 .bg-selected {
   background: var(--tui-selected);
+}
+
+/* Notes: a purple highlight behind cells, and a label that explains them. One note at a time fades in and out. */
+.notes {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+.note-enter-active,
+.note-leave-active {
+  transition: opacity 0.4s;
+}
+.note-enter-from,
+.note-leave-to {
+  opacity: 0;
+}
+.note-box,
+.note {
+  position: absolute;
+  left: calc(12px + var(--x) * var(--cell, 0.6) * 1em);
+  top: calc(10px + var(--y) * 1.2em);
+}
+.note-box {
+  width: calc(var(--w) * var(--cell, 0.6) * 1em);
+  height: calc(var(--h) * 1.2em);
+  margin: -0.15em -0.3em;
+  padding: 0.15em 0.3em;
+  box-sizing: content-box;
+  border-radius: 5px;
+  background: color-mix(in srgb, var(--z-purple-bright) 22%, transparent);
+}
+/* The label's font is larger than the screen's, so it's positioned in the screen's em, then styled inside */
+.note {
+  margin-top: 0.1em;
+}
+.note > span {
+  display: inline-block;
+  padding: 0.1em 0.6em;
+  border-radius: 5px;
+  background: var(--z-purple);
+  color: #fff;
+  font-family: var(--vp-font-family-base);
+  font-size: max(12px, 1.1em);
+  line-height: 1.25;
+  white-space: pre;
+}
+.note code {
+  padding: 0 0.25em;
+  border-radius: 3px;
+  background: rgba(255, 255, 255, 0.2);
+  color: #fff;
+  font-size: 0.95em;
 }
 
 /* The key that was just pressed */

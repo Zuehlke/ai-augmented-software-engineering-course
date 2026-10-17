@@ -2,20 +2,21 @@
 
 ## Context
 
-From here on, agents run unattended: in a loop, in parallel, in a pipeline. Something has to start them, check their work and decide what comes next. In this course, that's the harness in `.harness/`, which runs on [Temporal](https://temporal.io/). Unattended work takes long, and things go wrong along the way. Temporal saves every finished step, so when something crashes, the work goes on where it stopped instead of starting over.
+From here on, agents run unattended: in a loop, in parallel, in a pipeline. The harness in `.harness/` starts them and decides what comes next. It runs on [Temporal](https://temporal.io/), so when something crashes, the work goes on where it stopped.
 
-You won't call Temporal yourself. `flows watch`, a terminal UI, shows what runs and lets you start it. In the background, it uses these Temporal concepts:
+This lab gets you comfortable with Temporal and the terminal UI you'll use in all the upcoming labs.
 
-| Temporal | What it is | In terminal UI |
-| --- | --- | --- |
-| **Workflow** | A function that decides what happens next, for example "for every ticket, run an agent". It does no work itself. | Every agent you start: the plan agent, later the Ralph loops and the pipeline. |
-| **Activity** | One piece of real work a workflow asks for, for example an agent run. Temporal saves its result and retries it when it fails. | The agent's output, below the workflows. |
-| **Worker** | The process that runs the workflows and their activities. | `● Worker` in the header. |
-| **Query** | A question to a running workflow: "how far are you?". | Every few seconds, to show where each workflow is. |
+You start and follow everything in the terminal UI. Behind it are these Temporal concepts:
 
-Everything `flows watch` does is also a command: `flows` lists them.
+<FlowsWatch scene="lab9-plan" :notes="[
+  { boxes: [[73, 0, 10, 1]], lx: 38, ly: 2, label: 'Temporal', text: 'remembers every workflow and step, so work survives a crash.\nCalled via `temporal server start-dev`.' },
+  { boxes: [[86, 0, 8, 1]], lx: 56, ly: 2, label: 'Worker', text: 'the process that runs the workflows and activities.\nCalled via `flows worker`.' },
+  { boxes: [[2, 4, 116, 6]], lx: 22, ly: 10.2, label: 'Workflow', text: 'decides which step runs next. The four phases are one workflow.\nCalled via `flows start`, the plan agent via `flows plan`.' },
+  { boxes: [[4, 16, 72, 3]], lx: 4, ly: 20, label: 'Activity', text: 'one step that does real work, like an agent run. Retried if it fails.\nCalled by the workflow, its output via `flows logs`.' },
+  { boxes: [[30, 12, 11, 1]], lx: 30, ly: 14, label: 'Query', text: 'asks a running workflow how far it is.\nCalled via `flows status`.' },
+]" />
 
-In this lab, you start one workflow: the **plan agent**, with the `plan` skill from [Tracer bullets](./lab-8-tracer-bullets.md), turns a specification into tickets.
+In this lab, you start one workflow: the **plan agent** turns a specification into tickets, with the `plan` skill from [Tracer bullets](./lab-8-tracer-bullets.md).
 
 ## Your Task
 
