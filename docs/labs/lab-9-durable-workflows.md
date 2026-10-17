@@ -6,7 +6,7 @@ From here on, agents run unattended: in a loop, in parallel, in a pipeline. Some
 
 You won't call Temporal yourself. `flows watch`, a terminal UI, shows what runs and lets you start it. In the background, it uses these Temporal concepts:
 
-| Temporal | What it is | In `flows watch` |
+| Temporal | What it is | In terminal UI |
 | --- | --- | --- |
 | **Workflow** | A function that decides what happens next, for example "for every ticket, run an agent". It does no work itself. | Every agent you start: the plan agent, later the Ralph loops and the pipeline. |
 | **Activity** | One piece of real work a workflow asks for, for example an agent run. Temporal saves its result and retries it when it fails. | The agent's output, below the workflows. |
