@@ -448,7 +448,7 @@ if (lab === '9') {
     '[plan] Looking at GET /delays and its airline filter',
   ];
 
-  // ── 2. Watch the workflows: what runs, its output, and scrolling it ─────────────────────────
+  // ── 2. Open flows watch: what runs, its output, and scrolling it ─────────────────────────
   {
     const output = [
       ...working,
@@ -481,7 +481,7 @@ if (lab === '9') {
     out('lab9-watch', sc);
   }
 
-  // ── 4. Run the workflow ──────────────────────────────────────────────────────────────────────
+  // ── 3. Run the plan agent ──────────────────────────────────────────────────────────────────────
   {
     const sc = new Scene(snap({ backlog: TRACER }));
     sc.show(2000, { caption: 'Nothing runs yet' });
@@ -499,20 +499,7 @@ if (lab === '9') {
     out('lab9-plan', sc);
   }
 
-  // ── 5. Stop the worker ───────────────────────────────────────────────────────────────────────
-  {
-    const sc = new Scene(snap({ backlog: TRACER, others: plan, log: working }));
-    sc.show(160, { spin: 10, caption: 'The plan agent is working' });
-    sc.s = { ...sc.s, temporal: false, worker: false, others: [] };
-    sc.show(3500, { caption: 'task flows:stop in terminal 2: Temporal and the worker are gone' });
-    sc.s = { ...sc.s, temporal: true, worker: true, others: plan };
-    sc.show(160, { spin: 18, caption: 'task flows:start: the workflow is still there' });
-    sc.log(['[plan] == plan: claude'], 'Only the agent run starts again, after the retry delay');
-    sc.show(160, { spin: 10, caption: 'Only the agent run starts again, after the retry delay' });
-    out('lab9-restart', sc);
-  }
-
-  // ── 6. Check the result ──────────────────────────────────────────────────────────────────────
+  // ── 4. Check the result ──────────────────────────────────────────────────────────────────────
   {
     const sc = new Scene(
       snap({
