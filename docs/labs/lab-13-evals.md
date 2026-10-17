@@ -101,12 +101,7 @@ git checkout .agents/skills/testing/SKILL.md
 
 ### 3. The end-to-end evals
 
-A skill that loads can still lead to bad code. End-to-end evals check whether the setup builds features you would ship, on a few fixed tasks. Each task is a folder in `.harness/evals/tasks/<id>/`:
-
-- `request.md`: the feature request the pipeline gets.
-- `base`: the commit its app code starts from.
-- `accept/`: the hidden acceptance tests.
-- `criteria.md`: what the grader checks.
+A skill that loads can still lead to bad code. End-to-end evals check whether the setup builds features you would ship, on a few fixed tasks. Each task is a folder in `.harness/evals/tasks/<id>/`.
 
 <details>
 <summary>The task <code>min-delay-filter</code></summary>
