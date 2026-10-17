@@ -825,7 +825,7 @@ explanation: the 3 cases that shouldn't load it fail. The 2 that should load it 
     out('lab13-proposals', sc);
   }
 
-  // ── 3. The e2e evals: the start dialog, and one of our runs ───────────────────────
+  // ── 3. The end-to-end evals: the start dialog, and one of our runs ───────────────────────
   {
     const sc = new Scene(snap({ skillReports: [FIRST] }));
     sc.ui.view = 'evals';
@@ -833,7 +833,7 @@ explanation: the 3 cases that shouldn't load it fail. The 2 that should load it 
     sc.ui.evalsTabs = true;
     sc.show(1200);
     sc.ui.evalsKind = 'e2e';
-    sc.show(2600, { key: '←', caption: '← switches to the e2e evals' });
+    sc.show(2600, { key: '←', caption: '← switches to the end-to-end evals' });
     sc.ui.dialog = { kind: 'startEvals', tasks: TASKS, cursor: 0, uncommitted: [], evalReports: [] };
     sc.show(4500, { key: 's', caption: '5 tasks, 3 runs each, through the whole pipeline' });
     sc.ui.dialog = { ...sc.ui.dialog, cursor: 4 };
@@ -843,7 +843,7 @@ explanation: the 3 cases that shouldn't load it fail. The 2 that should load it 
     out('lab13-e2e-start', sc);
   }
 
-  // One of our e2e evals: 5 tasks, 3 runs each, 8 of 15 accepted, $58.64
+  // One of our end-to-end evals: 5 tasks, 3 runs each, 8 of 15 accepted, $58.64
   {
     const accepted = 'the tests pass with the hidden ones, and the grader approves it';
     const reviewed = (why: string) => `nothing was merged: the review approved no branch: agent/ticket-1: REJECT: ${why}`;
@@ -917,7 +917,7 @@ defines (rounding, truncation, clamping, defaults). One that does is scope added
     });
     for (const [doneCount, working, grading] of [[0, [0, 1, 2]], [1, [1, 2, 3]], [3, [3, 4, 5], [3]], [7, [7, 8, 9], [8]], [12, [12, 13, 14], [14]]] as [number, number[], number[]?][]) {
       sc.s = { ...sc.s, evals: progress(doneCount, working, grading) };
-      sc.show(1800, { spin: 3, caption: 'One of our e2e evals: 15 runs, at most 3 at the same time, about 18 minutes each' });
+      sc.show(1800, { spin: 3, caption: 'One of our end-to-end evals: 15 runs, at most 3 at the same time, about 18 minutes each' });
     }
     sc.s = { ...sc.s, evals: undefined, evalReports: [REPORT] };
     sc.show(5500, { caption: '8 of 15 accepted, 1 task reliable, $7.33 per accepted change' });

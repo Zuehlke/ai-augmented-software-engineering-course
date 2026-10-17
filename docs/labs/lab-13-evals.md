@@ -7,7 +7,7 @@ A skill only helps when the agent loads it. Nobody types "use the testing skill"
 Trying it once by hand doesn't catch that. An **eval** does it automatically, after every change. This lab has two:
 
 - The **skill-loaded evals** check whether the agent loads the skills from the earlier labs when it should, and only then. They take a few minutes and cost about $5.
-- The **e2e evals** grade the whole setup end to end, the skills, the harness and the models together: the pipeline from [Orchestration](./lab-12-orchestration.md) builds a few fixed features, unattended, and each result is graded against tests and criteria the agents never saw. They are slow, and they cost real money: this lab shows them, but you won't run them.
+- The **end-to-end evals** grade the whole setup, the skills, the harness and the models together: the pipeline from [Orchestration](./lab-12-orchestration.md) builds a few fixed features, unattended, and each result is graded against tests and criteria the agents never saw. They are slow, and they cost real money: this lab shows them, but you won't run them.
 
 For the skill-loaded evals, both directions count. A skill that doesn't load when it should is a bug. A skill that loads when it shouldn't fills the context with rules that don't apply.
 
@@ -70,7 +70,7 @@ task flows:watch
 
 <FlowsWatch scene="lab13-skills" />
 
-This branch has `.harness/evals/`, so `flows watch` has a third tab now. Press `Tab` until you see **Evals**. It opens on **E2E**, the e2e evals: press `→` to switch to **Skill loaded**.
+This branch has `.harness/evals/`, so `flows watch` has a third tab now. Press `Tab` until you see **Evals**. It opens on **E2E**, the end-to-end evals: press `→` to switch to **Skill loaded**.
 
 Press `s`. The dialog says what runs: every case 3 times, 27 runs, and what that will cost, by the last skill-loaded evals. The first time, it can't know yet. Press `Enter` to start.
 
@@ -206,9 +206,9 @@ git checkout .agents/skills/testing/SKILL.md
 > [!NOTE]
 > An eval is only as good as its cases. When a skill doesn't load in real use, add that prompt to its `skill-loaded-evals.json`, so the description can't break the same way twice.
 
-### 3. The e2e evals
+### 3. The end-to-end evals
 
-A skill that loads can still lead to bad code. Whether the setup builds features you would ship is a question for the whole pipeline. The **e2e evals** answer it on a few fixed tasks. Each task is a folder in `.harness/evals/tasks/<id>/`:
+A skill that loads can still lead to bad code. Whether the setup builds features you would ship is a question for the whole pipeline. The **end-to-end evals** answer it on a few fixed tasks. Each task is a folder in `.harness/evals/tasks/<id>/`:
 
 - `request.md`: the feature request, what the pipeline gets.
 - `base`: the commit its app code starts from.
@@ -247,13 +247,13 @@ answer is an empty list, not an error. A `min_delay` that is negative or not a n
 Each run works in a copy of your repository under `~/.flows/evals/`, with the skills and the harness of your last commit and the task's app code, and runs the pipeline from Lab 12 unattended: nobody approves the tickets or decides the merge. A run is **accepted** when its pipeline merged something, `task test` passes with the hidden tests added, and the grader would ship it. The pipeline's own judges and its review don't grade: they belong to the setup under test.
 
 > [!CAUTION]
-> Don't start the e2e evals unless you have (almost) unlimited credits. Every run is a whole pipeline: research, plan, the Ralph loops with their judges, the review and the grader. In our runs, one task, 3 runs, cost $5 to $16, and all 5 tasks, 15 runs, cost $58.64 and took about 18 minutes per run.
+> Don't start the end-to-end evals unless you have (almost) unlimited credits. Every run is a whole pipeline: research, plan, the Ralph loops with their judges, the review and the grader. In our runs, one task, 3 runs, cost $5 to $16, and all 5 tasks, 15 runs, cost $58.64 and took about 18 minutes per run.
 
 <FlowsWatch scene="lab13-e2e-start" />
 
-To see what you would start, press `←` in the Evals tab to switch back to **E2E**, and `s`. You pick all tasks or one of them, and the dialog says how many runs that is. The cost is unknown until an e2e evals has run: then it estimates by the cost per run of the last one. Press `Esc` to close it without starting anything.
+To see what you would start, press `←` in the Evals tab to switch back to **E2E**, and `s`. You pick all tasks or one of them, and the dialog says how many runs that is. The cost is unknown until an end-to-end evals has run: then it estimates by the cost per run of the last one. Press `Esc` to close it without starting anything.
 
-Here is one of our e2e evals, all 5 tasks:
+Here is one of our end-to-end evals, all 5 tasks:
 
 <FlowsWatch scene="lab13-e2e-results" />
 
@@ -265,4 +265,4 @@ While it runs, at most 3 runs work at the same time, and the box shows each one'
 - **Cost per accepted**: what all runs cost, the ones not accepted too, divided by the accepted ones: $7.33.
 
 > [!TIP]
-> Everything in the Evals tab also works from the command line: `flows skill-loaded-evals`, `flows evals [task]` for the e2e evals, and `flows evals --stop` to stop running e2e evals. The results go to `.harness/evals/results/`, not committed.
+> Everything in the Evals tab also works from the command line: `flows skill-loaded-evals`, `flows evals [task]` for the end-to-end evals, and `flows evals --stop` to stop running end-to-end evals. The results go to `.harness/evals/results/`, not committed.
