@@ -29,7 +29,6 @@ export default defineConfig({
     nav: [
       { text: "Getting Started", link: "/getting-started/setup" },
       { text: "Labs", link: "/labs/lab-1-vibe-coding" },
-      { text: "Hackathon", link: "/hackathon/problem-statement" },
       { text: "Resources", link: "/slides/" },
     ],
     sidebar: [
@@ -56,10 +55,6 @@ export default defineConfig({
           { text: 'Lab 12 · Orchestration <span class="sidebar-tag-new">New</span>', link: "/labs/lab-12-orchestration" },
           { text: 'Lab 13 · Evals <span class="sidebar-tag-new">New</span>', link: "/labs/lab-13-evals" },
         ],
-      },
-      {
-        text: "Hackathon",
-        items: [{ text: 'Problem Statement <span class="sidebar-tag-new">New</span>', link: "/hackathon/problem-statement" }],
       },
       {
         text: "Resources",

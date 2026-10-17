@@ -1,6 +1,5 @@
 import DefaultTheme from "vitepress/theme";
 import "./zuhlke.css";
-import "./hackathon.css";
 import ContentTabs from "./components/ContentTabs.vue";
 import CourseAccessOverlay from "./components/CourseAccessOverlay.vue";
 import DownloadLink from "./components/DownloadLink.vue";
