@@ -3,7 +3,7 @@
 // Zuehlke/ai-augmented-software-engineering. Run it again when `flows watch` changes there (any tsx >= 4):
 //
 //   git worktree add /tmp/lab-10 lab/ralph-loop
-//   npx tsx docs/.vitepress/theme/components/flows-watch/record.mts /tmp/lab-10/.harness/flows/src 10
+//   npx tsx docs/.vitepress/theme/components/flows-watch/record.mts /tmp/lab-10/.harness/src 10
 //
 // Lab 9 is lab/durable-workflows, Lab 10 lab/ralph-loop, Lab 12 lab/orchestration.
 import { writeFileSync } from 'node:fs';
@@ -15,7 +15,7 @@ const lab = process.argv[3];
 const BRANCH = ({ '9': 'lab/durable-workflows', '10': 'lab/ralph-loop', '12': 'lab/orchestration' } as Record<string, string>)[lab];
 if (!BRANCH) throw new Error('Which lab? 9, 10 or 12');
 const outDir = path.dirname(fileURLToPath(import.meta.url));
-const { render } = await import(path.join(srcDir, 'watch/view.ts'));
+const { render } = await import(path.join(srcDir, 'watch/view/index.ts'));
 const { needs } = await import(path.join(srcDir, 'watch/model.ts'));
 
 const W = 120;
@@ -50,7 +50,8 @@ const status = (step: string, extra: object = {}) => ({
   ...extra,
 });
 
-const snap = (extra: Partial<Snapshot>): Snapshot => ({ temporal: true, worker: true, loops: [], others: [], backlog: BASE_BACKLOG, log: [], ...extra });
+// Labs 9-12 have no .harness/evals/ yet, so no Evals tab
+const snap = (extra: Partial<Snapshot>): Snapshot => ({ temporal: true, worker: true, loops: [], others: [], backlog: BASE_BACKLOG, log: [], evalReports: [], skillReports: [], withoutEvals: true, ...extra });
 const pipeline = (step: string, extra: object = {}, state = 'running') => ({ workflowId: 'pipeline', state, status: status(step, extra) });
 
 // Styles as a small table, each cell's style as an index into it
@@ -143,7 +144,7 @@ if (lab === '12') {
   sc.ui.dialog = undefined;
   sc.s = { ...sc.s, pipeline: pipeline('researching'), log: ['[pipeline] == research: claude'] };
   sc.show(160, { key: '⏎', spin: 10, caption: 'The research agent writes a specification' });
-  sc.s = { ...sc.s, pipeline: pipeline('planning'), log: [...sc.s.log, '[pipeline] PASS', '[pipeline] == slice: claude'] };
+  sc.s = { ...sc.s, pipeline: pipeline('planning'), log: [...sc.s.log, '[pipeline] PASS', '[pipeline] == plan: claude'] };
   sc.show(160, { spin: 10, caption: 'The plan agent slices it into tickets' });
   sc.s = { ...sc.s, backlog: BACKLOG, pipeline: pipeline('waiting for your approval'), log: [...sc.s.log, '[pipeline] PASS'] };
   sc.show(1600, { caption: 'You approve the tickets' });
@@ -223,7 +224,7 @@ if (lab === '12') {
   sc.s = { ...sc.s, pipeline: pipeline('planning') };
   sc.log(
     [
-      '[pipeline] == slice: claude',
+      '[pipeline] == plan: claude',
       '[pipeline] Slicing the specification into vertical slices',
       '[pipeline] Wrote backlog/TICKET-5-delayed-departures-per-airport.md',
       '[pipeline] Wrote backlog/TICKET-6-airlines-with-most-delays.md',
@@ -232,7 +233,7 @@ if (lab === '12') {
   );
   sc.show(160, { spin: 6, caption: 'The plan agent writes the tickets' });
   sc.s = { ...sc.s, pipeline: pipeline('planning', { judging: true }) };
-  sc.log(['[pipeline] == judge slice: claude', '[pipeline] PASS'], 'Its judge checks them');
+  sc.log(['[pipeline] == judge plan: claude', '[pipeline] PASS'], 'Its judge checks them');
   sc.show(160, { spin: 4, caption: 'Its judge checks them' });
   sc.s = { ...sc.s, backlog: BACKLOG, pipeline: pipeline('waiting for your approval') };
   sc.show(4000, { caption: 'The tickets wait for you' });
@@ -244,10 +245,10 @@ const planLog = [
   '[pipeline] Wrote specs/delayed-departures/specification.md',
   '[pipeline] == judge research: claude',
   '[pipeline] PASS',
-  '[pipeline] == slice: claude',
+  '[pipeline] == plan: claude',
   '[pipeline] Wrote backlog/TICKET-5-delayed-departures-per-airport.md',
   '[pipeline] Wrote backlog/TICKET-6-airlines-with-most-delays.md',
-  '[pipeline] == judge slice: claude',
+  '[pipeline] == judge plan: claude',
   '[pipeline] PASS',
 ];
 
@@ -442,8 +443,8 @@ if (lab === '9') {
   const SPEC = 'specs/delays-csv-export/specification.md';
   const plan = [{ workflowId: 'plan', state: 'running' }];
   const working = [
-    '[plan] == slice: claude',
-    '[plan] Reading the slice skill and specs/delays-csv-export/specification.md',
+    '[plan] == plan: claude',
+    '[plan] Reading the plan skill and specs/delays-csv-export/specification.md',
     '[plan] Looking at GET /delays and its airline filter',
   ];
 
@@ -506,7 +507,7 @@ if (lab === '9') {
     sc.show(3500, { caption: 'task flows:stop in terminal 2: Temporal and the worker are gone' });
     sc.s = { ...sc.s, temporal: true, worker: true, others: plan };
     sc.show(160, { spin: 18, caption: 'task flows:start: the workflow is still there' });
-    sc.log(['[plan] == slice: claude'], 'Only the agent run starts again, after the retry delay');
+    sc.log(['[plan] == plan: claude'], 'Only the agent run starts again, after the retry delay');
     sc.show(160, { spin: 10, caption: 'Only the agent run starts again, after the retry delay' });
     out('lab9-restart', sc);
   }
@@ -516,7 +517,7 @@ if (lab === '9') {
     const sc = new Scene(
       snap({
         backlog: [...TRACER, ...CSV],
-        log: [...working, '[plan] == slice: claude', '[plan] Wrote backlog/TICKET-5-delays-csv-download.md', '[plan] Wrote backlog/TICKET-6-csv-airline-filter.md'],
+        log: [...working, '[plan] == plan: claude', '[plan] Wrote backlog/TICKET-5-delays-csv-download.md', '[plan] Wrote backlog/TICKET-6-csv-airline-filter.md'],
       }),
     );
     sc.show(2000, { caption: 'The workflow is done' });
@@ -643,7 +644,7 @@ Delay data is restructured from a single flat table into separate airline, fligh
     sc.ui.dialog = undefined;
     sc.ui.message = 'Started ralph-TICKET-1.';
     sc.s = { ...sc.s, loops: loop() };
-    sc.show(160, { key: 'y', spin: 6, caption: 'y lets it loop, at most 10 runs' });
+    sc.show(160, { key: 'y', spin: 6, caption: 'y lets it loop, until the ticket is done' });
     sc.ui.message = undefined;
     sc.ui.view = 'pipeline';
     sc.show(160, { key: 'Tab', spin: 2, caption: 'Each run does one step, the judge checks it' });

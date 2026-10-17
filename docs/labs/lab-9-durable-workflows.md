@@ -2,7 +2,7 @@
 
 ## Context
 
-From here on, agents run unattended: in a loop, in parallel, in a pipeline. Something has to start them, check their work and decide what comes next. In this course, that's `.harness/flows/`, a small TypeScript project that runs on [Temporal](https://temporal.io/).
+From here on, agents run unattended: in a loop, in parallel, in a pipeline. Something has to start them, check their work and decide what comes next. In this course, that's the harness in `.harness/`, a small TypeScript project that runs on [Temporal](https://temporal.io/).
 
 Unattended work takes long, and things go wrong along the way: a loop runs for an hour, an agent run crashes. Temporal saves every finished step on a server. If the process doing the work dies, a new one continues where the old one stopped, instead of starting over.
 
@@ -15,7 +15,7 @@ The four Temporal terms you need in this lab:
 | **Worker** | The process that runs the workflows and their activities. |
 | **Query** | A question to a running workflow, for example "how far are you?". |
 
-In this lab, you run a workflow that doesn't change any code: the **plan agent**, an agent with the `slice` skill from [Tracer bullets](./lab-8-tracer-bullets.md), turns a specification into tickets.
+In this lab, you run a workflow that doesn't change any code: the **plan agent**, an agent with the `plan` skill from [Tracer bullets](./lab-8-tracer-bullets.md), turns a specification into tickets.
 
 ## Your Task
 
@@ -30,7 +30,7 @@ task lab/durable-workflows
 >
 > [![Open Lab 9 in GitHub Codespaces](https://github.com/codespaces/badge.svg)](https://codespaces.new/Zuehlke/ai-augmented-software-engineering?ref=lab%2Fdurable-workflows)
 
-The branch contains the tracer-bullet `backlog/`, a specification in `specs/`, the sandbox profile in `.harness/sandbox/` and the workflows in `.harness/flows/`. The dev container already has the Temporal CLI and the `flows` command. Check both:
+The branch contains the tracer-bullet `backlog/`, a specification in `specs/`, the sandbox profile in `.harness/sandbox/` and the workflows in `.harness/src/`. The dev container already has the Temporal CLI and the `flows` command. Check both:
 
 ```bash
 temporal --version
@@ -58,13 +58,13 @@ Open the web UI at [http://localhost:8233](http://localhost:8233). In **GitHub C
 
 ### 2. Watch the workflows
 
-Still in **terminal 1**. If you use GitHub Copilot CLI, set `AGENT=copilot` there first. The default is Claude Code.
+Still in **terminal 1**:
 
 ```bash
 task flows:watch
 ```
 
-`flows watch` is a terminal UI that shows what runs: the workflows, and below them the worker's output, the agents' output included. `↑` and `↓` scroll the output, `End` follows the new lines again. Leave it open.
+`flows watch` is a terminal UI that shows what runs: the workflows, and below them the worker's output, the agents' output included. `↑` and `↓` scroll the output, `End` follows the new lines again. The agents use Claude Code. If you use GitHub Copilot CLI, press `a` to switch to it: the footer shows `agent: copilot`. Leave it open.
 
 <FlowsWatch scene="lab9-watch" />
 
@@ -81,26 +81,31 @@ In `flows watch` in terminal 1, press `→` to select the **Plan tickets** phase
 The workflow hands the specification to the plan agent, which writes its tickets to `backlog/`, next to the four from Lab 8. It works on a branch of its own and commits the tickets there. At the end, the workflow brings them onto your branch. `flows watch` shows the workflow under **Other workflows**, and the agent's output below.
 
 > [!NOTE]
-> The plan agent only sees what's committed, and the tickets can only come onto your branch if it has no uncommitted changes. Commit or stash your changes before you start the plan agent. If you change the specification or the `slice` skill, commit the change, or the workflow refuses to start.
+> The plan agent only sees what's committed, and the tickets can only come onto your branch if it has no uncommitted changes. Commit or stash your changes before you start the plan agent. If you change the specification or the `plan` skill, commit the change, or the workflow refuses to start.
 
 ::: code-group
 
-```ts [.harness/flows/src/workflows/plan.ts]
+```ts [.harness/src/workflows/plan.ts]
 import { ApplicationFailure, log, setHandler, workflowInfo } from '@temporalio/workflow';
-import type { PlanInput, PlanStatus } from '../shared';
 import { MODELS } from '../shared';
+import type { PlanInput, PlanStatus } from '../types/pipeline';
 import { addWorktree, currentBranch, headCommit, listTickets, mergeBranch, removeWorktree, requireCommitted, runAgent } from './activities';
 import { skillFile, workPrompt } from './prompts';
 import { planStatus } from './signals';
+import { count, keepingUsage } from './usage';
 
-// The plan agent: it uses the slice skill to turn a feature request or a specification into tickets in backlog/
-export async function plan({ repoDir, agent, request, spec }: PlanInput): Promise<string[]> {
+// The plan agent: it uses the plan skill to turn a feature request or a specification into tickets in backlog/
+export async function plan(input: PlanInput): Promise<string[]> {
   const status: PlanStatus = { step: 'planning', newTickets: [] };
   setHandler(planStatus, () => status);
+  return keepingUsage(status, () => writeTickets(input, status));
+}
 
-  // The plan agent works on a branch of its own. Its tickets come onto the branch you're on now.
+async function writeTickets({ repoDir, agent, request, spec }: PlanInput, status: PlanStatus): Promise<string[]> {
+  // The plan agent works in a worktree of its own. A retry throws away uncommitted changes, and that
+  // never touches your checkout. Its tickets come onto the branch you're on now.
   if (spec) await requireCommitted(repoDir, spec);
-  await requireCommitted(repoDir, skillFile('slice'));
+  await requireCommitted(repoDir, skillFile('plan'));
   const into = await currentBranch(repoDir);
   const name = `plan-${workflowInfo().runId.slice(0, 8)}`;
   const branch = `agent/${name}`;
@@ -111,12 +116,14 @@ export async function plan({ repoDir, agent, request, spec }: PlanInput): Promis
 
   // Activity: one agent run. It takes minutes, and it's the one you'll interrupt.
   log.info('== plan');
-  await runAgent({ repoDir, workDir, agent, mode: 'write', model: MODELS.slice, step: 'slice', prompt: workPrompt('slice', spec ? `Specification: ${spec}` : `Feature request: ${request}`) });
+  const input = spec ? `Specification: ${spec}` : `Feature request: ${request}`;
+  const run = await runAgent({ repoDir, workDir, agent, mode: 'write', model: MODELS.plan, step: 'plan', prompt: workPrompt('plan', input) });
+  count(status, 'plan', run);
 
   // Activity: the tickets the plan agent added
   status.newTickets = (await listTickets(workDir)).filter((ticket) => !before.includes(ticket));
 
-  // Activities: the tickets come onto your branch
+  // Activities: the tickets come onto your branch, and the worktree goes
   const problem = await mergeBranch(repoDir, branch, into);
   if (problem) {
     throw ApplicationFailure.nonRetryable(`The tickets are on ${branch}, not on ${into}: ${problem}. Then: git rebase ${into} ${branch} && git merge --ff-only ${branch}`);
@@ -129,7 +136,7 @@ export async function plan({ repoDir, agent, request, spec }: PlanInput): Promis
 
 :::
 
-Every `await` line is an **activity**. Temporal saves each activity's result in the workflow's **history**. If the worker stops, a new one runs the function again from the top, takes finished results from the history, and only reruns what didn't finish.
+Every `await` line that calls an imported function, like `runAgent` or `listTickets`, is an **activity**. `keepingUsage` and `count` only add up what the agent runs cost, which `flows watch` shows. Temporal saves each activity's result in the workflow's **history**. If the worker stops, a new one runs the function again from the top, takes finished results from the history, and only reruns what didn't finish.
 
 In the web UI, click `plan` to see its history.
 
@@ -155,10 +162,10 @@ The workflow continues where it stopped, even though the server restarted too: i
 
 ::: code-group
 
-```ts [.harness/flows/src/workflows/activities.ts (excerpt)]
+```ts [.harness/src/workflows/activities.ts (excerpt)]
 // An agent run takes minutes. It heartbeats every 10 seconds, so when the worker dies, Temporal
 // notices after 1 minute (heartbeatTimeout) instead of 45, and runs it again on the next worker.
-export const { runAgent } = proxyActivities<typeof activities>({
+export const { runAgent, loadsSkill } = proxyActivities<typeof activities>({
   startToCloseTimeout: '45 minutes',
   heartbeatTimeout: '1 minute',
   retry: { maximumAttempts: 3, initialInterval: '30 seconds' },
@@ -171,6 +178,6 @@ export const { runAgent } = proxyActivities<typeof activities>({
 
 <FlowsWatch scene="lab9-board" />
 
-When the workflow is done, press `Tab` in `flows watch`: the backlog board shows the new tickets next to the four from Lab 8. Select one with the arrow keys and press `Enter` to read it, or open them in `backlog/`. Check them as you did in Lab 8: does every ticket cut a full vertical slice, and does every `ready` ticket really not depend on another one?
+When the workflow is done, press `Tab` in `flows watch`: the backlog board shows the new tickets next to the four from Lab 8. Select one with the arrow keys and press `Enter` to read it, or open them in `backlog/`. Check them as you did in Lab 8: does every ticket cut a full vertical slice, does every `ready` ticket really not depend on another one, and does every `blocked` ticket name what blocks it?
 
 You now have a server, a worker and a workflow that survives its worker. In the next lab, a workflow changes code.

@@ -4,9 +4,9 @@
 
 A feature request describes what should happen, not the tickets to build it. Splitting it by hand is slow, and everyone does it differently: blockers get missed, and features get split by layer instead of into slices you can demo on their own.
 
-A `slice` skill does it the same way every time. It finds the work that must come first (a schema change, a missing dataset, an open decision), makes every blocker explicit, and slices the rest into vertical tracer-bullet tickets that each go through every layer they touch.
+A `plan` skill does it the same way every time. It finds the work that must come first (a schema change, a missing dataset, an open decision), makes every blocker explicit, and slices the rest into vertical tracer-bullet tickets that each go through every layer they touch.
 
-`slice` is the step after `research` from [Structured agentic workflows](./lab-4-structured-agentic-workflows.md): `research` turns a requirement into a specification, `slice` turns a specification or feature request that's too big for one agent session into tickets. Each ticket has the same shape as a specification: a title that names the outcome, a sentence or two of context, and testable acceptance criteria.
+`plan` is the step after `research` from [Structured agentic workflows](./lab-4-structured-agentic-workflows.md): `research` turns a requirement into a specification, `plan` turns a specification or feature request that's too big for one agent session into tickets. Each ticket has the same shape as a specification: a title that names the outcome, a sentence or two of context, and testable acceptance criteria.
 
 ## Your Task
 
@@ -21,7 +21,7 @@ task lab/tracer-bullets
 >
 > [![Open Lab 8 in GitHub Codespaces](https://github.com/codespaces/badge.svg)](https://codespaces.new/Zuehlke/ai-augmented-software-engineering?ref=lab%2Ftracer-bullets)
 
-The `slice` skill below is already in the repository. Paste the feature request below to your agent and ask it to invoke the skill on it:
+The `plan` skill below is already in the repository. Paste the feature request below to your agent and ask it to invoke the skill on it:
 
 <details>
 <summary>Feature request: Flight Delays Dashboard</summary>
@@ -77,11 +77,11 @@ After the skill proposes a breakdown, complete the following tasks:
 ## Solution
 
 <details>
-<summary><code>.agents/skills/slice/SKILL.md</code></summary>
+<summary><code>.agents/skills/plan/SKILL.md</code></summary>
 
-```markdown
+````markdown
 ---
-name: slice
+name: plan
 description: Break a feature request, spec, or plan into a backlog of tracer-bullet tickets, each declaring what blocks it; use when asked to turn a requirements document into issues or a backlog.
 disable-model-invocation: true
 ---
@@ -100,15 +100,20 @@ tickets under `backlog/`. You do not implement anything.
 
 2. Break the remaining scope into vertical slices, not horizontal layers:
    - Each ticket cuts a narrow but complete path through every layer it touches (schema → service →
-     endpoint → UI), not one layer shared across many tickets. There is no "build the UI" or "add the
-     endpoints" ticket, each slice brings its own piece of both.
+     endpoint), not one layer shared across many tickets.
    - A completed ticket is demoable or verifiable on its own; it must own every acceptance criterion
      it's graded on, never split a single demoable outcome across two tickets.
    - Each ticket should be sized to fit in a single agent session.
+   - A behaviour and its combination with what already exists, "X together with Y", is one slice, not
+     two. A ticket that would only add tests or wiring for another ticket's behaviour is folded into
+     that ticket. A small request is one ticket.
+   - Something several tickets share, such as the page they're shown on, is built by the first
+     ticket that needs it, never as a ticket of its own.
 
 3. Give every ticket its blocking edges: which other tickets, or which external things, must land
    before it can start. A ticket with no blocker is `ready`; anything else is `blocked`, however
-   well-specified it is.
+   well-specified it is. Other tickets go in `blocked_by`, anything outside the repo in
+   `blocked_reason`: a ticket blocked only by tickets can start as soon as they are done.
 
 4. Present the breakdown as a numbered list before writing anything: title, blocked by, what it
    delivers. Ask whether the granularity and the blocking edges are right. Iterate until the user
@@ -118,11 +123,12 @@ tickets under `backlog/`. You do not implement anything.
    the highest ticket already in `backlog/`, in dependency order (blockers first). Don't change the
    existing tickets:
 
-   \```markdown
+   ```markdown
    ---
    id: TICKET-<n>
    status: ready | blocked
-   blocked_reason: <only when blocked, name the specific dependency>
+   blocked_by: <only when it waits for other tickets: their ids, for example TICKET-3, TICKET-4>
+   blocked_reason: <only when it waits for something outside the repo: name it>
    ---
 
    # <Title: the demoable outcome>
@@ -133,7 +139,7 @@ tickets under `backlog/`. You do not implement anything.
    ## Acceptance Criteria
 
    - <objectively testable, false at the current commit>
-   \```
+   ```
 
 ## CONSTRAINTS
 
@@ -141,7 +147,7 @@ tickets under `backlog/`. You do not implement anything.
 - Never mark a ticket `ready` if its acceptance criteria depend on another ticket's work, or on
   something outside the repo that hasn't landed yet.
 - Don't invent scope the feature request doesn't ask for.
-```
+````
 
 Adapted from Matt Pocock's `to-tickets` skill.
 
@@ -179,7 +185,7 @@ of by scanning one flat table.
 ---
 id: TICKET-2
 status: blocked
-blocked_reason: requires the normalized airline/flight/delay-event data model from TICKET-1
+blocked_by: TICKET-1
 ---
 
 # Airline overview dashboard
@@ -203,7 +209,7 @@ how many of its flights are currently active or scheduled, without writing any q
 ---
 id: TICKET-3
 status: blocked
-blocked_reason: requires the normalized data model from TICKET-1 and the shared dashboard page introduced in TICKET-2
+blocked_by: TICKET-1, TICKET-2
 ---
 
 # Flight status lookup
@@ -226,7 +232,8 @@ time / delayed / cancelled) and its delay in minutes, without knowing the query 
 ---
 id: TICKET-4
 status: blocked
-blocked_reason: requires the flight status lookup from TICKET-3, and an airport reference dataset (city, timezone per IATA code) that the data team has not yet delivered, with no ETA
+blocked_by: TICKET-3
+blocked_reason: an airport reference dataset (city, timezone per IATA code) that the data team has not yet delivered, with no ETA
 ---
 
 # Airport reference enrichment for flight status
@@ -247,7 +254,7 @@ The data model cleanup is prefactoring: it has to land before the dashboard can 
 
 The UI is not a ticket of its own. TICKET-2 introduces the dashboard page together with the airline search, TICKET-3 adds the flight search to that same page, and TICKET-4 enriches the flight result. A "build the dashboard page" ticket next to "add the endpoints" would be the horizontal split this lab is about avoiding.
 
-Every blocker is explicit: TICKET-2 and TICKET-3 wait on the data model, TICKET-3 also on the page from TICKET-2, and TICKET-4 on both the flight status lookup and the airport dataset that has no ETA yet.
+Every blocker is explicit: TICKET-2 and TICKET-3 wait on the data model, TICKET-3 also on the page from TICKET-2, and TICKET-4 on both the flight status lookup and the airport dataset that has no ETA yet. Tickets go in `blocked_by`, anything outside the repo in `blocked_reason`: a ticket blocked only by tickets can start as soon as they are done, one with a `blocked_reason` waits for someone outside the team.
 
 </details>
 

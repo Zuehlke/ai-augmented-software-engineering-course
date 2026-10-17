@@ -27,7 +27,7 @@ task lab/orchestration
 > [!NOTE]
 > The agents in this lab run unattended, so they need the [agent token from the setup](/getting-started/setup#agent-token).
 
-In **terminal 1**, start Temporal and the worker in the background, and open the pipeline view. If you use GitHub Copilot CLI, set `AGENT=copilot` there first. The default is Claude Code.
+In **terminal 1**, start Temporal and the worker in the background, and open the pipeline view. The agents use Claude Code. If you use GitHub Copilot CLI, press `a` in `flows watch` to switch to it.
 
 ```bash
 task flows:start
@@ -64,37 +64,43 @@ When the plan agent is done, `flows watch` shows that the tickets wait for you. 
 
 Press `n` to open it, select each ticket an agent should build with `Space` and press `Enter`. Only those get a Ralph loop.
 
+The tickets on offer are the `ready` ones, and the `blocked` ones whose `blocked_by` tickets are already done, from an earlier pipeline. A ticket that waits for another ticket of this pipeline, or for something outside the repo (`blocked_reason`), doesn't start: `flows status pipeline` lists it as unfinished, and a later pipeline picks it up.
+
 ### 3. Wait for the implement loops and the review agent
 
 <FlowsWatch scene="lab12-implement" />
 
-The implement loops and the review agent take a while. A loop that fails or runs out of runs doesn't stop the others: only the finished tickets go on to review. Press `Tab` to see the Ralph loops move across the backlog board, and `Tab` again to get back to the pipeline. On the board, select a card with the arrow keys and press `Enter` to read its ticket. In the pipeline view, `↑` and `↓` scroll the agents' output, and `End` follows the new lines again. Use the time to read the workflow below. Look for the two checkpoints. Each one is a `condition(...)` that waits for your answer. `flows watch` sends your answer as the same signal as `flows start` and `flows merge` do.
+The implement loops and the review agent take a while. A loop that fails or runs out of runs doesn't stop the others: only the finished tickets go on to review. Press `Tab` to see the Ralph loops move across the backlog board, and `Tab` again to get back to the pipeline. On the board, select a card with the arrow keys and press `Enter` to read its ticket. In the pipeline view, `↑` and `↓` scroll the agents' output, and `End` follows the new lines again. Use the time to read the workflow below. Look for the two checkpoints. Each one is a `condition(...)` that waits for your answer. `flows watch` sends your answer as the same signal as `flows start` and `flows merge` do. Leave out `unattended` and `acceptance` for now: they are for the evals in [Lab 13](./lab-13-evals.md), where nobody approves or decides, so the pipeline takes every ticket it can start and merges what the review approved.
 
 ::: code-group
 
-```ts [.harness/flows/src/workflows/pipeline.ts]
+```ts [.harness/src/workflows/pipeline.ts]
 import { ApplicationFailure, condition, executeChild, setHandler, workflowInfo } from '@temporalio/workflow';
-import type { PipelineInput, PipelineStatus } from '../shared';
 import { branchOf, MODELS, worktreeName } from '../shared';
-import { addWorktree, branchDiffs, checkoutProblem, currentBranch, headCommit, mergeBranch, readyTickets, requireCommitted, removeWorktree, runAgent, runTests } from './activities';
+import type { PipelineInput, PipelineStatus } from '../types/pipeline';
+import { addWorktree, blockedTickets, branchDiffs, checkoutProblem, currentBranch, headCommit, mergeBranch, readyTickets, requireCommitted, removeWorktree, runAgent, runTests } from './activities';
+import { failureMessage } from './failure';
 import { runPhase } from './phase';
 import { reviewPrompt, skillFile } from './prompts';
 import { ralph } from './ralph';
 import { approveTicketsSignal, decideMergeSignal, pipelineStatus } from './signals';
 import { findVerdict } from './text';
+import { add, count, keepingUsage, usageOf } from './usage';
 
 // research → plan → dispatch → you approve the tickets → implement, one Ralph loop per ticket → review → you decide → merge
-export async function pipeline({ repoDir, agent, request }: PipelineInput): Promise<PipelineStatus> {
+export async function pipeline(input: PipelineInput): Promise<PipelineStatus> {
   const status: PipelineStatus = { step: 'researching', tickets: [], unfinished: [], review: '', approvedBranches: [], merged: [], notMerged: [] };
-  let approved: string[] | undefined;
-  let merge: boolean | undefined;
+  const decisions: { approved?: string[]; merge?: boolean } = {}; // as the signals set them
   setHandler(pipelineStatus, () => status);
-  setHandler(approveTicketsSignal, (tickets) => void (approved = tickets));
+  setHandler(approveTicketsSignal, (tickets) => void (decisions.approved = tickets));
   setHandler(decideMergeSignal, (yes) => {
-    merge = yes;
+    decisions.merge = yes;
     status.mergeProblem = undefined;
   });
+  return keepingUsage(status, () => steps(input, status, decisions));
+}
 
+async function steps({ repoDir, agent, request, unattended, acceptance }: PipelineInput, status: PipelineStatus, decisions: { approved?: string[]; merge?: boolean }): Promise<PipelineStatus> {
   // Everything it brings comes onto the branch you start it on
   const into = await currentBranch(repoDir);
   status.into = into;
@@ -110,14 +116,16 @@ export async function pipeline({ repoDir, agent, request }: PipelineInput): Prom
     name: 'research', // the research skill, checked with the judge skill
     input: `Feature request: ${request}`,
     maxRuns: 3,
+    unattended,
   }, status);
 
   // plan: an agent writes the tickets, and a judge checks them
   status.step = 'planning';
   await runPhase(repoDir, planDir, agent, {
-    name: 'slice', // the slice skill, checked with the judge skill
+    name: 'plan', // the plan skill, checked with the judge skill
     input: 'Specification: the one the research agent just wrote in specs/',
     maxRuns: 3,
+    unattended,
   }, status);
 
   // The specification and the tickets come onto your branch, so you can read them before you approve
@@ -127,52 +135,64 @@ export async function pipeline({ repoDir, agent, request }: PipelineInput): Prom
   }
   await removeWorktree(repoDir, planName, planBranch);
 
-  // dispatch: no agent, a rule. It picks the tickets marked `ready`.
+  // dispatch: no agent, a rule. It picks the tickets that can start: `ready`, or blocked only by tickets that are done
+  // already. A ticket that waits for a ticket of this pipeline waits for a later pipeline.
   status.tickets = await readyTickets(repoDir);
 
-  // ✋ Checkpoint 1: waits until `flows start` sends the tickets you approved
-  status.step = 'waiting for your approval';
-  await condition(() => approved !== undefined);
-
-  // implement: one Ralph loop per ticket, each in its own worktree, all at the same time, all from the same
-  // commit. A loop that fails doesn't stop the others: only the finished tickets go on to review.
-  status.step = 'implementing';
-  const base = await headCommit(repoDir);
-  const results = await Promise.allSettled(
-    approved!.map((ticket) => executeChild(ralph, { workflowId: `pipeline-${ticket}`, args: [{ repoDir, agent, ticket, base }] })),
-  );
-  const finished: string[] = [];
-  results.forEach((result, i) => {
-    const ticket = approved![i];
-    if (result.status === 'fulfilled' && result.value) finished.push(ticket);
-    else if (result.status === 'fulfilled') status.unfinished.push(`${ticket}: out of runs, not done`);
-    else status.unfinished.push(`${ticket}: ${result.reason?.cause?.message ?? result.reason?.message ?? 'failed'}`);
-  });
-  if (!finished.length) {
-    status.step = 'done';
-    return status;
+  // ✋ Checkpoint 1: waits until `flows start` sends the tickets you approved. Unattended, all of them.
+  let approved = status.tickets;
+  if (!unattended) {
+    status.step = 'waiting for your approval';
+    await condition(() => decisions.approved !== undefined);
+    approved = decisions.approved!;
   }
 
-  // review: a fresh, read-only agent gets every finished branch's changes
-  status.step = 'reviewing';
+  // implement: one Ralph loop per ticket, each in its own worktree, all at the same time, all from the same
+  // commit. A loop that fails doesn't stop the others: only the finished tickets go on to review. The loops
+  // are named after the pipeline, pipeline-TICKET-5, so pipelines that run at the same time, in the evals, don't collide.
+  status.step = 'implementing';
+  const base = await headCommit(repoDir);
+  const loops = approved.map((ticket) => {
+    const workflowId = `${workflowInfo().workflowId}-${ticket}`;
+    return executeChild(ralph, { workflowId, args: [{ repoDir, agent, ticket, base, unattended, acceptance }] });
+  });
+  const results = await Promise.allSettled(loops);
+  const finished: string[] = [];
+  results.forEach((result, i) => {
+    const ticket = approved[i];
+    add(status, result.status === 'fulfilled' ? result.value : usageOf(result.reason)); // a failed loop's runs cost too
+    if (result.status === 'fulfilled' && result.value.done) finished.push(ticket);
+    else if (result.status === 'fulfilled') status.unfinished.push(`${ticket}: out of runs, not done`);
+    else status.unfinished.push(`${ticket}: ${failureMessage(result.reason)}`);
+  });
+  if (!finished.length) return finish(repoDir, status);
+
+  // review: a fresh, read-only agent gets every finished branch's changes. Its verdict per branch is its last
+  // line about it: `agent/ticket-5: APPROVE` or `agent/ticket-5: REJECT: <why>`. A rejected branch isn't merged.
   const branches = finished.map(branchOf);
   await requireCommitted(repoDir, skillFile('review'));
-  status.review = await runAgent({ repoDir, agent, mode: 'read', model: MODELS.review, step: 'review', prompt: reviewPrompt(await branchDiffs(repoDir, branches)) });
-  // Its verdict per branch, as its last line about it: `agent/ticket-5: APPROVE` or `agent/ticket-5: REJECT, <why>`
-  status.approvedBranches = branches.filter((branch) => findVerdict(status.review, ['APPROVE', 'REJECT'], branch)?.kind === 'APPROVE');
+  await requireCommitted(repoDir, skillFile('change-quality'));
+  status.step = 'reviewing';
+  const prompt = reviewPrompt(await branchDiffs(repoDir, branches));
+  const run = await runAgent({ repoDir, agent, mode: 'read', model: MODELS.review, step: 'review', prompt });
+  status.review = count(status, 'review', run);
+  const approves = (branch: string) => findVerdict(status.review, ['APPROVE', 'REJECT'], branch)?.kind === 'APPROVE';
+  status.approvedBranches = branches.filter(approves);
 
   // ✋ Checkpoint 2: waits until `flows merge` sends your decision. If your checkout can't take the merge
   // right now, for example because of uncommitted changes, it says why and waits for your decision again.
-  for (;;) {
+  // Unattended, it merges what the review approved. Nobody would fix a checkout that can't take it.
+  if (unattended) {
+    const problem = await checkoutProblem(repoDir, into);
+    if (problem) throw ApplicationFailure.nonRetryable(`It can't merge: ${problem}`);
+  }
+  while (!unattended) {
     status.step = 'waiting for your merge decision';
-    await condition(() => merge !== undefined);
-    if (!merge) {
-      status.step = 'done';
-      return status;
-    }
+    await condition(() => decisions.merge !== undefined);
+    if (!decisions.merge) return finish(repoDir, status);
     status.mergeProblem = (await checkoutProblem(repoDir, into)) ?? undefined;
     if (!status.mergeProblem) break;
-    merge = undefined;
+    decisions.merge = undefined; // your checkout couldn't take the merge: wait for your decision again
   }
 
   // merge: rebases the approved branches onto your branch and fast-forwards it, one after the other.
@@ -189,7 +209,13 @@ export async function pipeline({ repoDir, agent, request }: PipelineInput): Prom
       await removeWorktree(repoDir, worktreeName(ticket), branch);
     }
   }
-  status.testsPass = (await runTests(repoDir)).pass;
+  return finish(repoDir, status);
+}
+
+// The tickets that never got to start, because what blocks them wasn't merged, and the tests of what was merged
+async function finish(repoDir: string, status: PipelineStatus): Promise<PipelineStatus> {
+  status.unfinished.push(...(await blockedTickets(repoDir, status.tickets)));
+  if (status.merged.length) status.testsPass = (await runTests(repoDir)).pass;
   status.step = 'done';
   return status;
 }
@@ -200,14 +226,14 @@ export async function pipeline({ repoDir, agent, request }: PipelineInput): Prom
 <details>
 <summary>The skills in <code>.agents/skills/</code> and <code>prompts.ts</code> (already in the branch)</summary>
 
-The `research` and `slice` skills usually ask you questions. In the pipeline, nobody is there to answer. So `workPrompt` in `prompts.ts` tells every agent to make a sensible assumption and write it down where the skill keeps assumptions. The judges check these first, and then you check them at the first checkpoint.
+The `research` and `plan` skills usually ask you questions. In the pipeline, nobody is there to answer. So `workPrompt` in `prompts.ts` tells every agent to make a sensible assumption and write it down where the skill keeps assumptions. The judges check these first, and then you check them at the first checkpoint.
 
 ::: code-group
 
-```ts [.harness/flows/src/workflows/prompts.ts]
+```ts [.harness/src/workflows/prompts.ts (excerpt)]
 // What the harness tells each agent. The work itself is in the skills, .agents/skills/<name>/SKILL.md, the
 // same skills you use yourself in the earlier labs. This only adds what's different when nobody watches.
-import type { PhaseName } from '../shared';
+import type { PhaseName } from '../types/pipeline';
 
 // Where an agent finds a skill, in its worktree
 export const skillFile = (name: string) => `.agents/skills/${name}/SKILL.md`;
@@ -233,16 +259,17 @@ ${input}
 ${commits}`;
 }
 
-// The review agent: it gets every branch's changes
+// The review agent of the pipeline: it gets every branch's changes, and decides which ones to merge
 export function reviewPrompt(diffs: string): string {
   return `Use the review skill in \`${skillFile('review')}\` on the branches below.${diffs}`;
 }
+
 ```
 
 ```markdown [.agents/skills/judge/SKILL.md (excerpt)]
 ---
 name: judge
-description: Judge another agent's run on a phase (research, slice or implement) like a stranger's work, and end with one verdict line.
+description: Judge another agent's run on a phase (research, plan or implement) like a stranger's work, and end with one verdict line.
 disable-model-invocation: true
 ---
 
@@ -263,15 +290,22 @@ The agent turned the feature request into a specification in `specs/`.
 
 - Every part of the feature request is covered, and nothing beyond it is added.
 - Where the request leaves something open, there is a sensible assumption under Assumptions.
+- No assumption or criterion changes a value the request defines (rounding, truncation, clamping,
+  defaults). One that does is scope added beyond the request.
 - If the request can be read in two ways that lead to different features, ask a question instead.
 
-### slice
+### plan
 
 The agent turned the specification into tickets in `backlog/`.
 
 - Every ticket is a vertical slice that a user can see or use, not a layer such as "database" or "UI".
-- A `ready` ticket doesn't depend on any other new ticket. One that does is `blocked`.
+- A `ready` ticket doesn't depend on any other new ticket. One that does is `blocked`, with those
+  tickets in `blocked_by`.
 - Together, the tickets cover the whole specification.
+- Every acceptance criterion of the specification is owned by exactly one ticket. A ticket that only
+  combines what another ticket built, for example "X together with Y", or that only adds tests for
+  another ticket's behaviour, is not a slice: its criteria belong to the ticket that builds the
+  behaviour. A small request is one ticket.
 
 …
 
@@ -286,35 +320,43 @@ End with exactly one line, without any formatting: `PASS`, `RETRYABLE: <what to 
 ```markdown [.agents/skills/review/SKILL.md]
 ---
 name: review
-description: Review branches built by other agents like a stranger's pull request, against their tickets in backlog/, and end with one APPROVE or REJECT line per branch.
+description: Review a finished change built by other agents like a stranger's pull request, against its tickets in backlog/ or against a feature request and hidden criteria, and end with APPROVE or REJECT.
 disable-model-invocation: true
 ---
 
 ## TASK
 
-You review branches built by other agents. You don't know how they were built: review them like a
-stranger's pull request. The changes of every branch are below, under `BRANCH <name>`. Don't change
-any file.
+You review a change built by other agents. You don't know how it was built: review it like a stranger's
+pull request. Read any file you need, but don't change any. You get one of two inputs:
+
+- **Branches**, each under `BRANCH <name>`: the pipeline asks whether to merge them. Every branch is
+  checked against its ticket in `backlog/`, the ticket id is in the branch name.
+- **One change**, with a FEATURE REQUEST and CRITERIA: the evals ask whether you would ship it. The
+  agents that built it never saw the criteria. What they left besides the code, a specification in
+  `specs/` and tickets in `backlog/`, is fine.
 
 ---
 
 ## STEPS
 
-For every branch:
+For every branch, or for the one change:
 
-1. Check its changes against the ticket in `backlog/` (the ticket id is in the branch name): is every
-   acceptance criterion met, and nothing outside its scope changed? A `.harness/progress.md` on the
-   branch means the loop didn't finish.
+1. Check it against what was asked. Every acceptance criterion of the ticket, or every one of the
+   CRITERIA, is met by the change itself, not only by its tests, and nothing outside its scope changed.
+   A `.harness/progress.md` on a branch means the loop didn't finish.
 
-2. Check that tests cover the acceptance criteria. The loop already ran them green, you don't need
-   to run them.
+2. Check it against the checklist in `.agents/skills/change-quality/SKILL.md`. The tests already ran
+   green, you don't need to run them. An item that doesn't hold is a reason to REJECT: say which.
 
 ---
 
 ## VERDICT
 
-End with one line per branch, without any formatting: `<branch>: APPROVE` or
-`<branch>: REJECT, <reason>`.
+End without any formatting, no bullets, no bold, no backticks:
+
+- For branches, one line per branch: `<branch>: APPROVE` or `<branch>: REJECT: <reason>`. Every branch
+  gets exactly one such line, the last lines of your answer. A branch without one counts as rejected.
+- For one change, exactly one line: `APPROVE` or `REJECT: <the most important reason>`.
 ```
 
 :::
@@ -331,7 +373,7 @@ To check a branch's changes yourself before you decide, press `Esc` and `Tab` to
 
 Press `y`. The workflow rebases each approved branch onto your branch and fast-forwards it, one after the other, so there's no merge commit. Then it runs the tests. If your checkout has uncommitted changes, it says so and waits for your decision again.
 
-Both tickets change the same dashboard page, so the second branch will probably conflict when it's rebased. The workflow doesn't merge that branch. It stays on the board as *ready to merge*: open it with `Enter` and press `m` to see its commits and the command to rebase it by hand. If a branch applies cleanly, `y` there rebases and fast-forwards it. In terminal 2, see which branches were merged, which weren't and why, and whether the tests pass:
+Both tickets change the same dashboard page, so the second branch will probably conflict when it's rebased. The workflow doesn't merge that branch. It stays on the board as *ready to merge*: open it with `Enter` and press `m` to see its commits and the command to rebase it by hand. If a branch applies cleanly, `y` there rebases and fast-forwards it. In terminal 2, see which branches were merged, which weren't and why, whether the tests pass, what the agent runs cost, and which model each role ran with:
 
 ```bash
 flows status pipeline

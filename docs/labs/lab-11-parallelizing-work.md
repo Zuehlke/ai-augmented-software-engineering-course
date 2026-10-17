@@ -54,15 +54,15 @@ status: ready
 
 # Flight status lookup
 
-On the dashboard page, support staff can enter a flight id and see its current status (on time /
+On the dashboard page, support staff can enter a flight number and see its current status (on time /
 delayed / cancelled) and its delay in minutes, without knowing the query API.
 
 ## Acceptance Criteria
 
-- The dashboard page displays a search box for a flight id.
-- Submitting a valid flight id shows its current status as one of: on time, delayed, or cancelled.
-- Submitting a valid flight id that is delayed shows the delay in minutes.
-- Submitting a flight id that doesn't exist shows a clear "not found" message instead of an error
+- The dashboard page displays a search box for a flight number.
+- Submitting a valid flight number shows its current status as one of: on time, delayed, or cancelled.
+- Submitting a valid flight number that is delayed shows the delay in minutes.
+- Submitting a flight number that doesn't exist shows a clear "not found" message instead of an error
   page or a blank result.
 - The result reflects the flight's latest delay/status event from real data, not a hand-entered or
   mocked value.
@@ -114,7 +114,7 @@ The loop in Lab 10 did the same. That's why your checkout stayed as it was until
 
 ::: code-group
 
-```ts [.harness/flows/src/workflows/ralph.ts (excerpt)]
+```ts [.harness/src/workflows/ralph.ts (excerpt)]
   // The loop works in a worktree of its own, on the branch agent/<ticket>: its commits, and the reset of a
   // retry, stay out of your checkout. In the pipeline it starts fresh from `base`. On its own (`flows ralph`)
   // it goes on where an earlier run on the same ticket stopped.
