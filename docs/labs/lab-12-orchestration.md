@@ -228,6 +228,8 @@ async function finish(repoDir: string, status: PipelineStatus): Promise<Pipeline
 
 The `research` and `plan` skills usually ask you questions. In the pipeline, nobody is there to answer. So `workPrompt` in `prompts.ts` tells every agent to make a sensible assumption and write it down where the skill keeps assumptions. The judges check these first, and then you check them at the first checkpoint.
 
+The `judge` skill keeps its checks per phase, in `checks/`. Each judge reads only the file of its phase, which `judgePrompt` names, so a plan judge isn't distracted by the rules for code.
+
 ::: code-group
 
 ```ts [.harness/src/workflows/prompts.ts (excerpt)]
@@ -237,6 +239,9 @@ import type { PhaseName } from '../types/pipeline';
 
 // Where an agent finds a skill, in its worktree
 export const skillFile = (name: string) => `.agents/skills/${name}/SKILL.md`;
+
+// The judge's checks for one phase. The judge reads only these, not the checks of the other phases.
+export const judgeChecksFile = (phase: PhaseName) => `.agents/skills/judge/checks/${phase}.md`;
 
 // An agent that does the work, unattended
 export function workPrompt(skill: PhaseName, input: string): string {
@@ -252,7 +257,7 @@ ${input}`;
 
 // The judge of a phase: it gets the same input as the agent, and the agent's commits
 export function judgePrompt(phase: PhaseName, input: string, commits: string): string {
-  return `Use the judge skill in \`${skillFile('judge')}\` to judge this ${phase} run.
+  return `Use the judge skill in \`${skillFile('judge')}\` to judge this ${phase} run, with the checks in \`${judgeChecksFile(phase)}\`.
 
 ${input}
 
@@ -266,7 +271,7 @@ export function reviewPrompt(diffs: string): string {
 
 ```
 
-```markdown [.agents/skills/judge/SKILL.md (excerpt)]
+```markdown [.agents/skills/judge/SKILL.md]
 ---
 name: judge
 description: Judge another agent's run on a phase (research, plan or implement) like a stranger's work, and end with one verdict line.
@@ -282,9 +287,19 @@ end. Judge them like a stranger's work. Read any file you need, but don't change
 
 ## CHECKS
 
-Use the checks of the phase you judge.
+Read the checks of the phase you judge, and only those: `checks/<phase>.md` next to this file, for
+example `checks/implement.md`. The phase is named below.
 
-### research
+---
+
+## VERDICT
+
+End with exactly one line, without any formatting: `PASS`, `RETRYABLE: <what to fix>`,
+`AMBIGUOUS: <question for a human>` or `FAILED: <why no further attempt can fix it>`.
+```
+
+```markdown [.agents/skills/judge/checks/research.md]
+# Checks: research
 
 The agent turned the feature request into a specification in `specs/`.
 
@@ -293,8 +308,10 @@ The agent turned the feature request into a specification in `specs/`.
 - No assumption or criterion changes a value the request defines (rounding, truncation, clamping,
   defaults). One that does is scope added beyond the request.
 - If the request can be read in two ways that lead to different features, ask a question instead.
+```
 
-### plan
+```markdown [.agents/skills/judge/checks/plan.md]
+# Checks: plan
 
 The agent turned the specification into tickets in `backlog/`.
 
@@ -306,15 +323,6 @@ The agent turned the specification into tickets in `backlog/`.
   combines what another ticket built, for example "X together with Y", or that only adds tests for
   another ticket's behaviour, is not a slice: its criteria belong to the ticket that builds the
   behaviour. A small request is one ticket.
-
-…
-
----
-
-## VERDICT
-
-End with exactly one line, without any formatting: `PASS`, `RETRYABLE: <what to fix>`,
-`AMBIGUOUS: <question for a human>` or `FAILED: <why no further attempt can fix it>`.
 ```
 
 ```markdown [.agents/skills/review/SKILL.md]
