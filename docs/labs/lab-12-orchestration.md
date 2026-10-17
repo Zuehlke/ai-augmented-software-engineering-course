@@ -7,7 +7,7 @@ In the last lab, you started each Ralph loop and checked each branch yourself. I
 <FlowsWatch scene="lab12-overview" />
 
 - Agents do the steps that need judgement. Steps that follow a fixed rule, like picking the `ready` tickets or merging, are plain code.
-- The research agent, the plan agent and the implement loops all run through `runPhase` from the Ralph loop. So each of them has a judge, with the `judge` skill's checks for its phase. A bad specification is caught before tickets or code are built on it.
+- The research agent, the plan agent and the implement loops all work like the Ralph loop, in `runPhase` (`phase.ts`): an agent runs, a judge checks it. So each of them has a judge, with the `judge` skill's checks for its phase. A bad specification is caught before tickets or code are built on it.
 - Each role gets the model that fits it, set in `MODELS` in `src/shared.ts`. The roles that run once and shape everything after them, research, plan and review, get Opus. The implement loops run most often, so they get the cheaper Sonnet. The judge is Opus too: it should be at least as strong as the agent it checks. With `AGENT=copilot`, the roles use Copilot's own model ids, `claude-opus-5` and `claude-sonnet-5`.
 - You only step in twice, at the two human gateways.
 
