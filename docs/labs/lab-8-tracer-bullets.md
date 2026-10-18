@@ -159,7 +159,8 @@ Adapted from Matt Pocock's `to-tickets` skill.
 ```markdown
 ---
 id: TICKET-1
-status: ready
+status: blocked
+blocked_reason: architecture review sign-off for the delay storage schema change, scheduled but not yet complete
 ---
 
 # Normalize delay data model
@@ -177,8 +178,7 @@ of by scanning one flat table.
   a specific flight, with multiple events per flight supported.
 - Existing data currently reachable via the flat `/delays` endpoint is fully represented in the new
   structure with no data loss.
-- Querying "all flights for a given airline" and "current status for a given flight" can each be
-  answered with a single, efficient lookup rather than a full-table scan.
+- The `/delays` endpoint returns the same results as before for the same queries.
 ```
 
 ```markdown
@@ -214,15 +214,15 @@ blocked_by: TICKET-1, TICKET-2
 
 # Flight status lookup
 
-On the same dashboard page, support staff can enter a flight number and see its current status (on
+On the same dashboard page, support staff can enter a flight id and see its current status (on
 time / delayed / cancelled) and its delay in minutes, without knowing the query API.
 
 ## Acceptance Criteria
 
-- The dashboard page shows a search box for a flight number, alongside the existing airline search box.
-- Submitting a valid flight number shows its current status as one of: on time, delayed, or cancelled.
-- Submitting a valid flight number that is delayed shows the delay in minutes.
-- Submitting a flight number that doesn't exist shows a clear "not found" message instead of an error
+- The dashboard page shows a search box for a flight id, alongside the existing airline search box.
+- Submitting a valid flight id shows its current status as one of: on time, delayed, or cancelled.
+- Submitting a valid flight id that is delayed shows the delay in minutes.
+- Submitting a flight id that doesn't exist shows a clear "not found" message instead of an error
   page or a blank result.
 - The result reflects the flight's latest delay/status event from real data, not a hand-entered or
   mocked value.
@@ -249,12 +249,6 @@ city, and timezone, instead of just the bare IATA codes.
   displays the flight's status and delay, with a clear indication that airport details are
   unavailable rather than an error or blank fields.
 ```
-
-The data model cleanup is prefactoring: it has to land before the dashboard can be built cleanly, so it gets its own ticket instead of being folded into the first feature ticket. Everything else is a vertical slice that is demoable in the browser the moment it lands.
-
-The UI is not a ticket of its own. TICKET-2 introduces the dashboard page together with the airline search, TICKET-3 adds the flight search to that same page, and TICKET-4 enriches the flight result. A "build the dashboard page" ticket next to "add the endpoints" would be the horizontal split this lab is about avoiding.
-
-Every blocker is explicit: TICKET-2 and TICKET-3 wait on the data model, TICKET-3 also on the page from TICKET-2, and TICKET-4 on both the flight status lookup and the airport dataset that has no ETA yet. Tickets go in `blocked_by`, anything outside the repo in `blocked_reason`: a ticket blocked only by tickets can start as soon as they are done, one with a `blocked_reason` waits for someone outside the team.
 
 </details>
 
