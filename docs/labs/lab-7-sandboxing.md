@@ -75,21 +75,7 @@ The setting applies to your whole machine. If you leave it off, every Copilot CL
 /sandbox
 ```
 
-On the **Mode** tab, pick **Auto-allow**. This saves the sandbox settings in `.claude/settings.local.json`, your personal settings for this repo. Open the file and check that it looks like this:
-
-```json
-{
-  "sandbox": {
-    "enabled": true,
-    "autoAllowBashIfSandboxed": true,
-    "enableWeakerNestedSandbox": true
-  }
-}
-```
-
-- `enabled`: every Bash command runs inside the sandbox.
-- `autoAllowBashIfSandboxed`: sandboxed commands run without asking you. The sandbox is the safety boundary instead.
-- `enableWeakerNestedSandbox`: lets the sandbox run inside a container, such as a Codespace. The isolation is weaker.
+On the **Mode** tab, pick **Auto-allow**. This saves the sandbox settings in `.claude/settings.local.json`, your personal settings for this repo.
 
 All network traffic now goes through the sandbox's proxy, and no domains are allowed yet. Run `/sandbox` again any time to see the current settings.
 
@@ -101,20 +87,15 @@ Run this in the session. The `!` prefix runs it as a shell command, inside the s
 ! curl -s -o /dev/null -w "%{http_code}\n" https://example.com
 ```
 
-`example.com` isn't on the allowlist, so the request needs an approval. Who gives it depends on your permission mode:
+`example.com` isn't on the allowlist, so it needs an approval: from you in default mode, from the classifier in auto mode. You most likely get `200` (allowed) rather than `000` (blocked).
 
-- **Default mode:** Claude Code asks you whether to allow `example.com`.
-- **Auto mode:** the auto mode classifier decides, without asking you. Often `curl` prints `200` right away, and you don't notice that anything was approved.
-
-If the request is denied, `curl` prints `000`.
-
-Most likely the request gets through one way or the other, and you end up with `200`. So the sandbox doesn't mean "no internet access". It means "no *unapproved* internet access", and the approval doesn't have to come from a human.
+So the sandbox doesn't block the internet. It only blocks *unapproved* access.
 
 ### 3. Block the network
 
-To block the network completely, you need the `strictAllowlist` setting. Claude Code ignores it in project settings files such as `.claude/settings.local.json`. It only reads it from your user settings, from managed settings, or from the `--settings` flag. Here you'll use the flag: keep the settings in a file in the repo and pass that file in when you start Claude.
+To block the network completely, you need `strictAllowlist`. Claude Code ignores it in project settings. Instead, you can pass it as part of your sandbox config with the `--settings` flag.
 
-Create `.harness/sandbox/no-network.json`. The `.harness/` folder holds everything that sets up how agents run, separate from the application code:
+Create `.harness/sandbox/no-network.json` (`.harness/` holds the agent setup, separate from the app code):
 
 ```json
 {
@@ -129,14 +110,16 @@ Create `.harness/sandbox/no-network.json`. The `.harness/` folder holds everythi
 }
 ```
 
+- `enabled`: turns the sandbox on.
+- `enableWeakerNestedSandbox`: lets the sandbox run inside a container, such as a Codespace, with weaker isolation.
+- `allowUnsandboxedCommands: false`: Claude can't retry a blocked command outside the sandbox.
+- `strictAllowlist`: hosts that aren't on the allowlist are blocked instead of asking you. This file allows none, so everything is blocked.
+
 Exit the session and start Claude with this file:
 
 ```bash
 claude --settings "$(cat .harness/sandbox/no-network.json)"
 ```
-
-- `network.strictAllowlist: true` blocks every host that isn't on the allowlist. Nothing is left to approve, neither by you nor by the auto mode classifier. The file has no `allowedDomains`, so the allowlist is empty and every host is blocked.
-- `allowUnsandboxedCommands: false` closes the other way out: running the command outside the sandbox.
 
 ### 4. Check again
 
