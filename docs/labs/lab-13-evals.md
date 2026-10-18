@@ -2,12 +2,12 @@
 
 ## Context
 
-A skill only helps when the agent loads it, and the agent decides that from the skill's `description`. Rewrite a description, rename a skill or add an overlapping one, and the agent may quietly stop loading it. Nothing fails: The agent just writes code without following the skill's instructions, potentially skipping things like the tests or code style.
+Agents fail quietly. Change a skill's `description` and the agent may stop loading it. Change a skill or the harness and the pipeline may build worse code. Nothing crashes: the results just get worse.
 
-An **eval** catches this automatically, after every change. This lab has two kinds:
+Evals catch this after every change. This lab has two kinds:
 
-- **Skill-loaded evals** check that the agent loads each skill when it should, and only then. They take a few minutes and cost about $5.
-- **End-to-end evals** grade the whole setup: the pipeline from [Orchestration](./lab-12-orchestration.md) builds fixed features unattended, and each result is graded against tests and criteria the agents never saw. They are slow and expensive: you'll see them, but not run them.
+- Skill-loaded evals check that the agent loads each skill when it should. They take a few minutes.
+- End-to-end evals let the pipeline from [Orchestration](./lab-12-orchestration.md) build fixed features, and grade the results against hidden tests. They are slow and expensive, so you only look at their results.
 
 ## Your Task
 
@@ -21,6 +21,18 @@ task lab/evals
 > If you work in **GitHub Codespaces**, open a **new Codespace** on branch `lab/evals`.
 >
 > [![Open Lab 13 in GitHub Codespaces](https://github.com/codespaces/badge.svg)](https://codespaces.new/Zuehlke/ai-augmented-software-engineering?ref=lab%2Fevals)
+
+> [!NOTE]
+> The skill-loaded evals need the [agent token from the setup](/getting-started/setup#agent-token). They run with Claude Code, also if you use Copilot otherwise.
+
+Start Temporal and the worker, and open `flows watch`:
+
+```bash
+task flows:start
+task flows:watch
+```
+
+### 1. Run the skill-loaded evals
 
 Each skill keeps its cases in `skill-loaded-evals.json`, next to its `SKILL.md`: a prompt, and whether the skill should load for it.
 
@@ -54,29 +66,15 @@ None of the prompts mentions a skill. Each skill is checked on its own, so some 
 
 </details>
 
-> [!NOTE]
-> The skill-loaded evals need the [agent token from the setup](/getting-started/setup#agent-token). They run with Claude Code, also if you use Copilot otherwise.
-
-In **terminal 1**, start Temporal and the worker, and open `flows watch`:
-
-```bash
-task flows:start
-task flows:watch
-```
-
-### 1. Run the skill-loaded evals
+Press `Tab` until you see **Evals**, the tab this branch adds, then `→` to switch to **Skill loaded**. Press `s`: the dialog shows the 27 runs, every case 3 times, and their cost, unknown the first time. Press `Enter`.
 
 <FlowsWatch scene="lab13-skills" />
 
-Press `Tab` until you see **Evals**, the tab this branch adds, then `→` to switch to **Skill loaded**. Press `s`: the dialog shows the 27 runs, every case 3 times, and their cost, unknown the first time. Press `Enter`.
+After a few minutes, you see one row per case, with a `✓` for each run that did what the case expects. `not:` marks a prompt the skill shouldn't load for. A case passes when 2 of its 3 runs do, and every case should pass. The trend above adds a column each time you run the evals, so you see when a change breaks something.
 
-After a few minutes, you see one row per case and a `✓` per run that did what the case expects. `not:` marks a prompt the skill shouldn't load for. Agent output varies, so a case passes when 2 of its 3 runs do. Every case should pass. `Enter` on a run shows what it did. The **trend** above gets a column per run of the evals, so you see when a change breaks something.
-
-There is no judge: whether a skill loaded is a fact in the agent's tool calls, so plain code checks it. That's fast, cheap and gives the same answer every time. And each run stops after ten turns: the eval needs the agent's decision, not its code.
+There is no judge: plain code checks the agent's tool calls for whether the skill loaded. That's fast, cheap and repeatable.
 
 ### 2. Make the description too broad
-
-<FlowsWatch scene="lab13-proposals" />
 
 When a skill doesn't load often enough, people often make it apply to everything. Try it: in `.agents/skills/testing/SKILL.md`, replace the `description` line with:
 
@@ -86,11 +84,78 @@ description: Use for every task in this repository.
 
 Skill-loaded evals check your checkout as it is, so there's no need to commit. Press `s` and `Enter` again.
 
+<FlowsWatch scene="lab13-proposals" />
+
 The trend drops to 6 of 9: the three cases that shouldn't load `testing` now fail. `api-design` still passes.
 
-Because cases failed, the **improve agent** runs last and proposes a better description. Press `p` to read it. It only proposes: since Lab 10, no agent may change `.agents/`, so the change is yours to make.
+Because cases failed, an improve agent proposes a better description. Press `p` to read it. Applying it is up to you: agents may not change `.agents/`.
 
-Undo your change:
+<details>
+<summary><code>.agents/skills/improve/SKILL.md</code>, the skill the improve agent uses</summary>
+
+````markdown
+---
+name: improve
+description: After an evals run, read its results and the earlier ones, and propose changes to the skills and the harness for a human to make. Changes no file.
+disable-model-invocation: true
+---
+
+## TASK
+
+An evals run just ran the setup, the skills in `.agents/skills/` and the harness in `.harness/src/`, and
+some runs weren't right the first time. Propose the changes to the setup that would prevent that next
+time. A human reads your proposals and makes the ones they agree with. Read any file you need, but
+don't change any.
+
+---
+
+## WHERE
+
+- `.harness/evals/results/<id>/` of the evals named below:
+  - an e2e evals run has `evals.json` and one `<task>-<run>.json` per run. `rejectedBecause` lists why a
+    judge or a check rejected a step, `reason` why the run wasn't accepted.
+  - a skill-loaded evals run has `skill-loaded-evals.json`: the cases whose skill loaded when it shouldn't, or didn't
+    when it should.
+- The folders next to it are the earlier evals, the oldest first. The `proposals` in their report is
+  what was proposed then, and their `skillsCommit` and `harnessCommit` say what the setup was.
+
+---
+
+## HOW
+
+1. Group the reasons of this evals. Look at the earlier ones too: a reason that comes back across runs,
+   tasks or evals is a gap in the setup. One that shows up once can be chance: say so, and don't
+   propose a change for it alone.
+2. Check the earlier proposals: if one was made (`git log` since that evals) and its reason is gone,
+   it helped. If the reason is still there, say so, and propose something else.
+3. For each gap, find where the setup lets it happen: the skill the agent followed, the judge's checks,
+   or the prompts in `.harness/src/workflows/prompts.ts`. Read the file.
+4. Propose the smallest change that closes the gap, as a rule that holds for any feature request. Never
+   a rule about one task's domain, its hidden tests or its criteria: the evals' tasks stand for all
+   work, and a fix for one of them only games the evals.
+5. For a skill-loaded evals run: a skill loads by its `description`. Propose a description that makes the failing
+   cases pass without breaking the ones that pass, in the skill's `skill-loaded-evals.json`.
+
+---
+
+## OUTPUT
+
+Markdown, at most five proposals, the one that would help most first. Each one:
+
+```
+## <what to change, in a few words>
+
+**Why:** <the reason that kept coming back, in which runs, and since which evals>
+**File:** <path>
+**Change:** <the text to add or replace, as it would be in the file>
+```
+
+If nothing comes back often enough to be more than chance, say that in one line instead.
+````
+
+</details>
+
+Undo your change in a new terminal:
 
 ```bash
 git checkout .agents/skills/testing/SKILL.md
@@ -139,11 +204,11 @@ Each run works in a copy of your repository, with your last commit and the task'
 
 <FlowsWatch scene="lab13-e2e-start" />
 
-To look without starting anything: press `←` to switch to **E2E**, then `s`. You can pick all tasks or one. Press `Esc` to close the dialog.
-
 Here is one of our end-to-end evals, all 5 tasks:
 
 <FlowsWatch scene="lab13-e2e-results" />
+
+The results are summed up in four metrics:
 
 - **Quality**: runs accepted, 8 of 15.
 - **Reliability**: tasks with all 3 runs accepted, 1 of 5. Only these are candidates for unattended work.
