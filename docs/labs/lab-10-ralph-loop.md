@@ -6,9 +6,9 @@ The longer an agent session runs, the worse it gets: the context fills up with o
 
 - Each run takes one small step on the ticket, one acceptance criterion, tested and committed.
 - The agent forgets everything between runs. `.harness/progress.md`, the same file as in [Structured agentic workflows](./lab-4-structured-agentic-workflows.md), and the git history are its memory.
-- After each run, a **judge** checks the step: first plain code (did it commit, do the tests pass, did it leave the skills and the harness alone?), then a read-only agent with the `judge` skill. The agent and the judge use the same checklist, the `change-quality` skill. A rejected step goes back to the next run as feedback.
-- The loop runs on Sonnet, its judge on Opus: a weaker judge would approve bad work.
-- The loop commits on its own branch, `agent/<ticket>`, and stops when the ticket is `done`, or when the judge rejects 3 runs in a row.
+- After each run, a **judge** checks the step: first plain code (did it commit, do the tests pass, did it leave the skills and the harness alone?), then a read-only agent with the `judge` skill. A rejected step goes back to the next run as feedback.
+- The implementor runs on Sonnet, its judge on Opus: a weaker judge would approve bad work.
+- The loop stops when the ticket is `done`, after a maximum of 30 runs, or when the judge rejects 3 runs in a row.
 
 <RalphDiagram />
 
@@ -25,12 +25,10 @@ task lab/ralph-loop
 >
 > [![Open Lab 10 in GitHub Codespaces](https://github.com/codespaces/badge.svg)](https://codespaces.new/Zuehlke/ai-augmented-software-engineering?ref=lab%2Fralph-loop)
 
-The branch contains the tracer-bullet `backlog/`. Only TICKET-1 (normalize the delay data model) is `ready`.
-
 > [!IMPORTANT]
 > The agent runs unattended, with permission prompts turned off. The sandbox keeps this safe: the agent can change files and commit, but has no network access. Never run an unattended agent without it. It also needs the [agent token from the setup](/getting-started/setup#agent-token).
 
-In **terminal 1**, start Temporal and the worker, and open `flows watch`. Press `a` there to switch to GitHub Copilot CLI if you use it. Use **terminal 2** to look at the code.
+Start Temporal and the worker, and open `flows watch`. Press `a` there to switch to GitHub Copilot CLI if you use it.
 
 ```bash
 task flows:start
@@ -39,16 +37,18 @@ task flows:watch
 
 ### 1. One run, watching
 
+The branch contains the tracer-bullet `backlog/`. Only TICKET-1 (normalize the delay data model) is `ready`.
+
 <FlowsWatch scene="lab10-one-run" />
 
-Press `Tab` for the board, select TICKET-1 in **Ready**, press `s`, then `1` for one run. `Tab` back to watch the agent take a step and the judge check it. Then look at the loop's branch in terminal 2:
+Press `Tab` for the board, select TICKET-1 in **Ready**, press `s`, then `1` for one run. `Tab` back to watch the agent take a step and the judge check it. Look at the progress after 1 loop in a new terminal:
 
 ```bash
 git log --oneline -3 agent/ticket-1
 git show agent/ticket-1:.harness/progress.md
 ```
 
-Is the step small, one acceptance criterion with its test? Could the next run continue from `.harness/progress.md` alone? If not, improve `.agents/skills/implement/SKILL.md` and commit it. Then throw the run away, so the next one starts fresh with your skill: on the board, open TICKET-1 with `Enter`, press `x`, then `y`.
+Throw the run away, so the next one starts fresh: on the board, open TICKET-1 with `Enter`, press `x`, then `y`.
 
 <FlowsWatch scene="lab10-discard" />
 
@@ -128,20 +128,18 @@ You work on one ticket in `backlog/`, one small step per run. You don't remember
 
 ### 2. Let it loop
 
-<FlowsWatch scene="lab10-loop" />
+This time, the loop doesn't stop after one run: it loops until the ticket is `done`. Select TICKET-1 on the board, press `s`, then `y`. Each run continues where the last one stopped.
 
-Select TICKET-1 on the board, press `s`, then `y`. The loop continues where the last run stopped, until the ticket is done.
+<FlowsWatch scene="lab10-loop" />
 
 > [!IMPORTANT]
 > When the judge can't decide alone, for example because the ticket contradicts the code, the loop waits for you. Press `n`, type your answer, for example `Keep the flat flights table until TICKET-4.`, and press `Enter`. The next run gets it.
-
-Quitting `flows watch` with `q` doesn't stop the loop: it runs in Temporal.
 
 ### 3. Check the result
 
 <FlowsWatch scene="lab10-merge" />
 
-When the ticket is done, its card waits for you with `ready to merge`. Open it with `Enter`, press `m` to see the commits, and `y` to bring them onto your branch. In terminal 2:
+When the ticket is done, its card waits for you with `ready to merge`. Open it with `Enter`, press `m` to see the commits, and `y` to bring them onto your branch. Then quit `flows watch` with `q`:
 
 ```bash
 git log --oneline
