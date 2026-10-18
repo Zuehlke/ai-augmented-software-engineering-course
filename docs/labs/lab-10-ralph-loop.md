@@ -126,6 +126,42 @@ You work on one ticket in `backlog/`, one small step per run. You don't remember
 
 </details>
 
+<details>
+<summary>The Ralph loop in the harness</summary>
+
+Each run starts a fresh agent with the same prompt, then the judge checks it. Its verdict decides what happens next:
+
+```ts
+// .harness/src/workflows/phase.ts (excerpt)
+for (let run = 1; run <= phase.maxRuns; run++) {
+  await setFeedback(workDir, feedback); // .harness/run/feedback.md, the agent reads it first
+  const before = await headCommit(workDir);
+  // The agent takes one step, with a fresh context
+  await runAgent({ repoDir, workDir, agent, mode: 'write', model: MODELS[phase.name], step: phase.name, prompt });
+
+  // The judge checks the step: first plain code (commit, tests), then a read-only agent
+  verdict = await judge(repoDir, workDir, agent, phase, before, status);
+
+  switch (verdict.kind) {
+    case 'PASS':
+      if (await phase.done()) return; // the ticket is done
+      failures = 0;
+      feedback = null; // more to do: the next run takes the next step
+      break;
+    case 'RETRYABLE':
+      failures++;
+      feedback = `The judge rejected your work: ${verdict.reason}`;
+      break;
+    case 'AMBIGUOUS': // the loop waits for your answer
+      feedback = `The judge asked: ${verdict.reason}\nA human answered: ${await askHuman(verdict.reason)}`;
+      break;
+  }
+  if (failures >= MAX_FAILURES) throw ApplicationFailure.nonRetryable(`Stuck: ${failures} runs in a row rejected`);
+}
+```
+
+</details>
+
 ### 2. Let it loop
 
 This time, the loop doesn't stop after one run: it loops until the ticket is `done`. Select TICKET-1 on the board, press `s`, then `y`. Each run continues where the last one stopped.
