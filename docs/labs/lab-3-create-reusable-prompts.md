@@ -25,6 +25,7 @@ After the command is finished, complete the following tasks:
 - Make the skill invocable only by the user, not by other agents, via its frontmatter.
 - Invoke the skill to create the specification for:
   - `GET /delays?airline_code=AA&limit=50`
+- Check the specification it writes to `specs/<slug>/specification.md`.
 
 > [!NOTE]
 > The `TODO` markers in the relevant files will help you get started.
