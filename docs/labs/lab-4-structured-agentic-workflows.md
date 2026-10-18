@@ -10,8 +10,6 @@ In the last lab, the `research` skill turned a requirement into a specification.
 | design | `design` | `specs/<slug>/design.md`: which modules, endpoints and tests change |
 | implement | `implement` | the code, and `.harness/progress.md`: which criteria are met and which decisions were made |
 
-Every phase starts in a **new session**. It doesn't remember the previous phase: the handoff files are the only thing passed on. The specification and the design describe the feature, so they stay in `specs/<slug>/`. The progress only matters while the work is going on: it goes to `.harness/progress.md`, and is deleted when every acceptance criterion is met. From Lab 10 on, the agents that work unattended keep their progress in the same file. That keeps each session's context small and focused, and the files show you exactly what one phase hands to the next. The `handoff-writing` skill defines their format.
-
 ## Your Task
 
 Start the lab setup with the following command:
@@ -31,7 +29,7 @@ After the command is finished, complete the following tasks:
 - Implement the same endpoint again using the research → design → implement workflow, **each skill in a new session** (`/clear` or a new chat):
   - `GET /delays?airline_code=AA&limit=50`
 - After each phase, read the file it wrote: could the next phase work from it alone?
-- While `implement` runs, stop it after the first acceptance criterion is met. Start a new session and invoke `implement` again: it should continue from `.harness/progress.md` instead of starting over.
+- While `implement` runs, it writes its progress to `.harness/progress.md`.
 
 > [!NOTE]
 > The `TODO` markers in the relevant files will help you get started.
