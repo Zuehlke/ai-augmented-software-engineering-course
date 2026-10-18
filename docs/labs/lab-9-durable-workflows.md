@@ -16,7 +16,7 @@ You start and follow everything in the terminal UI. Behind it are these Temporal
   { boxes: [[30, 12, 11, 1]], lx: 30, ly: 14, label: 'Query', text: 'asks a running workflow how far it is.\nCalled via `flows status`.' },
 ]" />
 
-In this lab, you start one workflow: the **plan agent** turns a specification into tickets, with the `plan` skill from [Tracer bullets](./lab-8-tracer-bullets.md).
+In this lab, we do a simple activity: the **plan agent** turns a specification into tickets with the `plan` skill from [Tracer bullets](./lab-8-tracer-bullets.md). Temporal runs it, and you follow it in the terminal UI.
 
 ## Your Task
 
@@ -48,17 +48,17 @@ This starts a local Temporal server and the worker in the background. Temporal a
 task flows:watch
 ```
 
-<FlowsWatch scene="lab9-watch" />
-
 At the top, the tabs: **Pipeline** and **Board**, which `Tab` switches between, and whether Temporal and the worker run. Below, the four phases from research to merge, the workflows that run, and the agents' output, which `↑` and `↓` scroll. The agents use Claude Code: press `a` to switch to GitHub Copilot CLI.
+
+<FlowsWatch scene="lab9-watch" />
 
 ### 3. Run the plan agent
 
+The branch has a specification, `specs/delays-csv-export/specification.md`: support staff want to download the current delays as a CSV file. Press `→` to select **Plan**, press `Enter`, pick the specification and press `Enter` again.
+
 <FlowsWatch scene="lab9-plan" />
 
-The branch has a specification, `specs/delays-csv-export/specification.md`: support staff want to download the current delays as a CSV file. Press `→` to select **Plan**, press `Enter`, pick the specification and press `Enter` again. That's `flows plan --spec specs/delays-csv-export/specification.md`.
-
-`flows watch` started a **workflow**, `plan`, under **Other workflows**. Its agent run is an **activity**: the **worker** runs it, and its output shows below. The plan agent works on a branch of its own, and at the end, the workflow brings its tickets onto yours.
+This will start a simple workflow in Temporal.
 
 > [!NOTE]
 > The plan agent only sees what's committed. Commit or stash your changes before you start it.
@@ -67,11 +67,8 @@ In the web UI, click `plan` to see its history: every finished step, with its re
 
 ### 4. Check the result
 
+When the workflow is done, press `Tab`: the board shows the new tickets next to the four from Lab 8. Select one and press `Enter` to read it.
+
 <FlowsWatch scene="lab9-board" />
 
-When the workflow is done, press `Tab`: the board shows the new tickets next to the four from Lab 8. Select one and press `Enter` to read it. Check them as you did in Lab 8: is every ticket a vertical slice, and does every `blocked` ticket name what blocks it?
-
 In the next lab, a workflow changes code.
-
-> [!NOTE]
-> `task lab/...` stops the workflows of the lab you leave and clears them from `flows watch`, so every lab starts empty. Branches with unmerged agent work stay.
