@@ -2,11 +2,9 @@
 
 ## Context
 
-A feature request describes what should happen, not the tickets to build it. Splitting it by hand is slow, and everyone does it differently: blockers get missed, and features get split by layer instead of into slices you can demo on their own.
+A feature request says what should happen, not how to split it into tickets. Done by hand, that's slow and inconsistent: blockers get missed, and work gets split by layer instead of into slices you can demo.
 
-A `plan` skill does it the same way every time. It finds the work that must come first (a schema change, a missing dataset, an open decision), makes every blocker explicit, and slices the rest into vertical tracer-bullet tickets that each go through every layer they touch.
-
-`plan` is the step after `research` from [Structured agentic workflows](./lab-4-structured-agentic-workflows.md): `research` turns a requirement into a specification, `plan` turns a specification or feature request that's too big for one agent session into tickets. Each ticket has the same shape as a specification: a title that names the outcome, a sentence or two of context, and testable acceptance criteria.
+The `plan` skill splits it the same way every time. It first lists the blockers, such as a schema change or an open decision. Then it slices the rest into vertical tracer-bullet tickets: each one goes through every layer it touches.
 
 ## Your Task
 
@@ -69,10 +67,12 @@ situation", without knowing the query API.
 
 </details>
 
-After the skill proposes a breakdown, complete the following tasks:
+When the skill has written the tickets, review them in `backlog/`:
 
-- Review the numbered breakdown before confirming it: does the granularity feel right, is every blocker one that genuinely gates the ticket, would you have caught a missing blocker?
-- Confirm, and check the tickets it writes to `backlog/`: does every `ready` ticket actually have no dependency on something not yet landed? Does every ticket cut a full vertical slice, or did anything sneak in as a horizontal layer?
+- <label><input type="checkbox"> Does each ticket go through every layer it touches, such as schema, service, and endpoint?</label>
+- <label><input type="checkbox"> Can you demo or verify each ticket on its own once it's done?</label>
+- <label><input type="checkbox"> Is prefactoring, such as a schema change, its own ticket, ordered before the tickets that need it?</label>
+- <label><input type="checkbox"> Is a ticket only `ready` when nothing blocks it?</label>
 
 ## Solution
 
