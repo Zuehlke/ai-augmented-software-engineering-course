@@ -10,8 +10,12 @@ Choose one setup option and follow the steps.
 - [GitHub](https://github.com/) account
 - Active [GitHub Copilot](https://github.com/features/copilot) or [Claude Code](https://claude.com/de/product/claude-code) license
 
+<OnlyOn platform="gitlab">
+
 > [!IMPORTANT] Don't have a license yet?
 > Request one [here](https://ticket.zuehlke.com/support/catalog/items/570).
+
+</OnlyOn>
 
 ### 2. Open the course in GitHub Codespaces
 
@@ -104,8 +108,12 @@ echo ${CLAUDE_CODE_OAUTH_TOKEN:+set} ${COPILOT_GITHUB_TOKEN:+set}
 - [VS Code](https://code.visualstudio.com/download) including the [Dev Containers extension](https://marketplace.visualstudio.com/items?itemName=ms-vscode-remote.remote-containers)
 - [GitHub Copilot](https://github.com/features/copilot) or [Claude Code](https://claude.com/de/product/claude-code) license active and ready to use in your IDE or CLI
 
+<OnlyOn platform="gitlab">
+
 > [!IMPORTANT] Don't have a license yet?
 > Request one [here](https://ticket.zuehlke.com/support/catalog/items/570).
+
+</OnlyOn>
 
 ### 2. Clone and open in VS Code
 
@@ -203,8 +211,12 @@ echo ${CLAUDE_CODE_OAUTH_TOKEN:+set} ${COPILOT_GITHUB_TOKEN:+set}
 - [IntelliJ IDEA](https://www.jetbrains.com/idea/download/) including the [Dev Containers plugin](https://www.jetbrains.com/help/idea/connect-to-devcontainer.html)
 - [GitHub Copilot](https://github.com/features/copilot) or [Claude Code](https://claude.com/de/product/claude-code) license active and ready to use in your IDE or CLI
 
+<OnlyOn platform="gitlab">
+
 > [!IMPORTANT] Don't have a license yet?
 > Request one [here](https://ticket.zuehlke.com/support/catalog/items/570).
+
+</OnlyOn>
 
 ### 2. Clone and open in IntelliJ IDEA
 
