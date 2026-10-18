@@ -133,12 +133,4 @@ The change is done only when every modified Java artifact is accounted for again
 </details>
 
 > [!NOTE]
-> Claude Code uses `CLAUDE.md` rather than `AGENTS.md`. Rename `AGENTS.md` to `CLAUDE.md` if you want to use Claude Code.
-> If you want one shared source of truth across tools, create a symlink:
->
-> ```bash
-> # Create a symlink from AGENTS.md to CLAUDE.md
-> ln -s AGENTS.md CLAUDE.md
-> ```
-> 
 > Claude Code looks for skills in `.claude/skills` rather than `.agents/skills`. The branch has a symlink, `.claude/skills` → `.agents/skills`, so Claude Code uses the same files. There is nothing to rename.
