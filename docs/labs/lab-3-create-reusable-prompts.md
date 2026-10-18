@@ -22,6 +22,7 @@ task lab/research
 After the command is finished, complete the following tasks:
 
 - Describe the task in `.agents/skills/research/SKILL.md`: critically review requirements, surface gaps, refine requirements, and write an improved specification.
+- Make the skill invocable only by the user, not by other agents, via its frontmatter.
 - Invoke the skill to create the specification for:
   - `GET /delays?airline_code=AA&limit=50`
 
