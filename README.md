@@ -24,7 +24,8 @@ This starts the VitePress dev server on <http://localhost:5174>.
 | --- | --- | --- |
 | `VITE_DAY1_LABS_ENABLED` | `true` (default) / `false` | Show Labs 1-6 |
 | `VITE_DAY2_LABS_ENABLED` | `true` (default) / `false` | Show Labs 7-13 |
-| `VITE_DAY1_PASSWORD` / `VITE_DAY2_PASSWORD` | any text | Password for an enabled day |
+| `VITE_DAY1_PASSWORD` | `promptAndPray` | Password for Labs 1-6 |
+| `VITE_DAY2_PASSWORD` | `shipIt` | Password for Labs 7-13 |
 | `VITE_HOSTING_PLATFORM` | `gitlab` (default) / `github` | Show platform-specific content |
 
 Set them as CI/CD variables in GitLab (or in `.gitlab-ci.yml`), or locally in `docs/.env`:
