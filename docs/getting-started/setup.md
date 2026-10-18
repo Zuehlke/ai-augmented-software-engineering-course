@@ -109,10 +109,22 @@ echo ${CLAUDE_CODE_OAUTH_TOKEN:+set} ${COPILOT_GITHUB_TOKEN:+set}
 
 ### 2. Clone and open in VS Code
 
+<OnlyOn platform="gitlab">
+
+```bash
+git clone https://codehub.zuehlke.com/ai-augmented-software-engineering/lab.git
+cd lab
+```
+
+</OnlyOn>
+<OnlyOn platform="github">
+
 ```bash
 git clone https://github.com/Zuehlke/ai-augmented-software-engineering.git
 cd ai-augmented-software-engineering
 ```
+
+</OnlyOn>
 
 Open the project folder in VS Code. 
 When being asked, select **Dev Containers: Reopen in Container**. The `.devcontainer/devcontainer.json`
@@ -196,10 +208,22 @@ echo ${CLAUDE_CODE_OAUTH_TOKEN:+set} ${COPILOT_GITHUB_TOKEN:+set}
 
 ### 2. Clone and open in IntelliJ IDEA
 
+<OnlyOn platform="gitlab">
+
+```bash
+git clone https://codehub.zuehlke.com/ai-augmented-software-engineering/lab.git
+cd lab
+```
+
+</OnlyOn>
+<OnlyOn platform="github">
+
 ```bash
 git clone https://github.com/Zuehlke/ai-augmented-software-engineering.git
 cd ai-augmented-software-engineering
 ```
+
+</OnlyOn>
 
 Open the project folder in IntelliJ IDEA.
 When being asked, select **Reopen in Container**. The `.devcontainer/devcontainer.json`

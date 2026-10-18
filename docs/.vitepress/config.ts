@@ -5,10 +5,13 @@ const rawBase = process.env.PAGES_BASE ?? "/";
 const normalizedBase = rawBase.trim().replace(/^\/+|\/+$/g, "");
 const base = normalizedBase ? `/${normalizedBase}/` : "/";
 // Also reads docs/.env (git-ignored) so the passwords can be set locally.
-const accessControl = resolveAccessControlFromEnv({
+const env = {
   ...loadEnv(process.env.NODE_ENV ?? "development", process.cwd(), "VITE_"),
   ...process.env,
-});
+};
+const accessControl = resolveAccessControlFromEnv(env);
+// "gitlab" or "github": lets pages show platform-specific content.
+const hostingPlatform = env.VITE_HOSTING_PLATFORM === "github" ? "github" : "gitlab";
 // Locked days are left out of the navbar and sidebar.
 const labsLink = accessControl.day1LabsEnabled
   ? "/labs/lab-1-vibe-coding"
@@ -36,6 +39,7 @@ export default defineConfig({
   ignoreDeadLinks: [/^https?:\/\/localhost/],
   themeConfig: {
     accessControl,
+    hostingPlatform,
     nav: [
       { text: "Getting Started", link: "/getting-started/setup" },
       ...(labsLink ? [{ text: "Labs", link: labsLink }] : []),

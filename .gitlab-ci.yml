@@ -23,9 +23,11 @@ variables:
   # Labs 1-6 (day 1) and labs 7-13 (day 2) are toggled separately.
   VITE_DAY1_LABS_ENABLED: true
   VITE_DAY2_LABS_ENABLED: true
-  # It's only a course ;)
+  # Password to access the lab and resources. It's only a course ;)
   VITE_DAY1_PASSWORD: promptAndPray
   VITE_DAY2_PASSWORD: shipIt
+  # Where the docs are deployed: gitlab or github.
+  VITE_HOSTING_PLATFORM: gitlab
 
 # Build docs on merge requests — fails pipeline on broken pages/links.
 docs-build:

@@ -18,20 +18,30 @@ npm run dev
 
 This starts the VitePress dev server on <http://localhost:5174>.
 
-## Release content during the course
+## Configuration
 
-Toggles (`true`/`false`, default `true`):
+| Variable | Values | Effect |
+| --- | --- | --- |
+| `VITE_DAY1_LABS_ENABLED` | `true` (default) / `false` | Show Labs 1-6 |
+| `VITE_DAY2_LABS_ENABLED` | `true` (default) / `false` | Show Labs 7-13 |
+| `VITE_DAY1_PASSWORD` / `VITE_DAY2_PASSWORD` | any text | Password for an enabled day |
+| `VITE_HOSTING_PLATFORM` | `gitlab` (default) / `github` | Show platform-specific content |
 
-- `VITE_DAY1_LABS_ENABLED`: Labs 1-6
-- `VITE_DAY2_LABS_ENABLED`: Labs 7-13
-
-A disabled day is hidden from the navigation. An enabled day asks for the password in `VITE_DAY1_PASSWORD` / `VITE_DAY2_PASSWORD`.
-
-Set the toggles and passwords in GitLab as CI/CD variables (or in the `variables` block of `.gitlab-ci.yml`), or locally in `docs/.env` (git-ignored):
+Set them as CI/CD variables in GitLab (or in `.gitlab-ci.yml`), or locally in `docs/.env`:
 
 ```bash
 VITE_DAY2_LABS_ENABLED=false
-VITE_DAY1_PASSWORD=...
+VITE_HOSTING_PLATFORM=github
+```
+
+Show content for one platform only:
+
+```md
+<OnlyOn platform="gitlab">
+
+Only shown on GitLab.
+
+</OnlyOn>
 ```
 
 ## Contributing
