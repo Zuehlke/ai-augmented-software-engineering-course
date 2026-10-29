@@ -125,11 +125,11 @@ cd lab
 ```
 
 </OnlyOn>
-<OnlyOn platform="github">
+<OnlyOn platform="zulu">
 
 ```bash
-git clone https://github.com/Zuehlke/ai-augmented-software-engineering.git
-cd ai-augmented-software-engineering
+git clone https://gitlab.zuluplane.io/ai-augmented-software-engineering-finstar/labs.git
+cd labs
 ```
 
 </OnlyOn>
@@ -228,11 +228,11 @@ cd lab
 ```
 
 </OnlyOn>
-<OnlyOn platform="github">
+<OnlyOn platform="zulu">
 
 ```bash
-git clone https://github.com/Zuehlke/ai-augmented-software-engineering.git
-cd ai-augmented-software-engineering
+git clone https://gitlab.zuluplane.io/ai-augmented-software-engineering-finstar/labs.git
+cd labs
 ```
 
 </OnlyOn>

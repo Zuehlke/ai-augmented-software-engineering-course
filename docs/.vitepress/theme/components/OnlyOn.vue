@@ -3,7 +3,7 @@ import { useData } from "vitepress";
 
 // Shows its content only when the docs are deployed to the given platform.
 defineProps<{
-  platform: "gitlab" | "github";
+  platform: "gitlab" | "zulu";
 }>();
 
 const { theme } = useData();
