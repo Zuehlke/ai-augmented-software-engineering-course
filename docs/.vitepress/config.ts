@@ -1,7 +1,13 @@
 import { defineConfig, loadEnv } from "vitepress";
 import { resolveAccessControlFromEnv } from "./theme/access-control";
 
-const rawBase = process.env.PAGES_BASE ?? "/";
+const rawBase = (() => {
+  if (process.env.CI_PAGES_URL) {
+    return new URL(process.env.CI_PAGES_URL).pathname;
+  }
+
+  return process.env.PAGES_BASE ?? "/";
+})();
 const normalizedBase = rawBase.trim().replace(/^\/+|\/+$/g, "");
 const base = normalizedBase ? `/${normalizedBase}/` : "/";
 // Also reads docs/.env (git-ignored) so the passwords can be set locally.

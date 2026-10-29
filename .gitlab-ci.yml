@@ -28,6 +28,11 @@ variables:
   VITE_DAY2_PASSWORD: shipIt
   # Where the docs are deployed: gitlab or github.
   VITE_HOSTING_PLATFORM: gitlab
+  # GitLab Pages can serve the project under a unique domain suffix such as
+  # /ai-augmented-software-engineering-934f4e/. Let VitePress use the actual
+  # deployed path, not a guessed project slug.
+  CI_PAGES_URL: "$CI_PAGES_URL"
+  PAGES_BASE: "$CI_PAGES_URL"
 
 # Build docs on merge requests — fails pipeline on broken pages/links.
 docs-build:
@@ -47,8 +52,9 @@ pages:
   rules:
     - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
   variables:
-    # Serve assets from project subpath, e.g. /course/. Derived from project slug.
-    PAGES_BASE: "/$CI_PROJECT_NAME/"
+    # Use GitLab's actual Pages URL, which may include a unique-domain suffix
+    # such as /ai-augmented-software-engineering-934f4e/.
+    PAGES_BASE: "$CI_PAGES_URL"
   script:
     - cd docs && npm ci && npm run build
   artifacts:
