@@ -73,8 +73,8 @@ export default defineConfig({
         text: 'Day 2 · Labs <span class="sidebar-tag-new">New</span>',
         items: [
           { text: "Lab 7 · Sandboxing", link: "/labs/lab-7-sandboxing" },
-          { text: "Lab 8 · Tracer Bullets", link: "/labs/lab-8-tracer-bullets" },
-          { text: "Lab 9 · Durable Workflows", link: "/labs/lab-9-durable-workflows" },
+          { text: "Lab 8 · Durable Workflows", link: "/labs/lab-8-durable-workflows" },
+          { text: "Lab 9 · Tracer Bullets", link: "/labs/lab-9-tracer-bullets" },
           { text: "Lab 10 · Ralph Loop", link: "/labs/lab-10-ralph-loop" },
           { text: "Lab 11 · Parallelizing Work", link: "/labs/lab-11-parallelizing-work" },
           { text: "Lab 12 · Orchestration", link: "/labs/lab-12-orchestration" },

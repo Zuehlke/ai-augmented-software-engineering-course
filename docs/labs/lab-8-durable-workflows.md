@@ -1,14 +1,14 @@
-# Lab 9 · Durable Workflows
+# Lab 8 · Durable Workflows
 
 ## Context
 
-From here on, agents run unattended: in a loop, in parallel, in a pipeline. The harness in `.harness/` starts them and decides what comes next. It runs on [Temporal](https://temporal.io/), so when something crashes, the work goes on where it stopped.
+From here on, agents mostly run unattended: in a loop, in parallel, in a pipeline. The harness in `.harness/` starts them and decides what comes next. It runs on [Temporal](https://temporal.io/), so when something crashes, the work goes on where it stopped.
 
 This lab gets you comfortable with Temporal and the `flows` command you'll use in all the upcoming labs. Every interaction with Temporal is a `flows` command, such as `flows start`, `flows status` or `flows approve`. For this course, we also built a simple UI on top of them, `flows watch`, to better illustrate an agentic pipeline and its concepts.
 
 You start and follow everything on that page. Behind it are these Temporal concepts:
 
-<FlowsWatch scene="lab9-research" :notes="[
+<FlowsWatch scene="lab8-research" :notes="[
   { at: 'temporal', label: 'Temporal', text: 'remembers every workflow and step, so work survives a crash.\nCalled via `temporal server start-dev`.' },
   { at: 'worker', label: 'Worker', text: 'the process that runs the workflows and activities.\nCalled via `flows worker`.' },
   { at: 'map', label: 'Workflow', text: 'decides which step runs next. The four stages are one workflow.\nCalled via `flows start`.' },
@@ -29,7 +29,7 @@ task lab/durable-workflows
 > [!IMPORTANT]
 > If you work in **GitHub Codespaces**, open a **new Codespace** on branch `lab/durable-workflows`.
 >
-> [![Open Lab 9 in GitHub Codespaces](https://github.com/codespaces/badge.svg)](https://codespaces.new/Zuehlke/ai-augmented-software-engineering?ref=lab%2Fdurable-workflows)
+> [![Open Lab 8 in GitHub Codespaces](https://github.com/codespaces/badge.svg)](https://codespaces.new/Zuehlke/ai-augmented-software-engineering?ref=lab%2Fdurable-workflows)
 
 > [!NOTE]
 > The agents in this lab run unattended, so they need the [agent token from the setup](/getting-started/setup#agent-token).
@@ -52,17 +52,59 @@ Open [http://localhost:8234](http://localhost:8234). In **GitHub Codespaces**, o
 
 At the top, whether Temporal and the worker run. Below, the four stages from research to merge, the loops that run, and the agents' output. Hover over a part to see the command behind it. The agents use Claude Code: click **Copilot** next to **Agent** to switch to GitHub Copilot CLI.
 
-<FlowsWatch scene="lab9-watch" />
+<FlowsWatch scene="lab8-watch" />
 
 ### 3. Run the research agent
 
 Click the **Research** box, paste the feature request and click **Start the pipeline**:
 
-```text
-Support staff want to download the current delays as a CSV file to open in a spreadsheet, optionally only the flights of one airline.
+<details>
+<summary>Feature request: Flight Delays Dashboard</summary>
+
+```markdown
+# Flight Delays Dashboard
+
+## Problem
+
+Ops and support staff currently query the raw `/delays` endpoint by hand to answer basic questions:
+"is this flight delayed", "how is this airline doing today". There's no airline-level view and no
+per-flight status view, just one flat query.
+
+## Goal
+
+Give support staff a simple web page to answer, per airline and per flight, "what's the current delay
+situation", without knowing the query API.
+
+## Scope
+
+1. **Airline overview** — for a given airline code, show its name and how many of its flights are
+   currently active or scheduled.
+2. **Flight status lookup** — for a given flight id, show its current status (on time / delayed /
+   cancelled) and its delay in minutes.
+3. **Airport reference data** — flights should show departure/arrival airport name, city, and
+   timezone, not just IATA codes.
+4. **Data model cleanup** — the current delay storage is one flat table; supporting (1)-(3)
+   correctly and efficiently needs it normalized into separate airline/flight/delay-event tables.
+5. **Simple UI** — one plain HTML page served by the app itself (no frontend framework, no separate
+   build), with a search box for an airline code and one for a flight id. The views from (1)-(3) are
+   shown on this page, not only exposed as endpoints.
+
+## Non-goals
+
+- No real-time push or streaming updates in this iteration.
+- Ops/support tooling only, not a customer-facing UI: no styling beyond the basics, no login.
+
+## Constraints
+
+- Airport reference data (city, timezone per IATA code) isn't available in-house yet; the data team
+  has been asked for a dataset export but has given no ETA.
+- Any schema change to delay storage requires architecture review sign-off before implementation
+  starts; that review is scheduled but not yet complete.
 ```
 
-<FlowsWatch scene="lab9-research" />
+</details>
+
+<FlowsWatch scene="lab8-research" />
 
 This will start the pipeline workflow in Temporal. In this lab, it only goes as far as the research agent.
 
@@ -75,7 +117,7 @@ In the Temporal web UI, click `pipeline` to see its history: every finished step
 
 When the research agent and its judge are done, the pipeline waits for you: the bar at the top asks you to approve the specification. Read it in `specs/<slug>/specification.md`, on your branch. The research agent picks the `<slug>`.
 
-<FlowsWatch scene="lab9-specification" />
+<FlowsWatch scene="lab8-specification" />
 
 Don't approve it: leave the pipeline waiting. It now does nothing until you decide, and that survives a restart. Stop Temporal and the worker:
 
@@ -85,4 +127,4 @@ task flows:stop
 
 The page shows both as not running. Start them again with `task flows:start`: the pipeline still waits for your approval, at the same step. The next lab stops it when you switch to it.
 
-In the next lab, a workflow changes code.
+In the next lab, you cut a specification like this one into tasks.

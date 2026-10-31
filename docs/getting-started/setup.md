@@ -49,10 +49,10 @@ After your application successfully started, you should be able to access the Sw
 
 ### 5. Agent token {#agent-token}
 
-From Lab 9 on, agents run unattended in [Temporal workflows](/labs/lab-9-durable-workflows), and nobody is there to log in for them. Set up a token once, so every agent run and every new terminal is already logged in.
+From Lab 8 on, agents run unattended in [Temporal workflows](/labs/lab-8-durable-workflows), and nobody is there to log in for them. Set up a token once, so every agent run and every new terminal is already logged in.
 
 > [!NOTE]
-> You only need this step if you attend the second course day, from Lab 9 on. If you only attend the first day, you can skip it.
+> You only need this step if you attend the second course day, from Lab 8 on. If you only attend the first day, you can skip it.
 
 **Create a token**
 
@@ -150,10 +150,10 @@ After your application successfully started, you should be able to access the Sw
 
 ### 4. Agent token {#agent-token-vscode}
 
-From Lab 9 on, agents run unattended in [Temporal workflows](/labs/lab-9-durable-workflows), and nobody is there to log in for them. Set up a token once, so every agent run and every new terminal is already logged in.
+From Lab 8 on, agents run unattended in [Temporal workflows](/labs/lab-8-durable-workflows), and nobody is there to log in for them. Set up a token once, so every agent run and every new terminal is already logged in.
 
 > [!NOTE]
-> You only need this step if you attend the second course day, from Lab 9 on. If you only attend the first day, you can skip it.
+> You only need this step if you attend the second course day, from Lab 8 on. If you only attend the first day, you can skip it.
 
 **Create a token**
 
@@ -257,10 +257,10 @@ After your application successfully started, you should be able to access the Sw
 
 ### 4. Agent token {#agent-token-intellij}
 
-From Lab 9 on, agents run unattended in [Temporal workflows](/labs/lab-9-durable-workflows), and nobody is there to log in for them. Set up a token once, so every agent run and every new terminal is already logged in.
+From Lab 8 on, agents run unattended in [Temporal workflows](/labs/lab-8-durable-workflows), and nobody is there to log in for them. Set up a token once, so every agent run and every new terminal is already logged in.
 
 > [!NOTE]
-> You only need this step if you attend the second course day, from Lab 9 on. If you only attend the first day, you can skip it.
+> You only need this step if you attend the second course day, from Lab 8 on. If you only attend the first day, you can skip it.
 
 **Create a token**
 

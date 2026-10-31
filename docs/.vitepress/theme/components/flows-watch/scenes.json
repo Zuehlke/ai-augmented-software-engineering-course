@@ -1104,7 +1104,7 @@
    }
   }
  ],
- "lab9-research": [
+ "lab8-research": [
   {
    "caption": "Click Research, paste the feature request, and start the pipeline",
    "click": [
@@ -1177,7 +1177,7 @@
    }
   }
  ],
- "lab9-specification": [
+ "lab8-specification": [
   {
    "caption": "The pipeline waits for your approval",
    "click": [
@@ -1259,7 +1259,7 @@
    }
   }
  ],
- "lab9-watch": [
+ "lab8-watch": [
   {
    "caption": "Nothing runs yet: the pipeline, the loops, the worker output"
   },

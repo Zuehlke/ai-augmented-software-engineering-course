@@ -40,6 +40,7 @@ The branch continues where the tracer-bullet backlog left off: with TASK-1 done,
 ---
 id: TASK-2
 status: ready
+design: specs/flight-delays-dashboard/design.md
 ---
 
 # Airline overview dashboard
@@ -62,6 +63,7 @@ how many of its flights are currently active or scheduled, without writing any q
 ---
 id: TASK-3
 status: ready
+design: specs/flight-delays-dashboard/design.md
 ---
 
 # Flight status lookup

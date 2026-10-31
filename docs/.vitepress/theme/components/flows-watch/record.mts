@@ -6,7 +6,7 @@
 //   git worktree add /tmp/lab-10 lab/ralph-loop && (cd /tmp/lab-10/.harness && npm ci)
 //   /tmp/lab-10/.harness/node_modules/.bin/tsx .vitepress/theme/components/flows-watch/record.mts /tmp/lab-10/.harness/src 10
 //
-// Lab 9 is lab/durable-workflows, Lab 10 lab/ralph-loop, Lab 11 lab/parallelizing-work, Lab 12 lab/orchestration,
+// Lab 8 is lab/durable-workflows, Lab 10 lab/ralph-loop, Lab 11 lab/parallelizing-work, Lab 12 lab/orchestration,
 // Lab 13 lab/evals. It writes <scene>-<n>-light.webp and -dark.webp per shot, and the shots' captions, what they
 // mark to click next and where the parts are that a note can point at, into scenes.json.
 import { existsSync, readFileSync, readdirSync, rmSync, writeFileSync } from 'node:fs';
@@ -18,8 +18,8 @@ import puppeteer, { type Page } from 'puppeteer-core';
 
 const srcDir = path.resolve(process.argv[2]);
 const lab = process.argv[3];
-const BRANCH = ({ '9': 'lab/durable-workflows', '10': 'lab/ralph-loop', '11': 'lab/parallelizing-work', '12': 'lab/orchestration', '13': 'lab/evals' } as Record<string, string>)[lab];
-if (!BRANCH) throw new Error('Which lab? 9, 10, 11, 12 or 13');
+const BRANCH = ({ '8': 'lab/durable-workflows', '10': 'lab/ralph-loop', '11': 'lab/parallelizing-work', '12': 'lab/orchestration', '13': 'lab/evals' } as Record<string, string>)[lab];
+if (!BRANCH) throw new Error('Which lab? 8, 10, 11, 12 or 13');
 const outDir = path.dirname(fileURLToPath(import.meta.url));
 const { handler } = await import(path.join(srcDir, 'web/server.ts'));
 const { pageState } = await import(path.join(srcDir, 'web/state.ts'));
@@ -66,6 +66,7 @@ class Act {
   }
   async type(selector: string, text: string) {
     await this.page.type(selector, text, { delay: 0 });
+    await this.page.$eval(selector, (el) => (el.scrollTop = 0)); // from its start, as after a paste
   }
   async hover(selector: string) {
     await this.page.hover(selector);
@@ -87,7 +88,8 @@ const TASK_TITLES = ['Normalize delay data model', 'Airline overview dashboard',
 const backlog = (...statuses: string[]) => statuses.map((st, i) => task(i + 1, TASK_TITLES[i], st, i === 3 ? ['TASK-3'] : []));
 const REQUEST =
   'On the dashboard, support staff enter an airport code and see the delayed flights departing from it, with their delay. The dashboard also shows the airlines with the most delayed flights right now, without any search.';
-const CSV_REQUEST = 'Support staff want to download the current delays as a CSV file to open in a spreadsheet, optionally only the flights of one airline.';
+// Lab 8's feature request, the start of it: the page shows that much of it
+const DASHBOARD_REQUEST = '# Flight Delays Dashboard\n\n## Problem\n\nOps and support staff currently query the raw `/delays` endpoint by hand to answer basic questions: "is this flight delayed", "how is this airline doing today". There\'s no airline-level view and no per-flight status view, just one flat query.\n\n## Goal\n\nGive support staff a simple web page to answer, per airline and per flight, "what\'s the current delay situation", without knowing the query API.';
 
 // What the pipeline's agents cost by each step, about what our runs cost with two tasks
 const COST: Record<string, number> = {
@@ -124,27 +126,27 @@ function taskView(s: Snapshot, id: string) {
 const scenes: Record<string, Shot[]> = {};
 const scene = (name: string, shots: Shot[]) => (scenes[name] = shots);
 
-// ── Lab 9: the research agent, started from the page ──────────────────────────────────────────────
-if (lab === '9') {
+// ── Lab 8: the research agent, started from the page ──────────────────────────────────────────────
+if (lab === '8') {
   const working = [
     '[pipeline] == research: claude',
     '[pipeline] Reading the research skill and the feature request',
-    '[pipeline] Looking at GET /delays and its airline filter',
-    '[pipeline] Wrote specs/delays-csv-export/specification.md',
+    '[pipeline] Looking at GET /delays and the flights table',
+    '[pipeline] Wrote specs/flight-delays-dashboard/specification.md',
   ];
   const judged = [...working, '[pipeline] == judge research: claude', '[pipeline] PASS'];
-  const waiting = snap({ pipeline: pipeline('waiting for your specification approval', { specification: 'specs/delays-csv-export/specification.md' }), log: judged });
+  const waiting = snap({ pipeline: pipeline('waiting for your specification approval', { specification: 'specs/flight-delays-dashboard/specification.md' }), log: judged });
 
-  scene('lab9-watch', [
+  scene('lab8-watch', [
     { s: snap({}), caption: 'Nothing runs yet: the pipeline, the loops, the worker output' },
     { s: snap({}), caption: 'Hover over a part to see the command behind it', do: (p) => p.hover('#box-0') },
   ]);
-  scene('lab9-research', [
-    { s: snap({}), caption: 'Click Research, paste the feature request, and start the pipeline', do: async (p) => { await p.clickOn('#box-0'); await p.type('#request', CSV_REQUEST); await p.markButton('Start the pipeline'); } },
+  scene('lab8-research', [
+    { s: snap({}), caption: 'Click Research, paste the feature request, and start the pipeline', do: async (p) => { await p.clickOn('#box-0'); await p.type('#request', DASHBOARD_REQUEST); await p.markButton('Start the pipeline'); } },
     { s: snap({ pipeline: pipeline('researching'), log: working.slice(0, 3) }), caption: 'The research agent writes the specification' },
     { s: snap({ pipeline: pipeline('researching', { judging: true }), log: [...working, '[pipeline] == judge research: claude'] }), caption: 'Its judge checks it' },
   ]);
-  scene('lab9-specification', [
+  scene('lab8-specification', [
     { s: waiting, caption: 'The pipeline waits for your approval', do: (p) => p.markButton('Decide') },
     { s: waiting, caption: 'Decide shows where the specification is. Leave it waiting', do: async (p) => { await p.button('Decide'); await p.markButton('Later'); } },
     { s: snap({ temporal: false, worker: false, log: judged }), caption: 'task flows:stop: Temporal and the worker are gone' },
