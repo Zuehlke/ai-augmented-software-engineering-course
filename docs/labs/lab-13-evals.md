@@ -25,7 +25,7 @@ task lab/evals
 > [!NOTE]
 > The skill-loaded evals need the [agent token from the setup](/getting-started/setup#agent-token). They run with Claude Code, also if you use Copilot otherwise.
 
-Start Temporal and the worker, and open `flows watch`:
+Start Temporal and the worker, and open `flows watch` on [http://localhost:8234](http://localhost:8234):
 
 ```bash
 task flows:start
@@ -66,11 +66,11 @@ None of the prompts mentions a skill. Each skill is checked on its own, so some 
 
 </details>
 
-Press `Tab` until you see **Evals**, the tab this branch adds, then `→` to switch to **Skill loaded**. Press `s`: the dialog shows the 27 runs, every case 3 times, and their cost, unknown the first time. Press `Enter`.
+Click **Evals**, the tab this branch adds. **Skill loaded** is selected: click **Start skill-loaded evals**. It runs every case 3 times, 27 runs.
 
 <FlowsWatch scene="lab13-skills" />
 
-After a few minutes, you see one row per case, with a `✓` for each run that did what the case expects. `not:` marks a prompt the skill shouldn't load for. A case passes when 2 of its 3 runs do, and every case should pass. The trend above adds a column each time you run the evals, so you see when a change breaks something.
+After a few minutes, you see one row per case, with what each of its runs did, and a `✗` for each run that didn't do what the case expects. `should not load` marks a prompt the skill shouldn't load for. A case passes when 2 of its 3 runs do, and every case should pass. The trend at the top adds a bar each time you run the evals, so you see when a change breaks something.
 
 There is no judge: plain code checks the agent's tool calls for whether the skill loaded. That's fast, cheap and repeatable.
 
@@ -82,13 +82,13 @@ When a skill doesn't load often enough, people often make it apply to everything
 description: Use for every task in this repository.
 ```
 
-Skill-loaded evals check your checkout as it is, so there's no need to commit. Press `s` and `Enter` again.
+Skill-loaded evals check your checkout as it is, so there's no need to commit. Click **Run again**.
 
 <FlowsWatch scene="lab13-proposals" />
 
 The trend drops to 6 of 9: the three cases that shouldn't load `testing` now fail. `api-design` still passes.
 
-Because cases failed, an improve agent proposes a better description. Press `p` to read it. Applying it is up to you: agents may not change `.agents/`.
+Because cases failed, an improve agent proposes a better description. Click **Read the proposal** to read it. Applying it is up to you: agents may not change `.agents/`.
 
 <details>
 <summary><code>.agents/skills/improve/SKILL.md</code>, the skill the improve agent uses</summary>

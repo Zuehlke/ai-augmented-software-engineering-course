@@ -1,0 +1,1326 @@
+{
+ "lab10-discard": [
+  {
+   "caption": "Click the loop: its task, and what you can do with it",
+   "click": [
+    43.7,
+    76.8,
+    7.3,
+    4.1
+   ]
+  },
+  {
+   "caption": "Throw away removes its worktree and branch",
+   "click": [
+    59.4,
+    54.5,
+    7.3,
+    4.1
+   ]
+  },
+  {
+   "caption": "The next run starts fresh",
+   "anchors": {
+    "temporal": [
+     74.3,
+     1.9,
+     4.7,
+     2.3
+    ],
+    "worker": [
+     80.2,
+     1.9,
+     3.8,
+     2.3
+    ],
+    "map": [
+     1.8,
+     17.9,
+     96.5,
+     42.2
+    ],
+    "stages": [
+     12.6,
+     17.9,
+     85.6,
+     4.8
+    ],
+    "steps": [
+     12.6,
+     22.8,
+     85.6,
+     9.5
+    ],
+    "box": [
+     12.6,
+     32.3,
+     8.5,
+     11.4
+    ],
+    "loops": [
+     12.6,
+     69.8,
+     85.6,
+     6.7
+    ],
+    "log": [
+     12.6,
+     79.5,
+     85.6,
+     20.5
+    ],
+    "needs": [
+     1.8,
+     9.2,
+     96.5,
+     5.6
+    ]
+   }
+  }
+ ],
+ "lab10-loop": [
+  {
+   "caption": "Implement a task…: loop until TASK-1 is done",
+   "click": [
+    57.1,
+    55.8,
+    8.9,
+    4.1
+   ]
+  },
+  {
+   "caption": "Each run does one step, the judge checks it"
+  },
+  {
+   "caption": "The judge asks you a question",
+   "click": [
+    92.4,
+    10.3,
+    5.3,
+    4.1
+   ]
+  },
+  {
+   "caption": "Answer, and the next run gets it",
+   "click": [
+    62.6,
+    60.4,
+    4.2,
+    4.1
+   ]
+  },
+  {
+   "caption": "The loop goes on",
+   "anchors": {
+    "temporal": [
+     74.3,
+     1.9,
+     4.7,
+     2.3
+    ],
+    "worker": [
+     80.2,
+     1.9,
+     3.8,
+     2.3
+    ],
+    "map": [
+     1.8,
+     17.9,
+     96.5,
+     42.2
+    ],
+    "stages": [
+     12.6,
+     17.9,
+     85.6,
+     4.8
+    ],
+    "steps": [
+     12.6,
+     22.8,
+     85.6,
+     9.5
+    ],
+    "box": [
+     12.6,
+     32.3,
+     8.5,
+     11.4
+    ],
+    "loops": [
+     12.6,
+     69.8,
+     85.6,
+     6.2
+    ],
+    "log": [
+     12.6,
+     79.1,
+     85.6,
+     20.9
+    ],
+    "needs": [
+     1.8,
+     9.2,
+     96.5,
+     5.6
+    ]
+   }
+  }
+ ],
+ "lab10-merge": [
+  {
+   "caption": "The task is done: its loop waits for you",
+   "click": [
+    12.6,
+    69.8,
+    85.6,
+    5.6
+   ]
+  },
+  {
+   "caption": "Merge into your branch brings its commits onto your branch",
+   "click": [
+    35.6,
+    74.2,
+    12.5,
+    4.1
+   ],
+   "anchors": {
+    "temporal": [
+     74.3,
+     1.9,
+     4.7,
+     2.3
+    ],
+    "worker": [
+     80.2,
+     1.9,
+     3.8,
+     2.3
+    ],
+    "map": [
+     1.8,
+     17.9,
+     96.5,
+     42.2
+    ],
+    "stages": [
+     12.6,
+     17.9,
+     85.6,
+     4.8
+    ],
+    "steps": [
+     12.6,
+     22.8,
+     85.6,
+     9.5
+    ],
+    "box": [
+     12.6,
+     32.3,
+     8.5,
+     11.4
+    ],
+    "loops": [
+     12.6,
+     69.8,
+     85.6,
+     10.8
+    ],
+    "log": [
+     12.6,
+     83.6,
+     85.6,
+     16.4
+    ],
+    "needs": [
+     1.8,
+     9.2,
+     96.5,
+     5.6
+    ]
+   }
+  }
+ ],
+ "lab10-one-run": [
+  {
+   "caption": "Implement a task…: one run on TASK-1",
+   "click": [
+    51,
+    55.8,
+    5.5,
+    4.1
+   ]
+  },
+  {
+   "caption": "One run: the agent takes one step and commits"
+  },
+  {
+   "caption": "Then the judge checks it"
+  },
+  {
+   "caption": "After one run, the loop stops",
+   "anchors": {
+    "temporal": [
+     74.3,
+     1.9,
+     4.7,
+     2.3
+    ],
+    "worker": [
+     80.2,
+     1.9,
+     3.8,
+     2.3
+    ],
+    "map": [
+     1.8,
+     17.9,
+     96.5,
+     42.2
+    ],
+    "stages": [
+     12.6,
+     17.9,
+     85.6,
+     4.8
+    ],
+    "steps": [
+     12.6,
+     22.8,
+     85.6,
+     9.5
+    ],
+    "box": [
+     12.6,
+     32.3,
+     8.5,
+     11.4
+    ],
+    "loops": [
+     12.6,
+     69.8,
+     85.6,
+     10.8
+    ],
+    "log": [
+     12.6,
+     83.6,
+     85.6,
+     16.4
+    ],
+    "needs": [
+     1.8,
+     9.2,
+     96.5,
+     5.6
+    ]
+   }
+  }
+ ],
+ "lab11-cleanup": [
+  {
+   "caption": "Both loops are done, each on its own branch",
+   "click": [
+    12.6,
+    69.8,
+    85.6,
+    5.6
+   ]
+  },
+  {
+   "caption": "Throw away removes its worktree and branch",
+   "click": [
+    59.4,
+    54.5,
+    7.3,
+    4.1
+   ]
+  },
+  {
+   "caption": "Both tasks are ready again",
+   "anchors": {
+    "temporal": [
+     74.3,
+     1.9,
+     4.7,
+     2.3
+    ],
+    "worker": [
+     80.2,
+     1.9,
+     3.8,
+     2.3
+    ],
+    "map": [
+     1.8,
+     17.9,
+     96.5,
+     42.2
+    ],
+    "stages": [
+     12.6,
+     17.9,
+     85.6,
+     4.8
+    ],
+    "steps": [
+     12.6,
+     22.8,
+     85.6,
+     9.5
+    ],
+    "box": [
+     12.6,
+     32.3,
+     8.5,
+     11.4
+    ],
+    "loops": [
+     12.6,
+     69.8,
+     85.6,
+     6.7
+    ],
+    "log": [
+     12.6,
+     79.5,
+     85.6,
+     20.5
+    ],
+    "needs": [
+     1.8,
+     9.2,
+     96.5,
+     5.6
+    ]
+   }
+  }
+ ],
+ "lab11-start": [
+  {
+   "caption": "Two ready tasks, independent of each other: a loop on TASK-2",
+   "click": [
+    57.1,
+    57.6,
+    8.9,
+    4.1
+   ]
+  },
+  {
+   "caption": "The same for TASK-3",
+   "click": [
+    57.1,
+    55.8,
+    8.9,
+    4.1
+   ]
+  },
+  {
+   "caption": "Both loops run at the same time, the output mixes both",
+   "anchors": {
+    "temporal": [
+     74.3,
+     1.9,
+     4.7,
+     2.3
+    ],
+    "worker": [
+     80.2,
+     1.9,
+     3.8,
+     2.3
+    ],
+    "map": [
+     1.8,
+     17.9,
+     96.5,
+     42.2
+    ],
+    "stages": [
+     12.6,
+     17.9,
+     85.6,
+     4.8
+    ],
+    "steps": [
+     12.6,
+     22.8,
+     85.6,
+     9.5
+    ],
+    "box": [
+     12.6,
+     32.3,
+     8.5,
+     11.4
+    ],
+    "loops": [
+     12.6,
+     69.8,
+     85.6,
+     12.3
+    ],
+    "log": [
+     12.6,
+     85.2,
+     85.6,
+     14.8
+    ],
+    "needs": [
+     1.8,
+     9.2,
+     96.5,
+     5.6
+    ]
+   }
+  }
+ ],
+ "lab12-approve": [
+  {
+   "caption": "The plan waits for you",
+   "click": [
+    92.6,
+    10.3,
+    5.1,
+    4.1
+   ]
+  },
+  {
+   "caption": "Approve the tasks to build, or send the plan back",
+   "click": [
+    61.1,
+    60.3,
+    5.7,
+    4.1
+   ]
+  },
+  {
+   "caption": "Each approved task gets a Ralph loop",
+   "anchors": {
+    "temporal": [
+     74.3,
+     1.9,
+     4.7,
+     2.3
+    ],
+    "worker": [
+     80.2,
+     1.9,
+     3.8,
+     2.3
+    ],
+    "map": [
+     1.8,
+     17.9,
+     96.5,
+     40.5
+    ],
+    "stages": [
+     12.6,
+     17.9,
+     85.6,
+     4.8
+    ],
+    "steps": [
+     12.6,
+     22.8,
+     85.6,
+     9.5
+    ],
+    "box": [
+     12.6,
+     32.3,
+     8.5,
+     9.7
+    ],
+    "loops": [
+     12.6,
+     68.1,
+     85.6,
+     12.3
+    ],
+    "log": [
+     12.6,
+     83.5,
+     85.6,
+     16.5
+    ],
+    "needs": [
+     1.8,
+     9.2,
+     96.5,
+     5.6
+    ]
+   }
+  }
+ ],
+ "lab12-implement": [
+  {
+   "caption": "The loops, one per task",
+   "click": [
+    12.6,
+    68.1,
+    85.6,
+    5.6
+   ]
+  },
+  {
+   "caption": "Click a loop to open its task",
+   "anchors": {
+    "temporal": [
+     74.3,
+     1.9,
+     4.7,
+     2.3
+    ],
+    "worker": [
+     80.2,
+     1.9,
+     3.8,
+     2.3
+    ],
+    "map": [
+     1.8,
+     17.9,
+     96.5,
+     40.5
+    ],
+    "stages": [
+     12.6,
+     17.9,
+     85.6,
+     4.8
+    ],
+    "steps": [
+     12.6,
+     22.8,
+     85.6,
+     9.5
+    ],
+    "box": [
+     12.6,
+     32.3,
+     8.5,
+     9.7
+    ],
+    "loops": [
+     12.6,
+     68.1,
+     85.6,
+     12.3
+    ],
+    "log": [
+     12.6,
+     83.5,
+     85.6,
+     16.5
+    ],
+    "needs": [
+     1.8,
+     9.2,
+     96.5,
+     5.6
+    ]
+   }
+  }
+ ],
+ "lab12-merge": [
+  {
+   "caption": "The review is done: the merge decision waits for you",
+   "click": [
+    92.6,
+    10.3,
+    5.1,
+    4.1
+   ]
+  },
+  {
+   "caption": "Decide shows the review's verdict per branch",
+   "click": [
+    62,
+    61.5,
+    4.8,
+    4.1
+   ]
+  },
+  {
+   "caption": "Merged onto your branch, and the tests pass",
+   "anchors": {
+    "temporal": [
+     74.3,
+     1.9,
+     4.7,
+     2.3
+    ],
+    "worker": [
+     80.2,
+     1.9,
+     3.8,
+     2.3
+    ],
+    "map": [
+     1.8,
+     17.9,
+     96.5,
+     42.2
+    ],
+    "stages": [
+     12.6,
+     17.9,
+     85.6,
+     4.8
+    ],
+    "steps": [
+     12.6,
+     22.8,
+     85.6,
+     9.5
+    ],
+    "box": [
+     12.6,
+     32.3,
+     8.5,
+     11.4
+    ],
+    "loops": [
+     12.6,
+     69.8,
+     85.6,
+     12.3
+    ],
+    "log": [
+     12.6,
+     85.2,
+     85.6,
+     14.8
+    ],
+    "needs": [
+     1.8,
+     9.2,
+     96.5,
+     5.6
+    ]
+   }
+  }
+ ],
+ "lab12-overview": [
+  {
+   "caption": "The research agent writes a specification"
+  },
+  {
+   "caption": "You approve the specification, or send it back"
+  },
+  {
+   "caption": "The design agent writes the design"
+  },
+  {
+   "caption": "The plan agent cuts it into tasks"
+  },
+  {
+   "caption": "You approve the plan and its tasks, or send it back"
+  },
+  {
+   "caption": "One Ralph loop per task, in parallel"
+  },
+  {
+   "caption": "The review agent reviews every branch"
+  },
+  {
+   "caption": "You decide whether to merge"
+  },
+  {
+   "caption": "Merged onto your branch",
+   "anchors": {
+    "temporal": [
+     74.3,
+     1.9,
+     4.7,
+     2.3
+    ],
+    "worker": [
+     80.2,
+     1.9,
+     3.8,
+     2.3
+    ],
+    "map": [
+     1.8,
+     17.9,
+     96.5,
+     42.2
+    ],
+    "stages": [
+     12.6,
+     17.9,
+     85.6,
+     4.8
+    ],
+    "steps": [
+     12.6,
+     22.8,
+     85.6,
+     9.5
+    ],
+    "box": [
+     12.6,
+     32.3,
+     8.5,
+     11.4
+    ],
+    "loops": [
+     12.6,
+     69.8,
+     85.6,
+     12.3
+    ],
+    "log": [
+     12.6,
+     85.2,
+     85.6,
+     14.8
+    ],
+    "needs": [
+     1.8,
+     9.2,
+     96.5,
+     5.6
+    ]
+   }
+  }
+ ],
+ "lab12-specification": [
+  {
+   "caption": "Decide: approve it, or send it back",
+   "click": [
+    53,
+    57.9,
+    7.5,
+    4.1
+   ]
+  },
+  {
+   "caption": "Send back… with your feedback",
+   "click": [
+    59.4,
+    60.4,
+    6.7,
+    4.1
+   ]
+  },
+  {
+   "caption": "The research agent revises it"
+  },
+  {
+   "caption": "It asks you again: Approve, and the design agent goes on",
+   "click": [
+    61.1,
+    57.9,
+    5.7,
+    4.1
+   ],
+   "anchors": {
+    "temporal": [
+     74.3,
+     1.9,
+     4.7,
+     2.3
+    ],
+    "worker": [
+     80.2,
+     1.9,
+     3.8,
+     2.3
+    ],
+    "map": [
+     1.8,
+     18.5,
+     96.5,
+     42.2
+    ],
+    "stages": [
+     12.6,
+     18.5,
+     85.6,
+     4.8
+    ],
+    "steps": [
+     12.6,
+     23.3,
+     85.6,
+     9.5
+    ],
+    "box": [
+     12.6,
+     32.8,
+     8.5,
+     11.4
+    ],
+    "loops": [
+     12.6,
+     70.3,
+     85.6,
+     6.7
+    ],
+    "log": [
+     12.6,
+     80,
+     85.6,
+     20
+    ],
+    "needs": [
+     1.8,
+     9.2,
+     96.5,
+     6.2
+    ]
+   }
+  }
+ ],
+ "lab12-start": [
+  {
+   "caption": "Click Research, paste the feature request, and start the pipeline",
+   "click": [
+    56.3,
+    61.7,
+    9.7,
+    4.1
+   ]
+  },
+  {
+   "caption": "The research agent writes the specification"
+  },
+  {
+   "caption": "Its judge checks it"
+  },
+  {
+   "caption": "The specification waits for you",
+   "click": [
+    92.6,
+    10.3,
+    5.1,
+    4.1
+   ],
+   "anchors": {
+    "temporal": [
+     74.3,
+     1.9,
+     4.7,
+     2.3
+    ],
+    "worker": [
+     80.2,
+     1.9,
+     3.8,
+     2.3
+    ],
+    "map": [
+     1.8,
+     18.5,
+     96.5,
+     42.2
+    ],
+    "stages": [
+     12.6,
+     18.5,
+     85.6,
+     4.8
+    ],
+    "steps": [
+     12.6,
+     23.3,
+     85.6,
+     9.5
+    ],
+    "box": [
+     12.6,
+     32.8,
+     8.5,
+     11.4
+    ],
+    "loops": [
+     12.6,
+     70.3,
+     85.6,
+     6.7
+    ],
+    "log": [
+     12.6,
+     80,
+     85.6,
+     20
+    ],
+    "needs": [
+     1.8,
+     9.2,
+     96.5,
+     6.2
+    ]
+   }
+  }
+ ],
+ "lab13-e2e-results": [
+  {
+   "caption": "One of our end-to-end evals: 15 runs, at most 3 at the same time"
+  },
+  {
+   "caption": "8 of 15 accepted, 1 task reliable, $7.33 per accepted change",
+   "click": [
+    27.7,
+    73.3,
+    22.9,
+    11.5
+   ]
+  },
+  {
+   "caption": "Click a task: why each run was or was not accepted"
+  },
+  {
+   "caption": "What the improve agent proposes for the whole setup",
+   "anchors": {
+    "temporal": [
+     74.3,
+     1.9,
+     4.7,
+     2.3
+    ],
+    "worker": [
+     80.2,
+     1.9,
+     3.8,
+     2.3
+    ],
+    "needs": [
+     1.8,
+     9.2,
+     96.5,
+     5.6
+    ]
+   }
+  }
+ ],
+ "lab13-e2e-start": [
+  {
+   "caption": "Start evals… picks all tasks, or one",
+   "click": [
+    30.8,
+    50.3,
+    13.2,
+    3.7
+   ],
+   "anchors": {
+    "temporal": [
+     74.3,
+     1.9,
+     4.7,
+     2.3
+    ],
+    "worker": [
+     80.2,
+     1.9,
+     3.8,
+     2.3
+    ],
+    "needs": [
+     1.8,
+     9.2,
+     96.5,
+     5.6
+    ]
+   }
+  }
+ ],
+ "lab13-proposals": [
+  {
+   "caption": "6 of 9: the cases that shouldn't load testing fail",
+   "click": [
+    87.5,
+    19,
+    10.2,
+    4.1
+   ]
+  },
+  {
+   "caption": "What the improve agent proposes. You decide",
+   "anchors": {
+    "temporal": [
+     74.3,
+     1.9,
+     4.7,
+     2.3
+    ],
+    "worker": [
+     80.2,
+     1.9,
+     3.8,
+     2.3
+    ],
+    "needs": [
+     1.8,
+     9.2,
+     96.5,
+     5.6
+    ]
+   }
+  }
+ ],
+ "lab13-skills": [
+  {
+   "caption": "The Evals tab: Start skill-loaded evals runs every case 3 times",
+   "click": [
+    85.9,
+    18.3,
+    12.3,
+    4.1
+   ]
+  },
+  {
+   "caption": "The cases fill in as their runs finish"
+  },
+  {
+   "caption": "Every case passes: ✗ marks a run that did not do what its case expects",
+   "anchors": {
+    "temporal": [
+     74.3,
+     1.9,
+     4.7,
+     2.3
+    ],
+    "worker": [
+     80.2,
+     1.9,
+     3.8,
+     2.3
+    ],
+    "needs": [
+     1.8,
+     9.2,
+     96.5,
+     5.6
+    ]
+   }
+  }
+ ],
+ "lab9-research": [
+  {
+   "caption": "Click Research, paste the feature request, and start the pipeline",
+   "click": [
+    56.3,
+    61.7,
+    9.7,
+    4.1
+   ]
+  },
+  {
+   "caption": "The research agent writes the specification"
+  },
+  {
+   "caption": "Its judge checks it",
+   "anchors": {
+    "temporal": [
+     74.3,
+     1.9,
+     4.7,
+     2.3
+    ],
+    "worker": [
+     80.2,
+     1.9,
+     3.8,
+     2.3
+    ],
+    "map": [
+     1.8,
+     17.9,
+     96.5,
+     42.2
+    ],
+    "stages": [
+     12.6,
+     17.9,
+     85.6,
+     4.8
+    ],
+    "steps": [
+     12.6,
+     22.8,
+     85.6,
+     9.5
+    ],
+    "box": [
+     12.6,
+     32.3,
+     8.5,
+     11.4
+    ],
+    "loops": [
+     12.6,
+     69.8,
+     85.6,
+     6.7
+    ],
+    "log": [
+     12.6,
+     79.5,
+     85.6,
+     20.5
+    ],
+    "needs": [
+     1.8,
+     9.2,
+     96.5,
+     5.6
+    ]
+   }
+  }
+ ],
+ "lab9-specification": [
+  {
+   "caption": "The pipeline waits for your approval",
+   "click": [
+    92.6,
+    10.3,
+    5.1,
+    4.1
+   ]
+  },
+  {
+   "caption": "Decide shows where the specification is. Leave it waiting",
+   "click": [
+    67.4,
+    57.9,
+    4.3,
+    4.1
+   ]
+  },
+  {
+   "caption": "task flows:stop: Temporal and the worker are gone"
+  },
+  {
+   "caption": "task flows:start: the pipeline still waits, at the same step",
+   "anchors": {
+    "temporal": [
+     74.3,
+     1.9,
+     4.7,
+     2.3
+    ],
+    "worker": [
+     80.2,
+     1.9,
+     3.8,
+     2.3
+    ],
+    "map": [
+     1.8,
+     18.5,
+     96.5,
+     42.2
+    ],
+    "stages": [
+     12.6,
+     18.5,
+     85.6,
+     4.8
+    ],
+    "steps": [
+     12.6,
+     23.3,
+     85.6,
+     9.5
+    ],
+    "box": [
+     12.6,
+     32.8,
+     8.5,
+     11.4
+    ],
+    "loops": [
+     12.6,
+     70.3,
+     85.6,
+     6.7
+    ],
+    "log": [
+     12.6,
+     80,
+     85.6,
+     20
+    ],
+    "needs": [
+     1.8,
+     9.2,
+     96.5,
+     6.2
+    ]
+   }
+  }
+ ],
+ "lab9-watch": [
+  {
+   "caption": "Nothing runs yet: the pipeline, the loops, the worker output"
+  },
+  {
+   "caption": "Hover over a part to see the command behind it",
+   "anchors": {
+    "temporal": [
+     74.3,
+     1.9,
+     4.7,
+     2.3
+    ],
+    "worker": [
+     80.2,
+     1.9,
+     3.8,
+     2.3
+    ],
+    "map": [
+     1.8,
+     17.9,
+     96.5,
+     42.2
+    ],
+    "stages": [
+     12.6,
+     17.9,
+     85.6,
+     4.8
+    ],
+    "steps": [
+     12.6,
+     22.8,
+     85.6,
+     9.5
+    ],
+    "box": [
+     12.6,
+     32.3,
+     8.5,
+     11.4
+    ],
+    "loops": [
+     12.6,
+     69.8,
+     85.6,
+     6.7
+    ],
+    "log": [
+     12.6,
+     79.5,
+     85.6,
+     20.5
+    ],
+    "needs": [
+     1.8,
+     9.2,
+     96.5,
+     5.6
+    ]
+   }
+  }
+ ]
+}

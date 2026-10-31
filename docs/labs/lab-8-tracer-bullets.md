@@ -2,9 +2,9 @@
 
 ## Context
 
-A feature request says what should happen, not how to split it into tickets. Done by hand, that's slow and inconsistent: blockers get missed, and work gets split by layer instead of into slices you can demo.
+A feature request says what should happen, not how to split it into tasks. Done by hand, that's slow and inconsistent: blockers get missed, and work gets split by layer instead of into slices you can demo.
 
-The `plan` skill splits it the same way every time. It first lists the blockers, such as a schema change or an open decision. Then it slices the rest into vertical tracer-bullet tickets: each one goes through every layer it touches.
+The `plan` skill splits it the same way every time. It first lists the blockers, such as a schema change or an open decision. Then it slices the rest into vertical tracer-bullet tasks: each one goes through every layer it touches.
 
 ## Your Task
 
@@ -19,7 +19,7 @@ task lab/tracer-bullets
 >
 > [![Open Lab 8 in GitHub Codespaces](https://github.com/codespaces/badge.svg)](https://codespaces.new/Zuehlke/ai-augmented-software-engineering?ref=lab%2Ftracer-bullets)
 
-The `plan` skill below is already in the repository. Paste the feature request below to your agent and ask it to invoke the skill on it:
+The `plan` skill below is already in the repository. Invoke it with `/plan`, followed by the feature request below:
 
 <details>
 <summary>Feature request: Flight Delays Dashboard</summary>
@@ -67,12 +67,12 @@ situation", without knowing the query API.
 
 </details>
 
-When the skill has written the tickets, review them in `backlog/`:
+When the skill has written the tasks, review them in `backlog/`:
 
-- <label><input type="checkbox"> Does each ticket go through every layer it touches, such as schema, service, and endpoint?</label>
-- <label><input type="checkbox"> Can you demo or verify each ticket on its own once it's done?</label>
-- <label><input type="checkbox"> Is prefactoring, such as a schema change, its own ticket, ordered before the tickets that need it?</label>
-- <label><input type="checkbox"> Is a ticket only `ready` when nothing blocks it?</label>
+- <label><input type="checkbox"> Does each task go through every layer it touches, such as schema, service, and endpoint?</label>
+- <label><input type="checkbox"> Can you demo or verify each task on its own once it's done?</label>
+- <label><input type="checkbox"> Is prefactoring, such as a schema change, its own task, ordered before the tasks that need it?</label>
+- <label><input type="checkbox"> Is a task only `ready` when nothing blocks it?</label>
 
 ## Solution
 
@@ -82,52 +82,52 @@ When the skill has written the tickets, review them in `backlog/`:
 ````markdown
 ---
 name: plan
-description: Break a feature request, spec, or plan into a backlog of tracer-bullet tickets, each declaring what blocks it; use when asked to turn a requirements document into issues or a backlog.
+description: Break a feature request, spec, or plan into a backlog of tracer-bullet tasks, each declaring what blocks it; use when asked to turn a requirements document into issues or a backlog.
 disable-model-invocation: true
 ---
 
 ## TASK
 
 Break a feature request, a spec, or the plan already discussed in this conversation into a set of
-tickets under `backlog/`. You do not implement anything.
+tasks under `backlog/`. You do not implement anything.
 
 ## STEPS
 
 1. Read the feature request in full. Look for prefactoring: work that has to land before a feature
    can be built cleanly, a schema change, a missing dataset, a pending decision. "Make the change
-   easy, then make the easy change." Prefactoring gets its own ticket(s), never folded into a
-   feature ticket.
+   easy, then make the easy change." Prefactoring gets its own task(s), never folded into a
+   feature task.
 
 2. Break the remaining scope into vertical slices, not horizontal layers:
-   - Each ticket cuts a narrow but complete path through every layer it touches (schema → service →
-     endpoint), not one layer shared across many tickets.
-   - A completed ticket is demoable or verifiable on its own; it must own every acceptance criterion
-     it's graded on, never split a single demoable outcome across two tickets.
-   - Each ticket should be sized to fit in a single agent session.
+   - Each task cuts a narrow but complete path through every layer it touches (schema → service →
+     endpoint), not one layer shared across many tasks.
+   - A completed task is demoable or verifiable on its own; it must own every acceptance criterion
+     it's graded on, never split a single demoable outcome across two tasks.
+   - Each task should be sized to fit in a single agent session.
    - A behaviour and its combination with what already exists, "X together with Y", is one slice, not
-     two. A ticket that would only add tests or wiring for another ticket's behaviour is folded into
-     that ticket. A small request is one ticket.
-   - Something several tickets share, such as the page they're shown on, is built by the first
-     ticket that needs it, never as a ticket of its own.
+     two. A task that would only add tests or wiring for another task's behaviour is folded into
+     that task. A small request is one task.
+   - Something several tasks share, such as the page they're shown on, is built by the first
+     task that needs it, never as a task of its own.
 
-3. Give every ticket its blocking edges: which other tickets, or which external things, must land
-   before it can start. A ticket with no blocker is `ready`; anything else is `blocked`, however
-   well-specified it is. Other tickets go in `blocked_by`, anything outside the repo in
-   `blocked_reason`: a ticket blocked only by tickets can start as soon as they are done.
+3. Give every task its blocking edges: which other tasks, or which external things, must land
+   before it can start. A task with no blocker is `ready`; anything else is `blocked`, however
+   well-specified it is. Other tasks go in `blocked_by`, anything outside the repo in
+   `blocked_reason`: a task blocked only by tasks can start as soon as they are done.
 
 4. Present the breakdown as a numbered list before writing anything: title, blocked by, what it
    delivers. Ask whether the granularity and the blocking edges are right. Iterate until the user
    approves.
 
-5. Only after approval, write one file per ticket to `backlog/TICKET-<n>-<slug>.md`, numbered after
-   the highest ticket already in `backlog/`, in dependency order (blockers first). Don't change the
-   existing tickets:
+5. Only after approval, write one file per task to `backlog/TASK-<n>-<slug>.md`, numbered after
+   the highest task already in `backlog/`, in dependency order (blockers first). Don't change the
+   existing tasks:
 
    ```markdown
    ---
-   id: TICKET-<n>
+   id: TASK-<n>
    status: ready | blocked
-   blocked_by: <only when it waits for other tickets: their ids, for example TICKET-3, TICKET-4>
+   blocked_by: <only when it waits for other tasks: their ids, for example TASK-3, TASK-4>
    blocked_reason: <only when it waits for something outside the repo: name it>
    ---
 
@@ -143,22 +143,20 @@ tickets under `backlog/`. You do not implement anything.
 
 ## CONSTRAINTS
 
-- No file paths, line numbers, or code in a ticket, only the outcome and its acceptance criteria.
-- Never mark a ticket `ready` if its acceptance criteria depend on another ticket's work, or on
+- No file paths, line numbers, or code in a task, only the outcome and its acceptance criteria.
+- Never mark a task `ready` if its acceptance criteria depend on another task's work, or on
   something outside the repo that hasn't landed yet.
 - Don't invent scope the feature request doesn't ask for.
 ````
 
-Adapted from Matt Pocock's `to-tickets` skill.
-
 </details>
 
 <details>
-<summary>Expected backlog (four tickets, in dependency order)</summary>
+<summary>Expected backlog (four tasks, in dependency order)</summary>
 
 ```markdown
 ---
-id: TICKET-1
+id: TASK-1
 status: blocked
 blocked_reason: architecture review sign-off for the delay storage schema change, scheduled but not yet complete
 ---
@@ -183,9 +181,9 @@ of by scanning one flat table.
 
 ```markdown
 ---
-id: TICKET-2
+id: TASK-2
 status: blocked
-blocked_by: TICKET-1
+blocked_by: TASK-1
 ---
 
 # Airline overview dashboard
@@ -207,9 +205,9 @@ how many of its flights are currently active or scheduled, without writing any q
 
 ```markdown
 ---
-id: TICKET-3
+id: TASK-3
 status: blocked
-blocked_by: TICKET-1, TICKET-2
+blocked_by: TASK-1, TASK-2
 ---
 
 # Flight status lookup
@@ -230,9 +228,9 @@ time / delayed / cancelled) and its delay in minutes, without knowing the query 
 
 ```markdown
 ---
-id: TICKET-4
+id: TASK-4
 status: blocked
-blocked_by: TICKET-3
+blocked_by: TASK-3
 blocked_reason: an airport reference dataset (city, timezone per IATA code) that the data team has not yet delivered, with no ETA
 ---
 

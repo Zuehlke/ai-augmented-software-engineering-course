@@ -22,23 +22,23 @@ task lab/parallelizing-work
 > [!NOTE]
 > The agents in this lab run unattended, so they need the [agent token from the setup](/getting-started/setup#agent-token).
 
-Start Temporal and the worker, and open `flows watch`. Press `a` there to switch to GitHub Copilot CLI if you use it.
+Start Temporal and the worker, and open `flows watch` on [http://localhost:8234](http://localhost:8234). Click **Copilot** next to **Agent** there to switch to GitHub Copilot CLI if you use it.
 
 ```bash
 task flows:start
 task flows:watch
 ```
 
-### 1. Run one Ralph loop per ticket
+### 1. Run one Ralph loop per task
 
-The branch continues where the tracer-bullet backlog left off: with TICKET-1 done, TICKET-2 and TICKET-3 are independent of each other, so they can run at the same time.
+The branch continues where the tracer-bullet backlog left off: with TASK-1 done, TASK-2 and TASK-3 are independent of each other, so they can run at the same time.
 
 <details>
 <summary><code>backlog/</code> (already in the branch)</summary>
 
 ```markdown
 ---
-id: TICKET-2
+id: TASK-2
 status: ready
 ---
 
@@ -60,7 +60,7 @@ how many of its flights are currently active or scheduled, without writing any q
 
 ```markdown
 ---
-id: TICKET-3
+id: TASK-3
 status: ready
 ---
 
@@ -82,20 +82,20 @@ delayed / cancelled) and its delay in minutes, without knowing the query API.
 
 </details>
 
-Press `Tab` for the board. Select TICKET-2 in **Ready**, press `s`, then `y`. Do the same for TICKET-3.
+Click **Implement a task…**, select TASK-2 and click **Loop until done**. Do the same for TASK-3.
 
 <FlowsWatch scene="lab11-start" />
 
-Both loops now run at the same time, each on its own ticket and branch, with its own `.harness/progress.md`. On the board, both cards move to **Running**. `Tab` back to the pipeline view: the worker output mixes both agents, each line prefixed with its loop.
+Both loops now run at the same time, each on its own task and branch, with its own `.harness/progress.md`. Under **Loops**, both say `running`. The worker output mixes both agents, each line prefixed with its loop.
 
 <details>
 <summary>How the harness creates a worktree for each loop</summary>
 
-Each loop starts by creating its worktree, `.harness/worktrees/ticket-2` on the branch `agent/ticket-2`:
+Each loop starts by creating its worktree, `.harness/worktrees/task-2` on the branch `agent/task-2`:
 
 ```ts
 // .harness/src/workflows/ralph.ts
-const workDir = await addWorktree(repoDir, worktreeName(ticket), branchOf(ticket), base ?? (await headCommit(repoDir)), fresh);
+const workDir = await addWorktree(repoDir, worktreeName(task), branchOf(task), base ?? (await headCommit(repoDir)), fresh);
 ```
 
 `addWorktree` runs `git worktree add`. If the branch already exists, for example after a single run, it checks it out again instead of starting over.
@@ -120,10 +120,10 @@ You see your checkout and one worktree per loop, each on its own branch. The loo
 
 ### 3. Look at the results
 
-When both cards wait under **Needs you** as *ready to merge*, start the app from the TICKET-2 worktree, in the same terminal:
+When both loops say `done` and `not merged`, start the app from the TASK-2 worktree, in the same terminal:
 
 ```bash
-cd .harness/worktrees/ticket-2
+cd .harness/worktrees/task-2
 task run
 ```
 
@@ -131,6 +131,6 @@ Open the dashboard at [http://localhost:8080/dashboard.html](http://localhost:80
 
 ### 4. Clean up
 
-Stop the app (`Ctrl+C`) and go back to the repository root (`cd ../../..`). To remove a loop's worktree and branch, open its ticket on the board with `Enter`, press `x`, then `y`. Do this for TICKET-2 and TICKET-3.
+Stop the app (`Ctrl+C`) and go back to the repository root (`cd ../../..`). To remove a loop's worktree and branch, click it under **Loops**, click **Throw away**, then **Throw away** again. Do this for TASK-2 and TASK-3.
 
 <FlowsWatch scene="lab11-cleanup" />

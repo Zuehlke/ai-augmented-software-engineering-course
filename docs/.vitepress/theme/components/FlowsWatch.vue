@@ -1,167 +1,88 @@
 <script setup lang="ts">
-// Lab 12: `flows watch` as it runs, frame by frame. The frames are recorded with the real renderer of
-// `flows watch` (see flows-watch/record.mts), so they show exactly what the terminal shows. The colours
-// are the ones `flows watch` uses on a light and on a dark terminal, following the page's theme.
-import { computed, onBeforeUnmount, onMounted, ref, shallowRef, watch } from "vue";
+// Labs 9 to 13: the page of `flows watch`, shot by shot. The screenshots are taken of the real page, fed scripted
+// states (see flows-watch/record.mts), in a light and a dark version that follow the page's theme. A ring marks
+// what to click next.
+import { computed, onBeforeUnmount, onMounted, ref, watch } from "vue";
+import { useData } from "vitepress";
+import scenes from "./flows-watch/scenes.json";
 
-type Run = [string, number];
-interface Recording {
-  width: number;
-  height: number;
-  styles: string[]; // "fg|bg|b"
-  rows: Run[][];
-  frames: { rows: number[]; ms: number; key?: string; caption?: string }[];
+type Rect = [number, number, number, number]; // x, y, w, h in % of the screenshot
+interface Shot {
+  caption: string;
+  click?: Rect;
+  anchors?: Record<string, Rect>;
 }
 
-// A note highlights parts of the screen in purple ([x, y, w, h] in cells) and explains them in a label at
-// (lx, ly). In its text, `code` is set as code and a line break starts a new line. With notes, the recording is a
-// still of its last frame, and the notes show one after the other.
+// A note points at a part of the last shot (`at`, one of its anchors, see ANCHORS in record.mts) and explains it.
+// In its text, `code` is set as code and a line break starts a new line. With notes, the scene is a still of its last
+// shot, and the notes show one after the other.
 interface Note {
-  boxes: [number, number, number, number][];
-  lx: number;
-  ly: number;
+  at: string;
   label: string;
   text: string;
 }
 
-// A note's text in parts, every other one code
-const parts = (text: string) => text.split("`").map((part, i) => ({ part, code: i % 2 === 1 }));
-
 const props = defineProps<{ scene: string; title?: string; notes?: Note[] }>();
 
-const recordings = import.meta.glob<Recording>("./flows-watch/*.json", { import: "default" });
+const images = import.meta.glob<string>("./flows-watch/*.webp", { eager: true, query: "?url", import: "default" });
+const shots = computed<Shot[]>(() => (scenes as Record<string, Shot[]>)[props.scene] ?? []);
 
-const data = shallowRef<Recording>();
+const { isDark } = useData();
 const index = ref(0);
-const noteIndex = ref(0);
 const playing = ref(false);
 const expanded = ref(false);
-const key = ref<{ label: string; id: number }>();
 const root = ref<HTMLElement>();
-const screen = ref<HTMLElement>();
-// How wide one character of the monospace font is, in em: measured, since fonts differ
-const cellWidth = ref(0.6);
-
 let timer: ReturnType<typeof setTimeout> | undefined;
-let keyTimer: ReturnType<typeof setTimeout> | undefined;
-let keyId = 0;
 let visible = false;
 let observer: IntersectionObserver | undefined;
 
-const KEY_NAMES: Record<string, string> = { "⏎": "⏎ Enter", "⌘V": "Paste" };
-const LAST_FRAME_PAUSE = 2500;
+const SHOT_MS = 4500;
 const NOTE_MS = 6000;
 
-const frame = computed(() => data.value?.frames[index.value]);
-const caption = computed(() => {
-  const frames = data.value?.frames ?? [];
-  for (let i = index.value; i >= 0; i--) if (frames[i]?.caption) return frames[i].caption;
-  return "";
+// What there is to step through: the notes, or else the shots
+const steps = computed(() => props.notes?.length ?? shots.value.length);
+const shotIndex = computed(() => (props.notes ? shots.value.length - 1 : index.value));
+const shot = computed(() => shots.value[shotIndex.value]);
+const note = computed(() => props.notes?.[index.value]);
+const noteRect = computed(() => (note.value ? shot.value?.anchors?.[note.value.at] : undefined));
+const src = (i: number) => images[`./flows-watch/${props.scene}-${i + 1}-${isDark.value ? "dark" : "light"}.webp`];
+// A note's label goes under the part it points at, or over it when the part is low on the page
+const notePlace = computed(() => {
+  const r = noteRect.value;
+  if (!r) return {};
+  const left = Math.min(Math.max(r[0], 2), 58);
+  return r[1] + r[3] > 70 ? { left: `${left}%`, bottom: `${100 - r[1] + 1.5}%` } : { left: `${left}%`, top: `${r[1] + r[3] + 1.5}%` };
 });
-const note = computed(() => props.notes?.[noteIndex.value]);
-// How many steps there are to play: the notes, or else the frames
-const steps = computed(() => props.notes?.length ?? data.value?.frames.length ?? 0);
-const step = computed(() => (props.notes ? noteIndex.value : index.value));
-const progress = computed(() => (steps.value ? (step.value + 1) / steps.value : 0));
-
-// Each run of a row in spans. Characters that some fonts draw wider than a cell (⚑, ✓, braille, …) get a
-// cell of their own, so the boxes stay aligned.
-const NARROW = /^[\x20-\x7e─│╭╮╰╯▌›·…]$/;
-const lines = computed(() => {
-  const d = data.value;
-  const f = frame.value;
-  if (!d || !f) return [];
-  return f.rows.map((r) =>
-    d.rows[r].map(([text, style]) => {
-      const [fg, bg, bold] = d.styles[style].split("|");
-      const cls = [fg && `fg-${fg}`, bg && `bg-${bg}`, bold && "bold"].filter(Boolean).join(" ");
-      const parts: { text: string; cell: boolean }[] = [];
-      for (const ch of text) {
-        const cell = !NARROW.test(ch);
-        const last = parts[parts.length - 1];
-        if (!cell && last && !last.cell) last.text += ch;
-        else parts.push({ text: ch, cell });
-      }
-      return { cls, parts };
-    }),
-  );
-});
-
-function showKey(label?: string) {
-  if (!label) return;
-  key.value = { label: KEY_NAMES[label] ?? label, id: ++keyId };
-  clearTimeout(keyTimer);
-  keyTimer = setTimeout(() => (key.value = undefined), 1100);
-}
+const box = (r: Rect) => ({ left: `${r[0]}%`, top: `${r[1]}%`, width: `${r[2]}%`, height: `${r[3]}%` });
+const ring = (r: Rect) => ({ left: `${r[0] + r[2] / 2}%`, top: `${r[1] + r[3] / 2}%` });
+// A note's text in parts, every other one code
+const parts = (text: string) => text.split("`").map((part, i) => ({ part, code: i % 2 === 1 }));
 
 function schedule() {
   clearTimeout(timer);
-  const d = data.value;
-  if (!d || !playing.value || !visible) return;
-  if (props.notes) {
-    timer = setTimeout(() => {
-      noteIndex.value = (noteIndex.value + 1) % steps.value;
-      schedule();
-    }, NOTE_MS);
-    return;
-  }
-  const last = index.value === d.frames.length - 1;
+  if (!playing.value || !visible || steps.value < 2) return;
   timer = setTimeout(() => {
-    index.value = last ? 0 : index.value + 1;
-    showKey(frame.value?.key);
+    index.value = (index.value + 1) % steps.value;
     schedule();
-  }, d.frames[index.value].ms + (last ? LAST_FRAME_PAUSE : 0));
+  }, props.notes ? NOTE_MS : SHOT_MS);
 }
-
+function go(i: number) {
+  index.value = (i + steps.value) % steps.value;
+  schedule();
+}
 function toggle() {
   playing.value = !playing.value;
-  if (playing.value && !props.notes && data.value && index.value === data.value.frames.length - 1) index.value = 0;
   schedule();
 }
-
-function restart() {
-  if (props.notes) noteIndex.value = 0;
-  else index.value = 0;
-  playing.value = true;
-  schedule();
-}
-
-// Click on the progress bar: jump to that frame, or that note
-function seek(event: MouseEvent) {
-  if (!steps.value) return;
-  const box = (event.currentTarget as HTMLElement).getBoundingClientRect();
-  const to = Math.min(steps.value - 1, Math.max(0, Math.floor(((event.clientX - box.left) / box.width) * steps.value)));
-  if (props.notes) noteIndex.value = to;
-  else index.value = to;
-  schedule();
-}
-
-function measure() {
-  if (!screen.value) return;
-  const probe = document.createElement("span");
-  probe.textContent = "─".repeat(50) + "x".repeat(50);
-  probe.style.cssText = "position:absolute;visibility:hidden;font-size:100px;white-space:pre;";
-  screen.value.appendChild(probe);
-  cellWidth.value = probe.getBoundingClientRect().width / 100 / 100 || 0.6;
-  probe.remove();
-}
-
 function onKeydown(event: KeyboardEvent) {
   if (event.key === "Escape" && expanded.value) expanded.value = false;
 }
-
 watch(expanded, (on) => document.documentElement.classList.toggle("flows-watch-expanded", on));
-
-onMounted(async () => {
-  const load = recordings[`./flows-watch/${props.scene}.json`];
-  if (!load) return;
-  data.value = await load();
-  measure();
-  document.fonts?.ready.then(measure);
-  const still = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-  // With reduced motion, it starts paused on the last frame, where the step ends, or on the first note
-  index.value = still || props.notes ? data.value.frames.length - 1 : 0;
-  playing.value = !still;
+onMounted(() => {
+  // With reduced motion, it starts paused
+  playing.value = !window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  // The screenshots of both themes load early, so switching shots doesn't flicker
+  for (let i = 0; i < shots.value.length; i++) new Image().src = src(i);
   observer = new IntersectionObserver(([entry]) => {
     visible = entry.isIntersecting;
     schedule();
@@ -169,10 +90,8 @@ onMounted(async () => {
   if (root.value) observer.observe(root.value);
   window.addEventListener("keydown", onKeydown);
 });
-
 onBeforeUnmount(() => {
   clearTimeout(timer);
-  clearTimeout(keyTimer);
   observer?.disconnect();
   window.removeEventListener("keydown", onKeydown);
   document.documentElement.classList.remove("flows-watch-expanded");
@@ -181,18 +100,21 @@ onBeforeUnmount(() => {
 
 <template>
   <div v-if="expanded" class="backdrop" @click="expanded = false"></div>
-  <figure ref="root" class="flows-watch" :class="{ expanded }">
+  <figure v-if="shot" ref="root" class="flows-watch" :class="{ expanded }">
     <div class="window">
       <div class="bar">
         <span class="dots" aria-hidden="true"><i></i><i></i><i></i></span>
-        <span class="name">{{ title ?? "Terminal 1 — flows watch" }}</span>
+        <span class="name">{{ title ?? "localhost:8234 — flows watch" }}</span>
         <span class="tools">
+          <button type="button" aria-label="Back" title="Back" @click="go(index - 1)">
+            <svg viewBox="0 0 16 16"><path d="M10 3L5 8l5 5" /></svg>
+          </button>
           <button type="button" :aria-label="playing ? 'Pause' : 'Play'" :title="playing ? 'Pause' : 'Play'" @click="toggle">
             <svg v-if="playing" viewBox="0 0 16 16"><path d="M5 3v10M11 3v10" /></svg>
             <svg v-else viewBox="0 0 16 16"><path d="M5 3l8 5-8 5z" class="solid" /></svg>
           </button>
-          <button type="button" aria-label="Start over" title="Start over" @click="restart">
-            <svg viewBox="0 0 16 16"><path d="M3.5 8a4.5 4.5 0 1 0 1.4-3.3M3 2.5v3h3" /></svg>
+          <button type="button" aria-label="Next" title="Next" @click="go(index + 1)">
+            <svg viewBox="0 0 16 16"><path d="M6 3l5 5-5 5" /></svg>
           </button>
           <button type="button" :aria-label="expanded ? 'Smaller' : 'Larger'" :title="expanded ? 'Smaller (Esc)' : 'Larger'" @click="expanded = !expanded">
             <svg v-if="expanded" viewBox="0 0 16 16"><path d="M6 2v4H2M10 14v-4h4M14 6h-4V2M2 10h4v4" /></svg>
@@ -200,36 +122,31 @@ onBeforeUnmount(() => {
           </button>
         </span>
       </div>
-      <div ref="screen" class="screen" :style="data ? { '--cols': data.width, '--rows': data.height, '--cell': cellWidth } : undefined" role="img" :aria-label="notes ? `flows watch: ${notes.map((n) => `${n.label}: ${n.text.replaceAll('`', '')}`).join(' ')}` : `flows watch: ${caption}`">
-        <template v-if="data">
-          <div v-for="(line, y) in lines" :key="y" class="line">
-            <span v-for="(run, i) in line" :key="i" :class="run.cls"><template v-for="(part, j) in run.parts" :key="j"><span v-if="part.cell" class="cell">{{ part.text }}</span><template v-else>{{ part.text }}</template></template></span>
-          </div>
-        </template>
+      <div class="screen">
+        <img :src="src(shotIndex)" :alt="note ? `flows watch: ${note.label}: ${note.text.replaceAll('`', '')}` : `flows watch: ${shot.caption}`" />
+        <span v-if="!note && shot.click" :key="`${scene}-${index}`" class="ring" :style="ring(shot.click)"></span>
         <Transition name="note" mode="out-in">
-          <div v-if="note" :key="noteIndex" class="notes">
-            <span v-for="([x, y, w, h], i) in note.boxes" :key="i" class="note-box" :style="{ '--x': x, '--y': y, '--w': w, '--h': h }"></span>
-            <span class="note" :style="{ '--x': note.lx, '--y': note.ly }"><span><b>{{ note.label }}:</b> <template v-for="({ part, code }, i) in parts(note.text)" :key="i"><code v-if="code">{{ part }}</code><template v-else>{{ part }}</template></template></span></span>
+          <div v-if="note && noteRect" :key="index" class="notes">
+            <span class="note-box" :style="box(noteRect)"></span>
+            <span class="note" :style="notePlace"><b>{{ note.label }}:</b> <template v-for="({ part, code }, i) in parts(note.text)" :key="i"><code v-if="code">{{ part }}</code><template v-else>{{ part }}</template></template></span>
           </div>
-        </Transition>
-        <Transition name="key">
-          <kbd v-if="key" :key="key.id" class="key">{{ key.label }}</kbd>
         </Transition>
       </div>
-      <div class="progress" role="presentation" @click="seek"><span :style="{ transform: `scaleX(${progress})` }"></span></div>
+      <div v-if="steps > 1" class="progress">
+        <button v-for="i in steps" :key="i" type="button" :class="{ on: i - 1 === index }" :aria-label="`Step ${i} of ${steps}`" @click="go(i - 1)"></button>
+      </div>
     </div>
     <figcaption>
-      <span class="dot" :class="{ paused: !playing }"></span>
-      <span v-if="note">{{ note.label }} ({{ noteIndex + 1 }} of {{ notes!.length }})</span>
-      <span v-else>{{ caption }}</span>
+      <span v-if="steps > 1" class="count">{{ index + 1 }} / {{ steps }}</span>
+      <span v-if="note">{{ note.label }}</span>
+      <span v-else>{{ shot.caption }}</span>
     </figcaption>
   </figure>
 </template>
 
 <style scoped>
-/* The palette of `flows watch` is in zuhlke.css (--tui-*), shared with RalphDiagram */
+/* The window's colours are in zuhlke.css (--tui-*), shared with RalphDiagram */
 .flows-watch {
-  container-type: inline-size;
   margin: 24px 0;
 }
 .window {
@@ -291,196 +208,116 @@ onBeforeUnmount(() => {
 .tools svg .solid {
   fill: currentColor;
 }
-
-/* The character grid fills the width: one cell is --cell em wide in the monospace font */
 .screen {
   position: relative;
-  padding: 10px 12px;
-  font-family: var(--vp-font-family-mono);
-  font-size: calc((100cqw - 26px) / (var(--cols, 120) * var(--cell, 0.6)));
-  line-height: 1.2;
-  color: var(--tui-text);
-  white-space: pre;
-  font-variant-ligatures: none;
-  min-height: calc(var(--rows, 30) * 1.2em + 20px);
+  line-height: 0;
 }
-.line {
-  height: 1.2em;
-  overflow: hidden;
+.screen img {
+  display: block;
+  width: 100%;
+  height: auto;
 }
-.cell {
-  display: inline-block;
-  width: calc(var(--cell, 0.6) * 1em);
-  text-align: center;
-  overflow: visible;
+/* What to click next */
+.ring {
+  position: absolute;
+  width: 34px;
+  height: 34px;
+  margin: -17px 0 0 -17px;
+  border: 3px solid var(--tui-you);
+  border-radius: 50%;
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--tui-you) 25%, transparent);
+  pointer-events: none;
+  animation: ring 1.6s ease-out 1;
 }
-.bold {
-  font-weight: 700;
+@keyframes ring {
+  0% {
+    transform: scale(1.8);
+    opacity: 0;
+  }
+  40% {
+    transform: scale(1);
+    opacity: 1;
+  }
 }
-.fg-text {
-  color: var(--tui-text);
-}
-.fg-muted {
-  color: var(--tui-muted);
-}
-.fg-line {
-  color: var(--tui-line);
-}
-.fg-run {
-  color: var(--tui-run);
-}
-.fg-you {
-  color: var(--tui-you);
-}
-.bg-you {
-  background: var(--tui-you-tint);
-}
-.bg-raised {
-  background: var(--tui-raised);
-}
-.bg-selected {
-  background: var(--tui-selected);
-}
-
-/* Notes: a purple highlight behind cells, and a label that explains them. One note at a time fades in and out. */
 .notes {
   position: absolute;
   inset: 0;
-  pointer-events: none;
+  line-height: 1.45;
+}
+.note-box {
+  position: absolute;
+  border: 2px solid var(--tui-you);
+  border-radius: 6px;
+  box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.18);
+}
+.note {
+  position: absolute;
+  max-width: 40%;
+  padding: 8px 12px;
+  border-radius: 8px;
+  background: var(--tui-you);
+  color: #fff;
+  font-size: 13px;
+  white-space: pre-line;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.2);
+}
+.note code {
+  background: rgba(255, 255, 255, 0.18);
+  color: #fff;
+  font-size: 12px;
 }
 .note-enter-active,
 .note-leave-active {
-  transition: opacity 0.4s;
+  transition: opacity 0.25s;
 }
 .note-enter-from,
 .note-leave-to {
   opacity: 0;
 }
-.note-box,
-.note {
-  position: absolute;
-  left: calc(12px + var(--x) * var(--cell, 0.6) * 1em);
-  top: calc(10px + var(--y) * 1.2em);
-}
-.note-box {
-  width: calc(var(--w) * var(--cell, 0.6) * 1em);
-  height: calc(var(--h) * 1.2em);
-  margin: -0.15em -0.3em;
-  padding: 0.15em 0.3em;
-  box-sizing: content-box;
-  border-radius: 5px;
-  background: color-mix(in srgb, var(--z-purple-bright) 22%, transparent);
-}
-/* The label's font is larger than the screen's, so it's positioned in the screen's em, then styled inside */
-.note {
-  margin-top: 0.1em;
-}
-.note > span {
-  display: inline-block;
-  padding: 0.1em 0.6em;
-  border-radius: 5px;
-  background: var(--z-purple);
-  color: #fff;
-  font-family: var(--vp-font-family-base);
-  font-size: max(12px, 1.1em);
-  line-height: 1.25;
-  white-space: pre;
-}
-.note code {
-  padding: 0 0.25em;
-  border-radius: 3px;
-  background: rgba(255, 255, 255, 0.2);
-  color: #fff;
-  font-size: 0.95em;
-}
-
-/* The key that was just pressed */
-.key {
-  position: absolute;
-  right: 16px;
-  bottom: 14px;
-  padding: 0.3em 0.8em;
-  border: 1px solid var(--tui-you);
-  border-bottom-width: 3px;
-  border-radius: 7px;
-  background: var(--tui-bg);
-  font-family: var(--vp-font-family-base);
-  font-size: max(13px, 1.25em);
-  font-weight: 600;
-  color: var(--tui-you);
-  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.15);
-}
-.key-enter-active {
-  transition: transform 0.12s ease-out, opacity 0.12s;
-}
-.key-leave-active {
-  transition: opacity 0.3s;
-}
-.key-enter-from {
-  transform: translateY(4px) scale(0.92);
-  opacity: 0;
-}
-.key-leave-to {
-  opacity: 0;
-}
-
 .progress {
-  height: 3px;
-  background: var(--tui-line);
-  cursor: pointer;
+  display: flex;
+  gap: 4px;
+  padding: 6px 10px;
+  border-top: 1px solid var(--tui-line);
+  background: var(--tui-chrome);
 }
-.progress span {
-  display: block;
-  height: 100%;
+.progress button {
+  flex: 1;
+  height: 4px;
+  border-radius: 2px;
+  background: var(--tui-line);
+}
+.progress button.on {
   background: var(--tui-you);
-  transform-origin: left;
-  transition: transform 0.15s linear;
 }
 figcaption {
   display: flex;
-  align-items: center;
-  gap: 8px;
-  margin-top: 10px;
-  min-height: 1.5em;
-  font-size: 13px;
-  font-weight: 600;
-  color: var(--vp-c-brand-1);
+  gap: 10px;
+  margin-top: 8px;
+  font-size: 14px;
+  color: var(--vp-c-text-2);
 }
-.dot {
-  flex: none;
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  background: var(--z-purple);
+.count {
+  color: var(--vp-c-text-3);
+  font-variant-numeric: tabular-nums;
 }
-.dot.paused {
-  background: var(--vp-c-text-3);
-}
-
 /* Larger: over the page, as wide as the window allows */
-.flows-watch.expanded {
-  position: fixed;
-  top: 50%;
-  left: 50%;
-  z-index: 100;
-  width: min(96vw, calc((100vh - 150px) * 1.85));
-  margin: 0;
-  transform: translate(-50%, -50%);
-}
-.flows-watch.expanded figcaption {
-  color: #fff;
-}
 .backdrop {
   position: fixed;
   inset: 0;
   z-index: 99;
   background: rgba(0, 0, 0, 0.6);
 }
-</style>
-
-<style>
-/* While a recording is larger, the page behind it doesn't scroll */
-html.flows-watch-expanded {
-  overflow: hidden;
+.flows-watch.expanded {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  z-index: 100;
+  width: min(96vw, calc(92vh * 1360 / 780));
+  margin: 0;
+  transform: translate(-50%, -50%);
+}
+.flows-watch.expanded figcaption {
+  color: #fff;
 }
 </style>

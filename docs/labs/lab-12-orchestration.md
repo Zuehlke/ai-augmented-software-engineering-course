@@ -6,11 +6,6 @@ In this lab, we will run the whole pipeline:
 
 <FlowsWatch scene="lab12-overview" />
 
-- Agents do the steps that need judgement. Fixed rules, like picking `ready` tickets or merging, are plain code.
-- Research, plan and implement all work like the Ralph loop: an agent runs, a judge checks it.
-- Research, plan, review and the judge run on Opus. The implement loops run most often, so they use the cheaper Sonnet.
-- You only step in twice, at the two human gateways, marked with ⚑ in the UI.
-
 ## Your Task
 
 Start the lab setup with the following command:
@@ -27,20 +22,20 @@ task lab/orchestration
 > [!NOTE]
 > The agents in this lab run unattended, so they need the [agent token from the setup](/getting-started/setup#agent-token).
 
-Start Temporal and the worker in the background, and open the pipeline view. The agents use Claude Code. If you use GitHub Copilot CLI, press `a` in `flows watch` to switch to it.
+Start Temporal and the worker in the background, and open the pipeline view on [http://localhost:8234](http://localhost:8234). The agents use Claude Code. If you use GitHub Copilot CLI, click **Copilot** next to **Agent** in `flows watch` to switch to it.
 
 ```bash
 task flows:start
 task flows:watch
 ```
 
-It shows the pipeline as in the recording above. Blue is what runs, purple is what waits for you.
+It shows the pipeline as in the screenshots above. Blue is what runs, purple is what waits for you.
 
 ### 1. Start the pipeline
 
 <FlowsWatch scene="lab12-start" />
 
-In the UI, the **Specification** stage is selected. Press `Enter`, paste the feature request and press `Enter` again:
+In the UI, click the **Research** box, paste the feature request and click **Start the pipeline**:
 
 <details>
 <summary>The feature request</summary>
@@ -51,51 +46,79 @@ On the dashboard, support staff enter an airport code and see the delayed flight
 
 </details>
 
-The research agent writes a specification and the plan agent writes tickets. Each phase has its own judge, which checks the result before the next phase starts.
+The research agent writes a specification. Each phase has its own judge, which checks the result before the next phase starts.
 
-### 2. Approve the tickets
+### 2. Approve the specification
 
-When the plan agent is done, the tickets wait for you. First check what the agents wrote:
+When the research agent is done, the specification waits for you. First check what the agent wrote:
 
 - In `specs/`: do the assumptions make sense?
-- In `backlog/`: is each `ready` ticket independent of the others?
 
-Then press `n`, select the tickets to build with `Space`, and press `Enter`. Each selected ticket gets a Ralph loop. Only tickets that nothing blocks are on offer.
+Then click **Decide**. Click **Approve**, or **Send back…** to send it back: type your feedback and click **Send back**. The research agent revises the specification and asks you again. Once you approve it, the design agent writes the design next to it, and the plan agent writes tasks along the design.
+
+<FlowsWatch scene="lab12-specification" />
+
+### 3. Approve the plan
+
+When the plan agent is done, the design and the tasks wait for you. First check what the agents wrote:
+
+- In `specs/`: does the design fit the specification?
+- In `backlog/`: is each `ready` task independent of the others?
+
+Then click **Decide**, select the tasks to build and click **Approve**. Each selected task gets a Ralph loop. Only tasks that nothing blocks are on offer. If the plan isn't right, click **Send back…** instead and type your feedback: its tasks go, and the design and the plan agent do it again.
 
 <FlowsWatch scene="lab12-approve" />
 
-### 3. Wait for the implement loops and the review agent
+### 4. Wait for the implement loops and the review agent
 
-The implement loops and the review agent take a while. A loop that fails doesn't stop the others: only finished tickets go on to review. Press `Tab` to switch between the pipeline and the board.
+The implement loops and the review agent take a while. A loop that fails doesn't stop the others: only finished tasks go on to review. The loops are under **Loops**: click one to open its task.
 
 <FlowsWatch scene="lab12-implement" />
 
-Meanwhile, read a simplified version of the workflow below. Every step uses something from the earlier labs: agents checked by a judge, one Ralph loop per ticket in its own worktree, and two checkpoints. Each checkpoint is a `condition(...)` that waits for your answer in the UI.
+Meanwhile, read a simplified version of the workflow below. Every step uses something from the earlier labs: agents checked by a judge, one Ralph loop per task in its own worktree, and three checkpoints. Each checkpoint is a `condition(...)` that waits for your answer in the UI.
 
 ::: code-group
 
 ```ts [.harness/src/workflows/pipeline.ts (simplified)]
-// research → plan → you approve the tickets → implement → review → you decide → merge
+// research → you approve the specification → design → plan → you approve the plan → implement → review →
+// you decide → merge. At the first two checkpoints, you can send the work back with your feedback instead.
 async function steps({ repoDir, agent, request }: PipelineInput, status: PipelineStatus, decisions: Decisions) {
-  // research and plan: an agent works, a judge checks it, like in the Ralph loop
-  await runPhase(repoDir, planDir, agent, { name: 'research', input: `Feature request: ${request}`, maxRuns: 3 }, status);
-  await runPhase(repoDir, planDir, agent, { name: 'plan', input: 'Specification: the one in specs/', maxRuns: 3 }, status);
+  // research: an agent works, a judge checks it, like in the Ralph loop
+  // ✋ Checkpoint 1: what it wrote comes onto your branch, and it waits until you approve it or send it back
+  let feedback: string | undefined;
+  do {
+    await runPhase(repoDir, planDir, agent, { name: 'research', input: researchInput(request, feedback), maxRuns: 3 }, status);
+    feedback = (await checkpoint('specification', 'waiting for your specification approval')).feedback;
+  } while (feedback !== undefined);
 
-  // dispatch: no agent, a rule. It picks the tickets that nothing blocks
-  status.tickets = await readyTickets(repoDir);
+  // design and plan: the design next to the specification, then the tasks along it, each checked by a judge
+  let approved: string[];
+  for (;;) {
+    await runPhase(repoDir, planDir, agent, { name: 'design', input: designInput(feedback), maxRuns: 3 }, status);
+    await runPhase(repoDir, planDir, agent, { name: 'plan', input: planInput(feedback), maxRuns: 3 }, status);
 
-  // ✋ Checkpoint 1: waits until you approve the tickets
-  await condition(() => decisions.approved !== undefined);
+    // dispatch: no agent, a rule. It picks the tasks that nothing blocks
+    status.tasks = await readyTasks(repoDir);
 
-  // implement: one Ralph loop per ticket, each in its own worktree, all at the same time
-  const loops = decisions.approved!.map((ticket) =>
-    executeChild(ralph, { workflowId: `pipeline-${ticket}`, args: [{ repoDir, agent, ticket, base }] }));
+    // ✋ Checkpoint 2: you approve the plan with the tasks to build, or send it back: its tasks go, design and plan again
+    const decision = await checkpoint('plan', 'waiting for your plan approval');
+    if (decision.feedback === undefined) {
+      approved = decision.tasks;
+      break;
+    }
+    await removeTasks(planDir, written);
+    feedback = decision.feedback;
+  }
+
+  // implement: one Ralph loop per task, each in its own worktree, all at the same time
+  const loops = approved.map((task) =>
+    executeChild(ralph, { workflowId: `pipeline-${task}`, args: [{ repoDir, agent, task, base }] }));
   const results = await Promise.allSettled(loops); // a loop that fails doesn't stop the others
 
   // review: a read-only agent checks every finished branch
   status.review = await runAgent({ repoDir, agent, mode: 'read', model: MODELS.review, step: 'review', prompt });
 
-  // ✋ Checkpoint 2: waits for your merge decision
+  // ✋ Checkpoint 3: waits for your merge decision
   await condition(() => decisions.merge !== undefined);
   if (!decisions.merge) return finish(repoDir, status);
 
@@ -110,7 +133,7 @@ async function steps({ repoDir, agent, request }: PipelineInput, status: Pipelin
 <details>
 <summary>The skills in <code>.agents/skills/</code> and <code>prompts.ts</code> (already in the branch)</summary>
 
-The `research` and `plan` skills usually ask you questions. In the pipeline, nobody is there to answer. So `workPrompt` in `prompts.ts` tells every agent to make a sensible assumption and write it down where the skill keeps assumptions. The judges check these first, and then you check them at the first checkpoint.
+The `research`, `design` and `plan` skills usually ask you questions. In the pipeline, nobody is there to answer. So `workPrompt` in `prompts.ts` tells every agent to make a sensible assumption and write it down where the skill keeps assumptions. The judges check these first, and then you check them at the first checkpoint.
 
 The `judge` skill keeps its checks per phase, in `checks/`. Each judge reads only the file of its phase, which `judgePrompt` names, so a plan judge isn't distracted by the rules for code.
 
@@ -158,7 +181,7 @@ export function reviewPrompt(diffs: string): string {
 ```markdown [.agents/skills/judge/SKILL.md]
 ---
 name: judge
-description: Judge another agent's run on a phase (research, plan or implement) like a stranger's work, and end with one verdict line.
+description: Judge another agent's run on a phase (research, design, plan or implement) like a stranger's work, and end with one verdict line.
 disable-model-invocation: true
 ---
 
@@ -194,25 +217,41 @@ The agent turned the feature request into a specification in `specs/`.
 - If the request can be read in two ways that lead to different features, ask a question instead.
 ```
 
+```markdown [.agents/skills/judge/checks/design.md]
+# Checks: design
+
+The agent wrote the design for the specification, in `specs/<slug>/design.md`.
+
+- Every acceptance criterion of the specification is served by the design: the modules, endpoints and
+  tests it names.
+- Nothing beyond the specification: no extra behaviour, endpoints, options or rules.
+- The design follows the codebase around it: its structure, naming and error handling. Check that
+  against the code, don't take the design's word for it.
+- It names the tests to write before the code, and they cover every acceptance criterion.
+- No literal code, and nothing called "optional" or "not needed".
+- If the specification can be built in two ways that change what a user or caller sees, ask a question
+  instead.
+```
+
 ```markdown [.agents/skills/judge/checks/plan.md]
 # Checks: plan
 
-The agent turned the specification into tickets in `backlog/`.
+The agent turned the specification into tasks in `backlog/`.
 
-- Every ticket is a vertical slice that a user can see or use, not a layer such as "database" or "UI".
-- A `ready` ticket doesn't depend on any other new ticket. One that does is `blocked`, with those
-  tickets in `blocked_by`.
-- Together, the tickets cover the whole specification.
-- Every acceptance criterion of the specification is owned by exactly one ticket. A ticket that only
-  combines what another ticket built, for example "X together with Y", or that only adds tests for
-  another ticket's behaviour, is not a slice: its criteria belong to the ticket that builds the
-  behaviour. A small request is one ticket.
+- Every task is a vertical slice that a user can see or use, not a layer such as "database" or "UI".
+- A `ready` task doesn't depend on any other new task. One that does is `blocked`, with those
+  tasks in `blocked_by`.
+- Together, the tasks cover the whole specification, and they follow the decisions of its design.md.
+- Every acceptance criterion of the specification is owned by exactly one task. A task that only
+  combines what another task built, for example "X together with Y", or that only adds tests for
+  another task's behaviour, is not a slice: its criteria belong to the task that builds the
+  behaviour. A small request is one task.
 ```
 
 ```markdown [.agents/skills/review/SKILL.md]
 ---
 name: review
-description: Review a finished change built by other agents like a stranger's pull request, against its tickets in backlog/ or against a feature request and hidden criteria, and end with APPROVE or REJECT.
+description: Review a finished change built by other agents like a stranger's pull request, against its tasks in backlog/ or against a feature request and hidden criteria, and end with APPROVE or REJECT.
 disable-model-invocation: true
 ---
 
@@ -222,10 +261,10 @@ You review a change built by other agents. You don't know how it was built: revi
 pull request. Read any file you need, but don't change any. You get one of two inputs:
 
 - **Branches**, each under `BRANCH <name>`: the pipeline asks whether to merge them. Every branch is
-  checked against its ticket in `backlog/`, the ticket id is in the branch name.
+  checked against its task in `backlog/`, the task id is in the branch name.
 - **One change**, with a FEATURE REQUEST and CRITERIA: the evals ask whether you would ship it. The
   agents that built it never saw the criteria. What they left besides the code, a specification in
-  `specs/` and tickets in `backlog/`, is fine.
+  `specs/` and tasks in `backlog/`, is fine.
 
 ---
 
@@ -233,7 +272,7 @@ pull request. Read any file you need, but don't change any. You get one of two i
 
 For every branch, or for the one change:
 
-1. Check it against what was asked. Every acceptance criterion of the ticket, or every one of the
+1. Check it against what was asked. Every acceptance criterion of the task, or every one of the
    CRITERIA, is met by the change itself, not only by its tests, and nothing outside its scope changed.
    A `.harness/progress.md` on a branch means the loop didn't finish.
 
@@ -255,15 +294,15 @@ End without any formatting, no bullets, no bold, no backticks:
 
 </details>
 
-### 4. Decide whether to merge
+### 5. Decide whether to merge
 
-When the review agent is done, the merge decision waits for you. Press `n` to see the review's verdict for each branch. To see a branch's changes yourself, open its ticket on the board and press `d`.
+When the review agent is done, the merge decision waits for you. Click **Decide** to see the review's verdict for each branch. To see a branch's changes yourself, click its loop under **Loops** and click **Diff in IDE**.
 
-Press `y` to merge. The workflow rebases each approved branch onto your branch, then runs the tests. Both tickets change the same dashboard page, so the second branch may conflict. It then stays on the board as *ready to merge*: open it and press `m` to see how to rebase it by hand.
+Click **Merge** to merge. The workflow rebases each approved branch onto your branch, then runs the tests. Both tasks change the same dashboard page, so the second branch may conflict. Its loop then says `not merged`: click it and **Merge into your branch** to see how to rebase it by hand.
 
 <FlowsWatch scene="lab12-merge" />
 
-### 5. Look at the result
+### 6. Look at the result
 
 In a new terminal:
 
@@ -273,12 +312,12 @@ task run
 
 Open the dashboard at [http://localhost:8080/dashboard.html](http://localhost:8080/dashboard.html). In **GitHub Codespaces**, open the **Ports** tab, click the globe icon next to port `8080` (**Flight API**) and append `/dashboard.html` to the URL. You should see the work of every merged branch.
 
-### 6. Clean up
+### 7. Clean up
 
-Stop the app (`Ctrl+C`), quit `flows watch` (`q`) and clean up:
+Stop the app (`Ctrl+C`), quit `flows watch` (`Ctrl+C` in its terminal) and clean up:
 
 ```bash
 flows cleanup
 ```
 
-This stops any running workflows and removes the worktrees and merged branches. Unmerged branches stay, and `flows cleanup` prints how to delete them. Your branch keeps the specification, the tickets and the merged code.
+This stops any running workflows and removes the worktrees and merged branches. Unmerged branches stay, and `flows cleanup` prints how to delete them. Your branch keeps the specification, the design, the tasks and the merged code.
