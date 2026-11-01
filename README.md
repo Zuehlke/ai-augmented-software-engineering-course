@@ -4,7 +4,7 @@ Course material for AI-augmented software engineering at Zühlke.
 
 ## Course Homepage
 
-<https://zuehlke.github.io/ai-augmented-software-engineering/>
+- GitHub Pages: <https://zuehlke.github.io/ai-augmented-software-engineering-course/>
 
 ## Run the page locally
 
@@ -26,21 +26,21 @@ This starts the VitePress dev server on <http://localhost:5174>.
 | `VITE_DAY2_LABS_ENABLED` | `true` (default) / `false` | Show Labs 7-13 |
 | `VITE_DAY1_PASSWORD` | `promptAndPray` | Password for Labs 1-6 |
 | `VITE_DAY2_PASSWORD` | `shipIt` | Password for Labs 7-13 |
-| `VITE_HOSTING_PLATFORM` | `gitlab` (default) / `zulu` | Show platform-specific content |
+| `VITE_AUDIENCE` | `internal` (default) / `github` | Show audience-specific content; `github` clones the lab from GitHub |
 
-Set them as CI/CD variables in GitLab (or in `.gitlab-ci.yml`), or locally in `docs/.env`:
+Set them as CI/CD variables in GitLab (or in `.gitlab-ci.yml`), in `.github/workflows/pages.yml` for GitHub Pages, or locally in `docs/.env`:
 
 ```bash
 VITE_DAY2_LABS_ENABLED=false
-VITE_HOSTING_PLATFORM=zulu
+VITE_AUDIENCE=github
 ```
 
-Show content for one platform only:
+Show content for some audiences only (space-separated: `internal`, `github`):
 
 ```md
-<OnlyOn platform="zulu">
+<OnlyOn audience="github">
 
-Only shown on Zulu.
+Only shown on GitHub Pages.
 
 </OnlyOn>
 ```

@@ -16,8 +16,8 @@ const env = {
   ...process.env,
 };
 const accessControl = resolveAccessControlFromEnv(env);
-// "gitlab" or "zulu": lets pages show platform-specific content.
-const hostingPlatform = env.VITE_HOSTING_PLATFORM === "zulu" ? "zulu" : "gitlab";
+// "internal" (Codehub) or "github" (GitHub Pages): lets pages show audience-specific content.
+const audience = env.VITE_AUDIENCE?.trim().toLowerCase() || "internal";
 // Locked days are left out of the navbar and sidebar.
 const labsLink = accessControl.day1LabsEnabled
   ? "/labs/lab-1-vibe-coding"
@@ -45,7 +45,7 @@ export default defineConfig({
   ignoreDeadLinks: [/^https?:\/\/localhost/],
   themeConfig: {
     accessControl,
-    hostingPlatform,
+    audience,
     nav: [
       { text: "Getting Started", link: "/getting-started/setup" },
       ...(labsLink ? [{ text: "Labs", link: labsLink }] : []),

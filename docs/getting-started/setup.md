@@ -10,7 +10,7 @@ Choose one setup option and follow the steps.
 - [GitHub](https://github.com/) account
 - Active [GitHub Copilot](https://github.com/features/copilot) or [Claude Code](https://claude.com/de/product/claude-code) license
 
-<OnlyOn platform="gitlab">
+<OnlyOn audience="internal">
 
 > [!IMPORTANT] Don't have a license yet?
 > Request one [here](https://ticket.zuehlke.com/support/catalog/items/570).
@@ -108,7 +108,7 @@ echo ${CLAUDE_CODE_OAUTH_TOKEN:+set} ${COPILOT_GITHUB_TOKEN:+set}
 - [VS Code](https://code.visualstudio.com/download) including the [Dev Containers extension](https://marketplace.visualstudio.com/items?itemName=ms-vscode-remote.remote-containers)
 - [GitHub Copilot](https://github.com/features/copilot) or [Claude Code](https://claude.com/de/product/claude-code) license active and ready to use in your IDE or CLI
 
-<OnlyOn platform="gitlab">
+<OnlyOn audience="internal">
 
 > [!IMPORTANT] Don't have a license yet?
 > Request one [here](https://ticket.zuehlke.com/support/catalog/items/570).
@@ -117,7 +117,7 @@ echo ${CLAUDE_CODE_OAUTH_TOKEN:+set} ${COPILOT_GITHUB_TOKEN:+set}
 
 ### 2. Clone and open in VS Code
 
-<OnlyOn platform="gitlab">
+<OnlyOn audience="internal">
 
 ```bash
 git clone https://codehub.zuehlke.com/ai-augmented-software-engineering/lab.git
@@ -125,11 +125,11 @@ cd lab
 ```
 
 </OnlyOn>
-<OnlyOn platform="zulu">
+<OnlyOn audience="github">
 
 ```bash
-git clone https://gitlab.zuluplane.io/ai-augmented-software-engineering-finstar/labs.git
-cd labs
+git clone https://github.com/Zuehlke/ai-augmented-software-engineering.git
+cd ai-augmented-software-engineering
 ```
 
 </OnlyOn>
@@ -211,7 +211,7 @@ echo ${CLAUDE_CODE_OAUTH_TOKEN:+set} ${COPILOT_GITHUB_TOKEN:+set}
 - [IntelliJ IDEA](https://www.jetbrains.com/idea/download/) including the [Dev Containers plugin](https://www.jetbrains.com/help/idea/connect-to-devcontainer.html)
 - [GitHub Copilot](https://github.com/features/copilot) or [Claude Code](https://claude.com/de/product/claude-code) license active and ready to use in your IDE or CLI
 
-<OnlyOn platform="gitlab">
+<OnlyOn audience="internal">
 
 > [!IMPORTANT] Don't have a license yet?
 > Request one [here](https://ticket.zuehlke.com/support/catalog/items/570).
@@ -220,7 +220,7 @@ echo ${CLAUDE_CODE_OAUTH_TOKEN:+set} ${COPILOT_GITHUB_TOKEN:+set}
 
 ### 2. Clone and open in IntelliJ IDEA
 
-<OnlyOn platform="gitlab">
+<OnlyOn audience="internal">
 
 ```bash
 git clone https://codehub.zuehlke.com/ai-augmented-software-engineering/lab.git
@@ -228,11 +228,11 @@ cd lab
 ```
 
 </OnlyOn>
-<OnlyOn platform="zulu">
+<OnlyOn audience="github">
 
 ```bash
-git clone https://gitlab.zuluplane.io/ai-augmented-software-engineering-finstar/labs.git
-cd labs
+git clone https://github.com/Zuehlke/ai-augmented-software-engineering.git
+cd ai-augmented-software-engineering
 ```
 
 </OnlyOn>

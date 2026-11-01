@@ -1,0 +1,60 @@
+# Deploy the AI-Augmented Software Engineering docs to GitHub Pages
+# (https://github.com/Zuehlke/ai-augmented-software-engineering-course).
+# Mirrors the `pages` job in .gitlab-ci.yml; output lands in public/
+# (VitePress outDir is ../public — see docs/.vitepress/config.ts).
+name: Deploy docs to GitHub Pages
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # Full history so `lastUpdated` dates are real per-page commit times.
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: docs/package-lock.json
+      - id: pages
+        uses: actions/configure-pages@v5
+      - name: Build docs
+        working-directory: docs
+        env:
+          # Project pages live under /<repo>/, e.g. /ai-augmented-software-engineering-course/.
+          PAGES_BASE: ${{ steps.pages.outputs.base_path }}
+          # Same toggles as .gitlab-ci.yml; see README.md › Configuration.
+          VITE_DAY1_LABS_ENABLED: true
+          VITE_DAY2_LABS_ENABLED: true
+          VITE_DAY1_PASSWORD: promptAndPray
+          VITE_DAY2_PASSWORD: shipIt
+          VITE_AUDIENCE: github
+        run: npm ci && npm run build
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: public
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4
