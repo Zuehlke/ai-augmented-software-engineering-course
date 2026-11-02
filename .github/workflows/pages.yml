@@ -39,8 +39,8 @@ jobs:
           # Project pages live under /<repo>/, e.g. /ai-augmented-software-engineering-course/.
           PAGES_BASE: ${{ steps.pages.outputs.base_path }}
           # Same toggles as .gitlab-ci.yml; see README.md › Configuration.
-          VITE_DAY1_LABS_ENABLED: true
-          VITE_DAY2_LABS_ENABLED: true
+          VITE_DAY1_LABS_ENABLED: ${{ vars.VITE_DAY1_LABS_ENABLED || 'true' }}
+          VITE_DAY2_LABS_ENABLED: ${{ vars.VITE_DAY2_LABS_ENABLED || 'true' }}
           VITE_DAY1_PASSWORD: promptAndPray
           VITE_DAY2_PASSWORD: shipIt
           VITE_AUDIENCE: github
