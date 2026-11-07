@@ -962,144 +962,76 @@
    }
   }
  ],
- "lab13-e2e-results": [
+ "lab13-fixed": [
   {
-   "caption": "One of our end-to-end evals: 15 runs, at most 3 at the same time"
-  },
-  {
-   "caption": "8 of 15 accepted, 1 task reliable, $7.33 per accepted change",
-   "click": [
-    27.7,
-    73.3,
-    22.9,
-    11.5
-   ]
-  },
-  {
-   "caption": "Click a task: why each run was or was not accepted"
-  },
-  {
-   "caption": "What the improve agent proposes for the whole setup",
+   "caption": "With a description that says what and when, every case passes again",
    "anchors": {
-    "temporal": [
-     74.3,
-     1.9,
-     4.7,
-     2.3
+    "passing": [
+     56.9,
+     62.9,
+     12.5,
+     3.1
     ],
-    "worker": [
-     80.2,
-     1.9,
-     3.8,
-     2.3
-    ],
-    "needs": [
-     1.8,
-     9.2,
-     96.5,
-     5.6
-    ]
-   }
-  }
- ],
- "lab13-e2e-start": [
-  {
-   "caption": "Start evals… picks all tasks, or one",
-   "click": [
-    30.8,
-    50.3,
-    13.2,
-    3.7
-   ],
-   "anchors": {
-    "temporal": [
-     74.3,
-     1.9,
-     4.7,
-     2.3
-    ],
-    "worker": [
-     80.2,
-     1.9,
-     3.8,
-     2.3
-    ],
-    "needs": [
-     1.8,
-     9.2,
-     96.5,
-     5.6
-    ]
-   }
-  }
- ],
- "lab13-proposals": [
-  {
-   "caption": "6 of 9: the cases that shouldn't load testing fail",
-   "click": [
-    87.5,
-    19,
-    10.2,
-    4.1
-   ]
-  },
-  {
-   "caption": "What the improve agent proposes. You decide",
-   "anchors": {
-    "temporal": [
-     74.3,
-     1.9,
-     4.7,
-     2.3
-    ],
-    "worker": [
-     80.2,
-     1.9,
-     3.8,
-     2.3
-    ],
-    "needs": [
-     1.8,
-     9.2,
-     96.5,
-     5.6
+    "metrics": [
+     45.5,
+     70.2,
+     16.7,
+     10.1
     ]
    }
   }
  ],
  "lab13-skills": [
   {
-   "caption": "The Evals tab: Start skill-loaded evals runs every case 3 times",
-   "click": [
-    85.9,
-    18.3,
-    12.3,
-    4.1
-   ]
-  },
-  {
-   "caption": "The cases fill in as their runs finish"
-  },
-  {
-   "caption": "Every case passes: ✗ marks a run that did not do what its case expects",
+   "caption": "Every run of every case, with the share that passed and the two shares of right runs",
    "anchors": {
-    "temporal": [
-     74.3,
-     1.9,
-     4.7,
-     2.3
+    "passing": [
+     56.9,
+     62.9,
+     12.5,
+     3.1
     ],
-    "worker": [
-     80.2,
-     1.9,
-     3.8,
-     2.3
+    "metrics": [
+     45.5,
+     70.2,
+     16.7,
+     10.1
+    ]
+   }
+  }
+ ],
+ "lab13-too-broad": [
+  {
+   "caption": "\"stays out when it shouldn't\" drops: testing loads for the near misses too",
+   "anchors": {
+    "passing": [
+     56.9,
+     62.9,
+     11.8,
+     3.1
     ],
-    "needs": [
-     1.8,
-     9.2,
-     96.5,
-     5.6
+    "metrics": [
+     45.5,
+     70.2,
+     16.7,
+     10.1
+    ]
+   }
+  },
+  {
+   "caption": "Failures shows the runs that loaded testing when they shouldn't have",
+   "anchors": {
+    "passing": [
+     55.3,
+     19.1,
+     8.8,
+     2.6
+    ],
+    "metrics": [
+     45.5,
+     25.8,
+     16.9,
+     20.9
     ]
    }
   }

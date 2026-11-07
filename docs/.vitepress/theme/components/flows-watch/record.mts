@@ -1,4 +1,4 @@
-// Takes the screenshots that <FlowsWatch> shows in Labs 9 to 13, of the real page of `flows watch`: the page's own
+// Takes the screenshots that <FlowsWatch> shows in Labs 8 to 12, of the real page of `flows watch`: the page's own
 // server and files, fed scripted snapshots instead of Temporal, clicked through in Chrome. Each lab is shot with
 // the `flows watch` of its own branch of Zuehlke/ai-augmented-software-engineering. Run it again when the page
 // changes there (in docs/, after npm install; it needs Google Chrome, or CHROME=<path>):
@@ -6,9 +6,9 @@
 //   git worktree add /tmp/lab-10 lab/ralph-loop && (cd /tmp/lab-10/.harness && npm ci)
 //   /tmp/lab-10/.harness/node_modules/.bin/tsx .vitepress/theme/components/flows-watch/record.mts /tmp/lab-10/.harness/src 10
 //
-// Lab 8 is lab/durable-workflows, Lab 10 lab/ralph-loop, Lab 11 lab/parallelizing-work, Lab 12 lab/orchestration,
-// Lab 13 lab/evals. It writes <scene>-<n>-light.webp and -dark.webp per shot, and the shots' captions, what they
-// mark to click next and where the parts are that a note can point at, into scenes.json.
+// Lab 8 is lab/durable-workflows, Lab 10 lab/ralph-loop, Lab 11 lab/parallelizing-work, Lab 12 lab/orchestration.
+// Lab 13 shows promptfoo instead, see record-promptfoo.mts. It writes <scene>-<n>-light.webp and -dark.webp per
+// shot, and the shots' captions, what they mark to click next and where the parts are that a note can point at, into scenes.json.
 import { existsSync, readFileSync, readdirSync, rmSync, writeFileSync } from 'node:fs';
 import http from 'node:http';
 import type { AddressInfo } from 'node:net';
@@ -18,8 +18,8 @@ import puppeteer, { type Page } from 'puppeteer-core';
 
 const srcDir = path.resolve(process.argv[2]);
 const lab = process.argv[3];
-const BRANCH = ({ '8': 'lab/durable-workflows', '10': 'lab/ralph-loop', '11': 'lab/parallelizing-work', '12': 'lab/orchestration', '13': 'lab/evals' } as Record<string, string>)[lab];
-if (!BRANCH) throw new Error('Which lab? 8, 10, 11, 12 or 13');
+const BRANCH = ({ '8': 'lab/durable-workflows', '10': 'lab/ralph-loop', '11': 'lab/parallelizing-work', '12': 'lab/orchestration' } as Record<string, string>)[lab];
+if (!BRANCH) throw new Error('Which lab? 8, 10, 11 or 12');
 const outDir = path.dirname(fileURLToPath(import.meta.url));
 const { handler } = await import(path.join(srcDir, 'web/server.ts'));
 const { pageState } = await import(path.join(srcDir, 'web/state.ts'));
@@ -102,7 +102,7 @@ const status = (step: string, extra: object = {}) => ({
 const pipeline = (step: string, extra: object = {}, state = 'running') => ({ workflowId: 'pipeline', state, status: status(step, extra) });
 const snap = (extra: Partial<Snapshot>): Snapshot => ({
   temporal: true, worker: true, loops: [], others: [], backlog: backlog('done', 'done', 'done', 'blocked'), log: [],
-  evalReports: [], skillReports: [], withoutEvals: lab !== '13', ...extra,
+  evalReports: [], skillReports: [], withoutEvals: true, ...extra,
 });
 // A task's file, as /api/task gives it, with what you can do with it now
 const TASK_FILES: Record<string, string> = {};
@@ -311,151 +311,6 @@ On the dashboard, support staff enter an airport code and see the flights depart
   ]);
 }
 
-// ── Lab 13: the evals ────────────────────────────────────────────────────────────────────────────
-if (lab === '13') {
-  // The cases of .agents/skills/<skill>/skill-loaded-evals.json, as on lab/evals
-  const CASES = [
-    { skill: 'api-design', prompt: 'Add an endpoint that returns all flights of one airline.', loads: true },
-    { skill: 'api-design', prompt: 'Add paging to GET /delays.', loads: true },
-    { skill: 'api-design', prompt: 'The flight status lookup shows the wrong status when two delay events have the same timestamp. Fix it.', loads: false },
-    { skill: 'api-design', prompt: 'Fix the typos in README.md.', loads: false },
-    { skill: 'testing', prompt: 'Add an endpoint that returns all flights of one airline.', loads: true },
-    { skill: 'testing', prompt: 'The flight status lookup shows the wrong status when two delay events have the same timestamp. Fix it.', loads: true },
-    { skill: 'testing', prompt: 'Fix the typos in README.md.', loads: false },
-    { skill: 'testing', prompt: 'Add a task to Taskfile.yml that prints the Java version.', loads: false },
-    { skill: 'testing', prompt: 'Explain how DelaysController computes the delay of a flight.', loads: false },
-  ];
-  const DESCRIPTIONS = {
-    'api-design': readSkillDescription('api-design'),
-    testing: readSkillDescription('testing'),
-  };
-  const BROAD = 'Use for every task in this repository.';
-  const TASKS = ['airline-delay-summary', 'airport-departures', 'delays-csv', 'min-delay-filter', 'status-filter'];
-
-  // A skill-loaded evals: `loaded` per case, in which of its 3 runs the agent loaded the skill
-  const skillReport = (evalsId: string, commit: string, loaded: boolean[][], costUsd: number, extra: object = {}) => ({
-    evalsId, startedAt: '', commit, skillsCommit: commit, uncommitted: [], descriptions: DESCRIPTIONS, costUsd, model: 'claude-sonnet-5-5',
-    results: CASES.map((c, i) => {
-      const runs = loaded[i].map((l) => ({ loaded: l, costUsd: costUsd / 27 }));
-      return { ...c, runs, loaded: loaded[i].filter(Boolean).length, pass: runs.filter((r) => r.loaded === c.loads).length >= 2 };
-    }),
-    ...extra,
-  });
-  // The first run misses the skill once, on the timestamp bug: 2 of 3 still pass. A description for everything loads it every time.
-  const expected = (flip: number[] = []) => CASES.map((c, i) => [0, 1, 2].map((r) => (flip.includes(i) ? !c.loads : !flip.length && i === 5 && r === 2 ? false : c.loads)));
-  const FIRST = skillReport('20261017-101817', '42308f5', expected(), 5.18);
-  const PROPOSAL = `## testing: say when the skill applies, not that it always does
-
-**Why:** "Use for every task in this repository." loads the skill for a README typo, a Taskfile task and an
-explanation: the 3 cases that shouldn't load it fail. The 2 that should load it still pass.
-
-**Proposal:** name the work the skill is for, the way the other skills do:
-
-\`description: Test-first Java coverage for src/**/*.java changes; use when the user adds or changes Java behavior, fixes a bug, or adds an endpoint.\``;
-  const BROKEN = skillReport('20261017-104502', '42308f5', expected([6, 7, 8]), 5.31, {
-    uncommitted: ['.agents/skills/testing/SKILL.md'], descriptions: { ...DESCRIPTIONS, testing: BROAD }, proposals: PROPOSAL,
-  });
-  // While it runs: the cases fill in as their runs finish
-  const runningSkills = (report: any, done: number) => {
-    let left = done;
-    const cases = report.results.map((r: any) => ({ skill: r.skill, prompt: r.prompt, loads: r.loads, runs: r.runs.map((run: any) => (left-- > 0 ? run : null)) }));
-    const asExpected = report.results.flatMap((r: any) => r.runs.map((run: any) => run.loaded === r.loads)).slice(0, done).filter(Boolean).length;
-    return { workflowId: `skill-loaded-evals-${report.evalsId}`, status: { evalsId: report.evalsId, step: 'running', runs: 27, done, asExpected, costUsd: (report.costUsd * done) / 27, cases } };
-  };
-  const evalsTab = (p: Act) => p.clickOn('.tab[data-tab="evals"]');
-
-  scene('lab13-skills', [
-    { s: snap({}), caption: 'The Evals tab: Start skill-loaded evals runs every case 3 times', do: async (p) => { await evalsTab(p); await p.markButton('Start skill-loaded evals'); } },
-    { s: snap({ skillLoadedEvals: runningSkills(FIRST, 14) }), caption: 'The cases fill in as their runs finish', do: evalsTab },
-    { s: snap({ skillReports: [FIRST] }), caption: 'Every case passes: ✗ marks a run that did not do what its case expects', do: evalsTab },
-  ]);
-  scene('lab13-proposals', [
-    { s: snap({ skillReports: [FIRST, BROKEN] }), caption: "6 of 9: the cases that shouldn't load testing fail", do: async (p) => { await evalsTab(p); await p.markButton('Read the proposal'); } },
-    { s: snap({ skillReports: [FIRST, BROKEN] }), caption: 'What the improve agent proposes. You decide', do: async (p) => { await evalsTab(p); await p.button('Read the proposal'); } },
-  ]);
-
-  // One of our end-to-end evals: 5 tasks, 3 runs each, 8 of 15 accepted, $58.64
-  const accepted = 'the tests pass with the hidden ones, and the grader approves it';
-  const reviewed = (why: string) => `nothing was merged: the review approved no branch: agent/task-1: REJECT: ${why}`;
-  const ROUNDING = 'averageDelayMinutes is rounded half up to one decimal, a rule nobody asked for';
-  const GRADING = `The endpoint answers the request, and its tests cover the filter and the empty result.
-
-But averageDelayMinutes is rounded half up to one decimal: 10, 10 and 15 minutes give 11.7. The request
-asks for the average delay, and nothing about rounding. The research added the rule as an assumption, and
-everything after it built on it.
-
-REJECT: ${ROUNDING}`;
-  const RUNS: [string, boolean, number, number, string, string[], string?][] = [
-    ['airline-delay-summary', false, 6.47, 30, `the grader rejects it: ${ROUNDING}`, ['implement: no test for an airline without delays'], GRADING],
-    ['airline-delay-summary', false, 4.83, 22, `the grader rejects it: ${ROUNDING}`, []],
-    ['airline-delay-summary', false, 5.2, 22, reviewed("no test tells a flight's latest delay event from an earlier one"), ['implement: the step did two criteria']],
-    ['airport-departures', true, 5.19, 25, accepted, ['implement: no test for a blank airport code']],
-    ['airport-departures', false, 6.49, 32, reviewed('change-quality item 2 (Tests): no test for a blank airport code'), ['implement: no test for a blank airport code', 'implement: a test mirrors the code']],
-    ['airport-departures', false, 1.93, 7, reviewed('the new {code} path parameter is never tested blank'), []],
-    ['delays-csv', false, 1.26, 5, reviewed("change-quality item 4 (Fit): the row-order test doesn't follow the existing tests"), []],
-    ['delays-csv', true, 6.25, 35, accepted, ['plan: one criterion in two tasks', 'implement: quoting is not tested']],
-    ['delays-csv', true, 2.41, 11, accepted, ['implement: the header row is not tested']],
-    ['min-delay-filter', true, 1.48, 6, accepted, []],
-    ['min-delay-filter', true, 1.99, 8, accepted, ['implement: no test for a negative minimum']],
-    ['min-delay-filter', true, 2.31, 10, accepted, ['implement: the step did two criteria']],
-    ['status-filter', false, 1.77, 7, reviewed("Fit: the bad request for an unknown status doesn't use the codebase's error handling"), []],
-    ['status-filter', true, 4.91, 24, accepted, ['research: the specification adds a sort order']],
-    ['status-filter', true, 6.15, 30, accepted, ['implement: no test for an unknown status']],
-  ];
-  const models = { research: 'claude-opus-5-5', design: 'claude-opus-5-5', plan: 'claude-opus-5-5', implement: 'claude-sonnet-5-5', judge: 'claude-opus-5-5', review: 'claude-opus-5-5', grader: 'claude-opus-5-5' };
-  const runs = RUNS.map(([taskId, ok, costUsd, min, reason, rejectedBecause, grading], i) => ({
-    task: taskId, run: (i % 3) + 1, accepted: ok, reason, grading, costUsd, durationS: min * 60, step: 'done', rejectedBecause,
-    merged: ok || reason.startsWith('the grader') ? ['agent/task-1'] : [], skillsCommit: 'cfdec82', harnessCommit: 'cfdec82',
-  }));
-  const PROPOSALS = `# Improvement proposals
-
-8 of 15 runs were accepted, and only 1 of 15 was right the first time. The judge cost $28.45 of the $58.64.
-
-## 1. Research may not add rules to a value the request defines
-
-**Why:** All 3 airline-delay-summary runs added "rounded half up to one decimal" to the average. It caused
-both grading rejections. The research judge passed it each time, and so did the review, because the task
-said so. The research skill says "make and state a sensible assumption", and the agents used that to add a
-rule instead of settling an open question.
-
-**Change:** in the judge skill's research checks: no assumption or criterion changes a value the request
-defines (rounding, truncation, clamping, defaults). One that does is scope added beyond the request.`;
-  const REPORT = {
-    evalsId: '20261017-102224', startedAt: '', commit: 'cfdec82', skillsCommit: 'cfdec82', harnessCommit: 'cfdec82',
-    tasks: TASKS, runs, models, quality: { accepted: 8, of: 15 }, reliability: { tasks: 1, of: 5 },
-    firstTimeRight: { runs: 1, of: 15 }, costUsd: 58.64, costPerAccepted: 58.64 / 8, proposals: PROPOSALS,
-    costByRole: { research: 4.78, design: 2.1, plan: 3.13, implement: 16.1, judge: 28.45, review: 4.16, grader: 2.02 },
-  };
-  const e2e = async (p: Act) => { await evalsTab(p); await p.clickOn('[data-kind="e2e"]'); };
-  const progress = (doneCount: number, working: number[], grading: number[] = []) => ({
-    workflowId: 'evals-20261017-102224',
-    status: {
-      evalsId: '20261017-102224',
-      costUsd: runs.slice(0, doneCount).reduce((sum, r) => sum + r.costUsd, 0) + working.length * 1.2,
-      runs: runs.map((r, i) => ({
-        task: r.task, run: r.run,
-        state: i < doneCount ? 'done' : grading.includes(i) ? 'grading' : working.includes(i) ? 'running' : 'waiting',
-        ...(i < doneCount ? { accepted: r.accepted, costUsd: r.costUsd } : {}),
-      })),
-    },
-    runs: working.filter((i) => !grading.includes(i)).map((i) => ({ task: runs[i].task, run: runs[i].run, state: 'running', pipeline: status(i % 2 ? 'implementing' : 'planning'), loops: [] })),
-  });
-  scene('lab13-e2e-start', [
-    { s: snap({ skillReports: [FIRST] }), caption: 'Start evals… picks all tasks, or one', do: async (p) => { await e2e(p); await p.button('Start evals…'); await p.mark('#evalsTask'); } },
-  ]);
-  scene('lab13-e2e-results', [
-    { s: snap({ skillReports: [FIRST], evals: progress(7, [7, 8, 9], [8]) }), caption: 'One of our end-to-end evals: 15 runs, at most 3 at the same time', do: e2e },
-    { s: snap({ skillReports: [FIRST], evalReports: [REPORT] }), caption: '8 of 15 accepted, 1 task reliable, $7.33 per accepted change', do: async (p) => { await e2e(p); await p.mark('[data-row="0"]'); } },
-    { s: snap({ skillReports: [FIRST], evalReports: [REPORT] }), caption: 'Click a task: why each run was or was not accepted', do: async (p) => { await e2e(p); await p.clickOn('[data-row="0"]'); } },
-    { s: snap({ skillReports: [FIRST], evalReports: [REPORT] }), caption: 'What the improve agent proposes for the whole setup', do: async (p) => { await e2e(p); await p.button('Read the proposals'); } },
-  ]);
-}
-
-function readSkillDescription(skill: string): string {
-  const file = path.join(srcDir, '../../.agents/skills', skill, 'SKILL.md');
-  return /^description: (.*)$/m.exec(readFileSync(file, 'utf8'))?.[1] ?? '';
-}
-
 // ── Shooting ─────────────────────────────────────────────────────────────────────────────────────
 
 let current: Snapshot = snap({});
@@ -476,7 +331,7 @@ function said(a: any): string {
 }
 const server = http.createServer(
   handler({
-    state: () => pageState(current, BRANCH, 'claude', lab === '13' ? ['airline-delay-summary', 'airport-departures', 'delays-csv', 'min-delay-filter', 'status-filter'] : []),
+    state: () => pageState(current, BRANCH, 'claude', []),
     task: (id: string) => taskView(current, id),
     act: async (body: string) => said(JSON.parse(body)),
   }),
