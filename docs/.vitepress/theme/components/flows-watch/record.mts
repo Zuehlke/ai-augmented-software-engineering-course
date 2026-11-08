@@ -101,8 +101,7 @@ const status = (step: string, extra: object = {}) => ({
 });
 const pipeline = (step: string, extra: object = {}, state = 'running') => ({ workflowId: 'pipeline', state, status: status(step, extra) });
 const snap = (extra: Partial<Snapshot>): Snapshot => ({
-  temporal: true, worker: true, loops: [], others: [], backlog: backlog('done', 'done', 'done', 'blocked'), log: [],
-  evalReports: [], skillReports: [], withoutEvals: true, ...extra,
+  temporal: true, worker: true, loops: [], others: [], backlog: backlog('done', 'done', 'done', 'blocked'), log: [], ...extra,
 });
 // A task's file, as /api/task gives it, with what you can do with it now
 const TASK_FILES: Record<string, string> = {};

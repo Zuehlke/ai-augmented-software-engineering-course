@@ -251,29 +251,25 @@ The agent turned the specification into tasks in `backlog/`.
 ```markdown [.agents/skills/review/SKILL.md]
 ---
 name: review
-description: Review a finished change built by other agents like a stranger's pull request, against its tasks in backlog/ or against a feature request and hidden criteria, and end with APPROVE or REJECT.
+description: Review the branches built by other agents like a stranger's pull requests, against their tasks in backlog/, and end with APPROVE or REJECT per branch.
 disable-model-invocation: true
 ---
 
 ## TASK
 
-You review a change built by other agents. You don't know how it was built: review it like a stranger's
-pull request. Read any file you need, but don't change any. You get one of two inputs:
-
-- **Branches**, each under `BRANCH <name>`: the pipeline asks whether to merge them. Every branch is
-  checked against its task in `backlog/`, the task id is in the branch name.
-- **One change**, with a FEATURE REQUEST and CRITERIA: the evals ask whether you would ship it. The
-  agents that built it never saw the criteria. What they left besides the code, a specification in
-  `specs/` and tasks in `backlog/`, is fine.
+You review the branches built by other agents, each under `BRANCH <name>`: the pipeline asks whether to
+merge them. You don't know how they were built: review each like a stranger's pull request. Read any file
+you need, but don't change any. Every branch is checked against its task in `backlog/`, the task id is in
+the branch name.
 
 ---
 
 ## STEPS
 
-For every branch, or for the one change:
+For every branch:
 
-1. Check it against what was asked. Every acceptance criterion of the task, or every one of the
-   CRITERIA, is met by the change itself, not only by its tests, and nothing outside its scope changed.
+1. Check it against what was asked. Every acceptance criterion of the task is met by the change itself,
+   not only by its tests, and nothing outside its scope changed.
    A `.harness/progress.md` on a branch means the loop didn't finish.
 
 2. Check it against the checklist in `.agents/skills/change-quality/SKILL.md`. The tests already ran
@@ -285,9 +281,8 @@ For every branch, or for the one change:
 
 End without any formatting, no bullets, no bold, no backticks:
 
-- For branches, one line per branch: `<branch>: APPROVE` or `<branch>: REJECT: <reason>`. Every branch
-  gets exactly one such line, the last lines of your answer. A branch without one counts as rejected.
-- For one change, exactly one line: `APPROVE` or `REJECT: <the most important reason>`.
+One line per branch: `<branch>: APPROVE` or `<branch>: REJECT: <reason>`. Every branch gets exactly one
+such line, the last lines of your answer. A branch without one counts as rejected.
 ```
 
 :::
