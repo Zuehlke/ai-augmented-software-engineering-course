@@ -22,7 +22,7 @@ task lab/evals
 > [![Open Lab 13 in GitHub Codespaces](https://github.com/codespaces/badge.svg)](https://codespaces.new/Zuehlke/ai-augmented-software-engineering?ref=lab%2Fevals)
 
 > [!NOTE]
-> The evals need the [agent token from the setup](/getting-started/setup#agent-token). They run with Claude Code, also if you use Copilot otherwise. Outside the dev container, they need Node.js 22.22 or newer.
+> The evals need the [agent token from the setup](/getting-started/setup#agent-token). They run with the agent you picked next to **Agent** in `flows watch`, Claude Code if you didn't pick one.
 
 ### 1. Run the skill-loaded eval
 
@@ -58,7 +58,7 @@ Run the eval:
 task evals:skills
 ```
 
-It runs the 25 cases of four skills, each 3 times, because agents don't do the same thing every time. In our run, that took 6 minutes and cost $10.56. It ends with one line per case, a `✓` or `✗` per run:
+It runs the 25 cases of four skills, each 3 times, because agents don't do the same thing every time. It ends with one line per case, a `✓` or `✗` per run:
 
 ```text
 Cases, the runs of each:
