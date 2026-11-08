@@ -19,6 +19,9 @@ task lab/hook
 >
 > [![Open Lab 6 in GitHub Codespaces](https://github.com/codespaces/badge.svg)](https://codespaces.new/Zuehlke/ai-augmented-software-engineering?ref=lab%2Fhook)
 
+> [!WARNING]
+> The GitHub Copilot plugin for **IntelliJ** doesn't support all hooks. If you work in IntelliJ, use the preinstalled **GitHub Copilot CLI** for this lab.
+
 After the command is finished, complete the following tasks:
 
 - Update the hook in `verification-harness.json` to make sure tests are run whenever the agent stops.
