@@ -9,7 +9,7 @@ Popular frameworks include:
 - [GSD](https://github.com/github/spec-kit/tree/main?tab=readme-ov-file#-guided-spec-driven-development-gsd)
 - [OpenSpec](https://github.com/Fission-AI/OpenSpec/)
 - [Spec Kit](https://github.com/github/spec-kit)
-- [ralpctl](https://github.com/lukas-grigis/ralphctl)
+- [ralphctl](https://github.com/lukas-grigis/ralphctl)
 
 ## Your Task
 
