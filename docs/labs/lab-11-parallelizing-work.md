@@ -90,6 +90,26 @@ Click **Implement a task…**, select TASK-2 and click **Loop until done**. Do t
 
 Both loops now run at the same time, each on its own task and branch, with its own `.harness/progress.md`. Under **Loops**, both say `running`. The worker output mixes both agents, each line prefixed with its loop.
 
+> [!NOTE]
+> From this lab on, a run takes bigger steps than in the [Ralph loop](./lab-10-ralph-loop.md): as many acceptance criteria as it can build and test, still in one commit. One criterion per run is easy to check, but makes a loop slow and costly. A small task may now be done after one run; the loop still runs again when the judge rejects a step.
+
+<details>
+<summary>What changed in the implement skill and its judge</summary>
+
+```markdown
+<!-- .agents/skills/implement/SKILL.md, step 2 -->
+Otherwise take the acceptance criteria in the task that aren't under Done, in order, as many as you
+can build and test in this run.
+```
+
+```markdown
+<!-- .agents/skills/judge/checks/implement.md -->
+- It works on the criteria it picked in `.harness/progress.md`, without changing anything outside the
+  task's scope.
+```
+
+</details>
+
 <details>
 <summary>How the harness creates a worktree for each loop</summary>
 
