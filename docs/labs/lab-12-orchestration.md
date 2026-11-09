@@ -71,7 +71,11 @@ Then click **Decide**, select the tasks to build and click **Approve**. Each sel
 
 ### 4. Wait for the implement loops and the review agent
 
-The implement loops and the review agent take a while. A loop that fails doesn't stop the others: only finished tasks go on to review. The loops are under **Loops**: click one to open its task.
+The implement loops and the review agent take a while. A loop that fails doesn't stop the others. Each finished task is merged into the review branch `agent/<slug>/review` as soon as its loop is done: its loop then says `in review`. Once all loops are done, the tests run on the review branch, and the review agent reviews it. The loops are under **Loops**: click one to open its task.
+
+The pipeline's branches are named after your request: `<slug>`. The tasks and the review branch all start from the same commit, the one with your approved plan:
+
+<BranchDiagram />
 
 <FlowsWatch scene="lab12-implement" />
 
@@ -80,8 +84,9 @@ Meanwhile, read a simplified version of the workflow below. Every step uses some
 ::: code-group
 
 ```ts [.harness/src/workflows/pipeline.ts (simplified)]
-// research → you approve the specification → design → plan → you approve the plan → implement → review →
-// you decide → merge. At the first two checkpoints, you can send the work back with your feedback instead.
+// research → you approve the specification → design → plan → you approve the plan → implement, each finished task
+// into the review branch → review → you decide → merge. At the first two checkpoints, you can send the work back
+// with your feedback instead.
 async function steps({ repoDir, agent, request }: PipelineInput, status: PipelineStatus, decisions: Decisions) {
   // research: an agent works, a judge checks it, like in the Ralph loop
   // ✋ Checkpoint 1: what it wrote comes onto your branch, and it waits until you approve it or send it back
@@ -110,20 +115,27 @@ async function steps({ repoDir, agent, request }: PipelineInput, status: Pipelin
     feedback = decision.feedback;
   }
 
-  // implement: one Ralph loop per task, each in its own worktree, all at the same time
-  const loops = approved.map((task) =>
-    executeChild(ralph, { workflowId: `pipeline-${task}`, args: [{ repoDir, agent, task, base }] }));
-  const results = await Promise.allSettled(loops); // a loop that fails doesn't stop the others
+  // implement: one Ralph loop per task, each in its own worktree, all at the same time, all from the same commit
+  // as the review branch. Each finished task is merged into the review branch as soon as its loop is done.
+  const reviewBranch = `agent/${slug}/review`;
+  const reviewDir = await addWorktree(repoDir, `${slug}-review`, reviewBranch, base, true);
+  const loops = approved.map(async (task) => {
+    const result = await executeChild(ralph, { workflowId: `pipeline-${task}`, args: [{ repoDir, agent, task, base, slug }] });
+    if (result.done) await intoReview(task); // git merge --no-ff agent/<slug>/<task>, one task after the other
+    return result;
+  });
+  await Promise.allSettled(loops); // a loop that fails doesn't stop the others
 
-  // review: a read-only agent checks every finished branch
+  // review: the tests run on the review branch, then a read-only agent reviews it: APPROVE or REJECT
+  status.testsPass = (await runTests(reviewDir)).pass;
   status.review = await runAgent({ repoDir, agent, mode: 'read', model: MODELS.review, step: 'review', prompt });
 
   // ✋ Checkpoint 3: waits for your merge decision
   await condition(() => decisions.merge !== undefined);
   if (!decisions.merge) return finish(repoDir, status);
 
-  // merge: rebases each approved branch onto your branch, one after the other
-  for (const branch of status.approvedBranches) await mergeBranch(repoDir, branch, into);
+  // merge: fast-forwards your branch to the review branch
+  await fastForward(repoDir, into, reviewBranch);
   return finish(repoDir, status);
 }
 ```
@@ -142,7 +154,7 @@ The `judge` skill keeps its checks per phase, in `checks/`. Each judge reads onl
 ```ts [.harness/src/workflows/prompts.ts (excerpt)]
 // What the harness tells each agent. The work itself is in the skills, .agents/skills/<name>/SKILL.md, the
 // same skills you use yourself in the earlier labs. This only adds what's different when nobody watches.
-import type { PhaseName } from '../types/pipeline';
+import type { PhaseName, TestResult } from '../types/pipeline';
 
 // Where an agent finds a skill, in its worktree
 export const skillFile = (name: string) => `.agents/skills/${name}/SKILL.md`;
@@ -171,9 +183,13 @@ ${input}
 ${commits}`;
 }
 
-// The review agent of the pipeline: it gets every branch's changes, and decides which ones to merge
-export function reviewPrompt(diffs: string): string {
-  return `Use the review skill in \`${skillFile('review')}\` on the branches below.${diffs}`;
+// The review agent of the pipeline: it gets what the review branch brings, every finished task merged in, and
+// decides whether to merge it
+export function reviewPrompt(branch: string, tasks: string[], tests: TestResult, diff: string): string {
+  const ran = tests.pass ? 'The tests pass on it.' : `The tests fail on it. The end of their output:\n\n${tests.tail}`;
+  return `Use the review skill in \`${skillFile('review')}\` on the branch ${branch}. It brings these tasks' branches, merged: ${tasks.join(', ')}. ${ran}
+
+${diff}`;
 }
 
 ```
@@ -251,29 +267,30 @@ The agent turned the specification into tasks in `backlog/`.
 ```markdown [.agents/skills/review/SKILL.md]
 ---
 name: review
-description: Review the branches built by other agents like a stranger's pull requests, against their tasks in backlog/, and end with APPROVE or REJECT per branch.
+description: Review the review branch, where the tasks built by other agents are merged, like a stranger's pull request, against their tasks in backlog/, and end with APPROVE or REJECT.
 disable-model-invocation: true
 ---
 
 ## TASK
 
-You review the branches built by other agents, each under `BRANCH <name>`: the pipeline asks whether to
-merge them. You don't know how they were built: review each like a stranger's pull request. Read any file
-you need, but don't change any. Every branch is checked against its task in `backlog/`, the task id is in
-the branch name.
+You review a branch where the branches built by other agents are merged, one per task: the pipeline asks
+whether to merge it. You don't know how they were built: review it like a stranger's pull request. Read any
+file you need, but don't change any. Every task is checked against its file in `backlog/`, the task id is in
+its branch's name.
 
 ---
 
 ## STEPS
 
-For every branch:
+1. Check every task against what was asked. Every acceptance criterion of the task is met by the change
+   itself, not only by its tests, and nothing outside its scope changed.
+   A `.harness/progress.md` on the branch means a loop didn't finish.
 
-1. Check it against what was asked. Every acceptance criterion of the task is met by the change itself,
-   not only by its tests, and nothing outside its scope changed.
-   A `.harness/progress.md` on a branch means the loop didn't finish.
+2. Check the tasks together: they fit, and none undoes or breaks another.
 
-2. Check it against the checklist in `.agents/skills/change-quality/SKILL.md`. The tests already ran
-   green, you don't need to run them. An item that doesn't hold is a reason to REJECT: say which.
+3. Check it against the checklist in `.agents/skills/change-quality/SKILL.md`. The pipeline ran the tests
+   on the branch, you don't need to run them: failing tests are a reason to REJECT. An item that doesn't
+   hold is a reason to REJECT: say which.
 
 ---
 
@@ -281,8 +298,8 @@ For every branch:
 
 End without any formatting, no bullets, no bold, no backticks:
 
-One line per branch: `<branch>: APPROVE` or `<branch>: REJECT: <reason>`. Every branch gets exactly one
-such line, the last lines of your answer. A branch without one counts as rejected.
+One line, the last line of your answer: `APPROVE`, or `REJECT: <reason>`, naming the task. Without it, the
+branch counts as rejected.
 ```
 
 :::
@@ -291,9 +308,11 @@ such line, the last lines of your answer. A branch without one counts as rejecte
 
 ### 5. Decide whether to merge
 
-When the review agent is done, the merge decision waits for you. Click **Decide** to see the review's verdict for each branch. To see a branch's changes yourself, click its loop under **Loops** and click **Diff in IDE**.
+When the review agent is done, the merge decision waits for you. Click **Decide** to see the review branch, whether the tests pass on it, and the review's verdict. To see its changes yourself, click **Diff in IDE**.
 
-Click **Merge** to merge. The workflow rebases each approved branch onto your branch, then runs the tests. Both tasks change the same dashboard page, so the second branch may conflict. Its loop then says `not merged`: click it and **Merge into your branch** to see how to rebase it by hand.
+Both tasks change the same dashboard page, so the second task may conflict with the first one in the review branch. It's then left out: its loop says `not merged`, and **Decide** lists it.
+
+Click **Merge** to merge. The workflow fast-forwards your branch to the review branch, with a merge commit per task.
 
 <FlowsWatch scene="lab12-merge" />
 

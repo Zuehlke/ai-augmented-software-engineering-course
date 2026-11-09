@@ -184,7 +184,7 @@ This time, the loop doesn't stop after one run: it loops until the task is `done
 
 <FlowsWatch scene="lab10-merge" />
 
-When the task is done, its loop says `done` and `not merged`. Click it, then **Merge into your branch** to bring its commits onto your branch (**Diff in IDE** shows them first). Then, in a terminal:
+When the task is done, its loop says `done` and `not merged`. Click it, then **Merge into lab/ralph-loop** to bring its commits onto your branch (**Diff in IDE** shows them first). Then, in a terminal:
 
 ```bash
 git log --oneline

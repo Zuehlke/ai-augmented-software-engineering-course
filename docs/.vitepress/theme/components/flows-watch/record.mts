@@ -97,7 +97,7 @@ const COST: Record<string, number> = {
   'waiting for your plan approval': 1.85, implementing: 1.85, reviewing: 5.9, 'waiting for your merge decision': 6.5, merging: 6.5, done: 6.5,
 };
 const status = (step: string, extra: object = {}) => ({
-  step, costUsd: COST[step], into: BRANCH, tasks: [], unfinished: [], review: '', approvedBranches: [], merged: [], notMerged: [], ...extra,
+  step, costUsd: COST[step], into: BRANCH, tasks: [], unfinished: [], review: '', inReview: [], merged: [], notMerged: [], ...extra,
 });
 const pipeline = (step: string, extra: object = {}, state = 'running') => ({ workflowId: 'pipeline', state, status: status(step, extra) });
 const snap = (extra: Partial<Snapshot>): Snapshot => ({
@@ -117,7 +117,7 @@ function taskView(s: Snapshot, id: string) {
     branch: `agent/${id.toLowerCase()}`,
     worktree: `.harness/worktrees/${id.toLowerCase()}`,
     start: t.status === 'ready' && !busy,
-    merge: loop?.state === 'done' && loop.merged === false,
+    merge: own && loop?.state === 'done' && loop.merged === false,
     discard: own && !busy && loop.merged !== true,
   };
 }
@@ -200,7 +200,7 @@ Delay data is restructured from a single flat table into separate airline, fligh
   const done = snap({ backlog: BACKLOG, loops: loop({ state: 'done', run: 6, merged: false }), log: [`${L} == judge implement: claude`, `${L} PASS`, `${L} TASK-1 is done`] });
   scene('lab10-merge', [
     { s: done, caption: 'The task is done: its loop waits for you', do: (p) => p.mark('[data-loop="0"]') },
-    { s: done, caption: 'Merge into your branch brings its commits onto your branch', do: async (p) => { await p.clickOn('[data-loop="0"]'); await p.markButton('Merge into your branch'); } },
+    { s: done, caption: `Merge into ${BRANCH} brings its commits onto your branch`, do: async (p) => { await p.clickOn('[data-loop="0"]'); await p.markButton(`Merge into ${BRANCH}`); } },
   ]);
 }
 
@@ -234,8 +234,9 @@ if (lab === '12') {
   const SPEC = { specification: 'specs/delayed-departures/specification.md' };
   const loop = (n: number, extra: object = {}) => ({ workflowId: `pipeline-TASK-${n}`, task: `TASK-${n}`, state: 'running', run: 1, ...extra });
   const loops = (a: object, b: object) => [loop(5, a), loop(6, b)];
-  const review = 'Both branches meet their acceptance criteria and have tests for them.\nagent/task-5: APPROVE\nagent/task-6: APPROVE';
-  const branches = ['agent/task-5', 'agent/task-6'];
+  const review = 'Both tasks meet their acceptance criteria, have tests for them, and fit together.\nAPPROVE';
+  const SLUG = 'delayed-departures';
+  const branches = [`agent/${SLUG}/task-5`, `agent/${SLUG}/task-6`];
   const tasks = ['TASK-5', 'TASK-6'];
   const FEEDBACK = 'Count only flights that are delayed by 15 minutes or more.';
   const researchLog = ['[pipeline] == research: claude', '[pipeline] Wrote specs/delayed-departures/specification.md', '[pipeline] == judge research: claude', '[pipeline] PASS'];
@@ -244,11 +245,15 @@ if (lab === '12') {
   const waitSpec = snap({ pipeline: pipeline('waiting for your specification approval', SPEC), log: researchLog });
   const waitPlan = snap({ backlog: BACKLOG, pipeline: pipeline('waiting for your plan approval', { ...SPEC, tasks }), log: planLog });
   const implementing = snap({ backlog: BACKLOG, pipeline: pipeline('implementing', { ...SPEC, tasks }), loops: loops({ run: 2, judging: true }, { run: 2 }), log: implLog });
-  const merging = { ...SPEC, tasks, review, approvedBranches: branches };
-  const doneLoops = (merged: boolean) => loops({ state: 'done', run: 3, merged }, { state: 'done', run: 4, merged });
-  const waitMerge = snap({ backlog: BACKLOG, pipeline: pipeline('waiting for your merge decision', merging), loops: doneLoops(false), log: [...implLog, '[pipeline] == review: claude', '[pipeline] agent/task-5: APPROVE', '[pipeline] agent/task-6: APPROVE'] });
+  const PIPELINE = { ...SPEC, slug: SLUG, reviewBranch: `agent/${SLUG}/review`, tasks };
+  // TASK-5 is done first: it's merged into the review branch while TASK-6 still works
+  const oneInReview = snap({ ...implementing, pipeline: pipeline('implementing', { ...PIPELINE, inReview: branches.slice(0, 1) }), loops: loops({ state: 'done', run: 3, merged: false, inReview: true }, { run: 3 }), log: [...implLog, `[pipeline] Merged agent/${SLUG}/task-5 into agent/${SLUG}/review`] });
+  const merging = { ...PIPELINE, inReview: branches, testsPass: true, review, approved: true };
+  const inReview = loops({ state: 'done', run: 3, merged: false, inReview: true }, { state: 'done', run: 4, merged: false, inReview: true });
+  const reviewLog = [...oneInReview.log, `[pipeline] Merged agent/${SLUG}/task-6 into agent/${SLUG}/review`, '[pipeline] Tests pass', '[pipeline] == review: claude'];
+  const waitMerge = snap({ backlog: BACKLOG, pipeline: pipeline('waiting for your merge decision', merging), loops: inReview, log: [...reviewLog, '[pipeline] APPROVE'] });
   const DONE = BACKLOG.map((t) => (tasks.includes(t.id) ? { ...t, status: 'done' } : t));
-  const merged = snap({ backlog: DONE, pipeline: pipeline('done', { ...merging, merged: branches, testsPass: true }, 'done'), loops: doneLoops(true), log: [...waitMerge.log, '[pipeline] Merged agent/task-5', '[pipeline] Merged agent/task-6', '[pipeline] Tests pass'] });
+  const merged = snap({ backlog: DONE, pipeline: pipeline('done', { ...merging, merged: branches }, 'done'), loops: loops({ state: 'done', run: 3, merged: true }, { state: 'done', run: 4, merged: true }), log: [...waitMerge.log, `[pipeline] Fast-forwarded ${BRANCH} to agent/${SLUG}/review`] });
 
   scene('lab12-overview', [
     { s: snap({ pipeline: pipeline('researching'), log: researchLog.slice(0, 1) }), caption: 'The research agent writes a specification' },
@@ -257,9 +262,9 @@ if (lab === '12') {
     { s: snap({ pipeline: pipeline('planning', SPEC), log: [...researchLog, '[pipeline] == plan: claude'] }), caption: 'The plan agent cuts it into tasks' },
     { s: waitPlan, caption: 'You approve the plan and its tasks, or send it back' },
     { s: implementing, caption: 'One Ralph loop per task, in parallel' },
-    { s: snap({ ...waitMerge, pipeline: pipeline('reviewing', { ...SPEC, tasks }) }), caption: 'The review agent reviews every branch' },
+    { s: snap({ ...waitMerge, pipeline: pipeline('reviewing', { ...merging, review: '', approved: undefined }), log: reviewLog }), caption: 'Each finished task is merged into the review branch, and the review agent reviews it' },
     { s: waitMerge, caption: 'You decide whether to merge' },
-    { s: merged, caption: 'Merged onto your branch' },
+    { s: merged, caption: 'Your branch is fast-forwarded to the review branch' },
   ]);
   scene('lab12-start', [
     { s: snap({}), caption: 'Click Research, paste the feature request, and start the pipeline', do: async (p) => { await p.clickOn('#box-0'); await p.type('#request', REQUEST); await p.markButton('Start the pipeline'); } },
@@ -298,11 +303,12 @@ On the dashboard, support staff enter an airport code and see the flights depart
   scene('lab12-implement', [
     { s: implementing, caption: 'The loops, one per task', do: (p) => p.mark('[data-loop="0"]') },
     { s: implementing, caption: 'Click a loop to open its task', do: (p) => p.clickOn('[data-loop="0"]') },
+    { s: oneInReview, caption: 'A finished loop is merged into the review branch right away' },
   ]);
   scene('lab12-merge', [
     { s: waitMerge, caption: 'The review is done: the merge decision waits for you', do: (p) => p.markButton('Decide') },
-    { s: waitMerge, caption: "Decide shows the review's verdict per branch", do: async (p) => { await p.button('Decide'); await p.markButton('Merge'); } },
-    { s: merged, caption: 'Merged onto your branch, and the tests pass' },
+    { s: waitMerge, caption: "Decide shows the review branch, its tests and the review's verdict", do: async (p) => { await p.button('Decide'); await p.markButton('Merge'); } },
+    { s: merged, caption: 'Your branch is fast-forwarded to the review branch' },
   ]);
 }
 
@@ -326,7 +332,7 @@ function said(a: any): string {
 }
 const server = http.createServer(
   handler({
-    state: () => pageState(current, BRANCH, 'claude', []),
+    state: () => pageState(current, BRANCH, 'claude', false),
     task: (id: string) => taskView(current, id),
     act: async (body: string) => said(JSON.parse(body)),
   }),

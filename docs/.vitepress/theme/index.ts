@@ -1,5 +1,6 @@
 import DefaultTheme from "vitepress/theme";
 import "./zuhlke.css";
+import BranchDiagram from "./components/BranchDiagram.vue";
 import ContentTabs from "./components/ContentTabs.vue";
 import CourseAccessOverlay from "./components/CourseAccessOverlay.vue";
 import DownloadLink from "./components/DownloadLink.vue";
@@ -16,6 +17,7 @@ export default {
   Layout: CourseAccessOverlay,
   enhanceApp({ app, router }) {
     reloadOnExpiredSession(router); // TEMPORARY FIX, see session-reload.ts
+    app.component("BranchDiagram", BranchDiagram);
     app.component("ContentTabs", ContentTabs);
     app.component("DownloadLink", DownloadLink);
     app.component("JudgeDiagram", JudgeDiagram);
