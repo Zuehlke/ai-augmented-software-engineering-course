@@ -19,11 +19,7 @@ const accessControl = resolveAccessControlFromEnv(env);
 // "internal" (Codehub) or "github" (GitHub Pages): lets pages show audience-specific content.
 const audience = env.VITE_AUDIENCE?.trim().toLowerCase() || "internal";
 // Locked days are left out of the navbar and sidebar.
-const labsLink = accessControl.day1LabsEnabled
-  ? "/labs/lab-1-vibe-coding"
-  : accessControl.day2LabsEnabled
-    ? "/labs/lab-7-sandboxing"
-    : null;
+const labsLink = accessControl.day1LabsEnabled ? "/labs/lab-1-vibe-coding" : null;
 const siteDescription =
   "An introduction to AI-augmented software engineering that helps teams build software with AI in a more disciplined and systematic way - learning the key concepts and methods of modern AI coding tools and applying them directly in hands-on labs.";
 const faviconDataUrl =
@@ -67,18 +63,6 @@ export default defineConfig({
           { text: "Lab 4 · Structured Agentic Workflows", link: "/labs/lab-4-structured-agentic-workflows" },
           { text: "Lab 5 · Spec-Driven Development", link: "/labs/lab-5-spec-driven-development" },
           { text: "Lab 6 · Automated Feedback Loops", link: "/labs/lab-6-automated-feedback-loops" },
-        ],
-      }] : []),
-      ...(accessControl.day2LabsEnabled ? [{
-        text: 'Day 2 · Labs <span class="sidebar-tag-new">New</span>',
-        items: [
-          { text: "Lab 7 · Sandboxing", link: "/labs/lab-7-sandboxing" },
-          { text: "Lab 8 · Durable Workflows", link: "/labs/lab-8-durable-workflows" },
-          { text: "Lab 9 · Tracer Bullets", link: "/labs/lab-9-tracer-bullets" },
-          { text: "Lab 10 · Ralph Loop", link: "/labs/lab-10-ralph-loop" },
-          { text: "Lab 11 · Parallelizing Work", link: "/labs/lab-11-parallelizing-work" },
-          { text: "Lab 12 · Orchestration", link: "/labs/lab-12-orchestration" },
-          { text: "Lab 13 · Evals", link: "/labs/lab-13-evals" },
         ],
       }] : []),
       {
