@@ -73,10 +73,6 @@ Then click **Decide**, select the tasks to build and click **Approve**. Each sel
 
 The implement loops and the review agent take a while. A loop that fails doesn't stop the others. Each finished task is merged into the review branch `agent/<slug>/review` as soon as its loop is done: its loop then says `in review`. Once all loops are done, the tests run on the review branch, and the review agent reviews it. The loops are under **Loops**: click one to open its task.
 
-The pipeline's branches are named after your request: `<slug>`. The tasks and the review branch all start from the same commit, the one with your approved plan:
-
-<BranchDiagram />
-
 <FlowsWatch scene="lab12-implement" />
 
 Meanwhile, read a simplified version of the workflow below. Every step uses something from the earlier labs: agents checked by a judge, one Ralph loop per task in its own worktree, and three checkpoints. Each checkpoint is a `condition(...)` that waits for your answer in the UI.
