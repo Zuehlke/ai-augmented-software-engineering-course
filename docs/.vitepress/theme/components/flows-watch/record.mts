@@ -141,15 +141,11 @@ if (lab === '8') {
     { s: snap({}), caption: 'Hover over a part to see the command behind it', do: (p) => p.hover('#box-0') },
   ]);
   scene('lab8-research', [
-    { s: snap({}), caption: 'Click Research, paste the feature request, and start the pipeline', do: async (p) => { await p.clickOn('#box-0'); await p.type('#request', DASHBOARD_REQUEST); await p.markButton('Start the pipeline'); } },
-    { s: snap({ pipeline: pipeline('researching'), log: working.slice(0, 3) }), caption: 'The research agent writes the specification' },
+    { s: snap({ pipeline: pipeline('researching'), log: working.slice(0, 3) }), caption: 'flows start started the pipeline: the research agent writes the specification' },
     { s: snap({ pipeline: pipeline('researching', { judging: true }), log: [...working, '[pipeline] == judge research: claude'] }), caption: 'Its judge checks it' },
   ]);
   scene('lab8-specification', [
     { s: waiting, caption: 'The pipeline waits for your approval', do: (p) => p.markButton('Decide') },
-    { s: waiting, caption: 'Decide shows where the specification is. Leave it waiting', do: async (p) => { await p.button('Decide'); await p.markButton('Later'); } },
-    { s: snap({ temporal: false, worker: false, log: judged }), caption: 'task flows:stop: Temporal and the worker are gone' },
-    { s: waiting, caption: 'task flows:start: the pipeline still waits, at the same step' },
   ]);
 }
 

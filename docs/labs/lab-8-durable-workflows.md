@@ -56,12 +56,13 @@ At the top, whether Temporal and the worker run. Below, the four stages from res
 
 ### 3. Run the research agent
 
-Click the **Research** box, paste the feature request and click **Start the pipeline**:
+Start the pipeline with `flows start` and the feature request, in a new terminal:
 
 <details>
 <summary>Feature request: Flight Delays Dashboard</summary>
 
-```markdown
+```bash
+flows start "$(cat <<'EOF'
 # Flight Delays Dashboard
 
 ## Problem
@@ -100,13 +101,15 @@ situation", without knowing the query API.
   has been asked for a dataset export but has given no ETA.
 - Any schema change to delay storage requires architecture review sign-off before implementation
   starts; that review is scheduled but not yet complete.
+EOF
+)"
 ```
 
 </details>
 
 <FlowsWatch scene="lab8-research" />
 
-This will start the pipeline workflow in Temporal. In this lab, it only goes as far as the research agent.
+This will start the pipeline workflow in Temporal, and `flows start` follows it in the terminal. In this lab, it only goes as far as the research agent.
 
 > [!NOTE]
 > The research agent only sees what's committed. Commit or stash your changes before you start it.
@@ -115,11 +118,11 @@ In the Temporal web UI, click `pipeline` to see its history: every finished step
 
 ### 4. Check the result
 
-When the research agent and its judge are done, the pipeline waits for you: the bar at the top asks you to approve the specification. Read it in `specs/<slug>/specification.md`, on your branch. The research agent picks the `<slug>`.
+When the research agent and its judge are done, the pipeline waits for you: `flows start` asks `Approve the specification? [y/N]`, and the bar at the top of `flows watch` asks too. Read it in `specs/<slug>/specification.md`, on your branch. Don't approve it for now!
 
 <FlowsWatch scene="lab8-specification" />
 
-Don't approve it: leave the pipeline waiting. It now does nothing until you decide, and that survives a restart. Stop Temporal and the worker:
+Stop Temporal and the worker:
 
 ```bash
 task flows:stop

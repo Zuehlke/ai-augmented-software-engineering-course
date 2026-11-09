@@ -1038,16 +1038,7 @@
  ],
  "lab8-research": [
   {
-   "caption": "Click Research, paste the feature request, and start the pipeline",
-   "click": [
-    56.3,
-    61.7,
-    9.7,
-    4.1
-   ]
-  },
-  {
-   "caption": "The research agent writes the specification"
+   "caption": "flows start started the pipeline: the research agent writes the specification"
   },
   {
    "caption": "Its judge checks it",
@@ -1118,77 +1109,6 @@
     5.1,
     4.1
    ]
-  },
-  {
-   "caption": "Decide shows where the specification is. Leave it waiting",
-   "click": [
-    67.4,
-    57.9,
-    4.3,
-    4.1
-   ]
-  },
-  {
-   "caption": "task flows:stop: Temporal and the worker are gone"
-  },
-  {
-   "caption": "task flows:start: the pipeline still waits, at the same step",
-   "anchors": {
-    "temporal": [
-     74.3,
-     1.9,
-     4.7,
-     2.3
-    ],
-    "worker": [
-     80.2,
-     1.9,
-     3.8,
-     2.3
-    ],
-    "map": [
-     1.8,
-     18.5,
-     96.5,
-     42.2
-    ],
-    "stages": [
-     12.6,
-     18.5,
-     85.6,
-     4.8
-    ],
-    "steps": [
-     12.6,
-     23.3,
-     85.6,
-     9.5
-    ],
-    "box": [
-     12.6,
-     32.8,
-     8.5,
-     11.4
-    ],
-    "loops": [
-     12.6,
-     70.3,
-     85.6,
-     6.7
-    ],
-    "log": [
-     12.6,
-     80,
-     85.6,
-     20
-    ],
-    "needs": [
-     1.8,
-     9.2,
-     96.5,
-     6.2
-    ]
-   }
   }
  ],
  "lab8-watch": [
