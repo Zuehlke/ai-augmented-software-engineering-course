@@ -2,13 +2,13 @@
 
 ## Context
 
-In the last lab, the `research` skill turned a requirement into a specification. Now you add the two phases that follow, each as its own skill:
+In the last lab, the `aiad-research` skill turned a requirement into a specification. Now you add the two phases that follow, each as its own skill:
 
 | Phase | Skill | Writes |
 | --- | --- | --- |
-| research | `research` | `specs/<slug>/specification.md`: what to build, with testable acceptance criteria |
-| design | `design` | `specs/<slug>/design.md`: which modules, endpoints and tests change |
-| implement | `implement` | the code, and `.harness/progress.md`: which criteria are met and which decisions were made |
+| research | `aiad-research` | `specs/<slug>/specification.md`: what to build, with testable acceptance criteria |
+| design | `aiad-design` | `specs/<slug>/design.md`: which modules, endpoints and tests change |
+| implement | `aiad-implement` | the code, and `.harness/progress.md`: which criteria are met and which decisions were made |
 
 ## Your Task
 
@@ -25,8 +25,8 @@ task lab/structured-workflow
 
 After the command is finished, complete the following tasks:
 
-- Write the missing frontmatter for the `research`, `design` and `implement` skills.
-- Implement the same endpoint again using the research → design → implement workflow, **each skill in a new session** (`/clear` or a new chat):
+- Write the missing frontmatter for the `aiad-research`, `aiad-design` and `aiad-implement` skills.
+- Implement the same endpoint again using the aiad-research → aiad-design → aiad-implement workflow, **each skill in a new session** (`/clear` or a new chat):
   - `GET /delays?airline_code=AA&limit=50`
 - After each phase, read the file it wrote: could the next phase work from it alone?
 - While `implement` runs, it writes its progress to `.harness/progress.md`.
@@ -41,7 +41,7 @@ After the command is finished, complete the following tasks:
 
 ```markdown
 ---
-name: research
+name: aiad-research
 description: Critically review a requirement, surface gaps, refine requirements, and write an improved spec.
 disable-model-invocation: true
 ---
@@ -117,7 +117,7 @@ If the user’s prompt is fundamentally insufficient, refuse to review it and as
 
 ```markdown
 ---
-name: design
+name: aiad-design
 description: Turn a specification into a design that names the modules, endpoints and tests to change and how they integrate.
 disable-model-invocation: true
 ---
@@ -185,7 +185,7 @@ You MUST NOT make any code changes or offer to make any code changes as part of 
 
 ```markdown
 ---
-name: implement
+name: aiad-implement
 description: Implement the design using TDD until every acceptance criterion is met, and record progress so a new session can continue.
 disable-model-invocation: true
 ---
